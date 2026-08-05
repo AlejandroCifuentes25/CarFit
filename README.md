@@ -2,7 +2,7 @@
 
 Julian Jimenez Garcia
 
-Simon Mazo 
+Simon Mazo Gomez
 
 Alejandro Cifuentes Arroyave
 
