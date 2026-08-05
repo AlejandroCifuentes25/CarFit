@@ -1,3 +1,11 @@
+**integrantes:**
+
+Julian Jimenez Garcia
+
+Simon Mazo 
+
+Alejandro Cifuentes Arroyave
+
 # CarFit
 
 Marketplace que **facilita y centraliza la compra y venta de repuestos y carros
