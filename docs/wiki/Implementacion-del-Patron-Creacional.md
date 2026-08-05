@@ -53,6 +53,7 @@ Tres consecuencias concretas:
 ```mermaid
 classDiagram
     class CrearArticuloView {
+        <<Vista>>
         +template_name : string
         +form_class : CrearArticuloForm
         +success_url : string
@@ -61,12 +62,14 @@ classDiagram
     }
 
     class PublicacionArticuloService {
+        <<Service Layer>>
         -validador : ValidadorDocumental
         -notificador : Notificador
         +crear_articulo(vendedor, datos) Carro
     }
 
     class CarroBuilder {
+        <<Builder>>
         -vendedor : Vendedor
         -placa : string
         -marca : string
@@ -111,10 +114,12 @@ classDiagram
     }
 
     class ValidadorDocumentalMock {
+        <<MOCK>>
         +validar(placa, documentos) ResultadoValidacion
     }
 
     class ValidadorDocumentalRunt {
+        <<REAL>>
         -hoy : date
         +validar(placa, documentos) ResultadoValidacion
     }
@@ -125,19 +130,23 @@ classDiagram
     }
 
     class NotificadorConsola {
+        <<MOCK>>
         +notificar_publicacion(articulo)
     }
 
     class NotificadorEmail {
+        <<REAL>>
         +notificar_publicacion(articulo)
     }
 
     class ValidadorDocumentalFactory {
+        <<Factory>>
         -registro : dict
         +crear(tipo) ValidadorDocumental
     }
 
     class NotificadorFactory {
+        <<Factory>>
         -registro : dict
         +crear(tipo) Notificador
     }
@@ -160,26 +169,16 @@ classDiagram
     ValidadorDocumental <|.. ValidadorDocumentalRunt : realiza
     Notificador <|.. NotificadorConsola : realiza
     Notificador <|.. NotificadorEmail : realiza
-
-    classDef capaPrincipal fill:#D6E4F5,stroke:#2E5C8A,color:#12233A
-    classDef patronCreacional fill:#FBE0C2,stroke:#C97A24,color:#5C3A0E,stroke-width:2px
-    classDef puerto fill:#FFFFFF,stroke:#2E5C8A,color:#12233A,stroke-dasharray: 4 3
-    classDef implementacion fill:#F1F5F8,stroke:#5A6A7A,color:#16212E
-
-    class CrearArticuloView,PublicacionArticuloService,Carro,DocumentoCarro capaPrincipal
-    class CarroBuilder,ValidadorDocumentalFactory,NotificadorFactory patronCreacional
-    class ValidadorDocumental,Notificador puerto
-    class ValidadorDocumentalMock,ValidadorDocumentalRunt,NotificadorConsola,NotificadorEmail implementacion
 ```
 
 **Notación UML aplicada:**
 
 - `+` público / `-` privado — el estado interno del Builder (`_placa`, `_precio`...) y el registro de las Factories son privados; solo los métodos fluidos y `crear()` son públicos.
+- `<<estereotipo>>` — clasifica cada clase por su rol: `<<Builder>>` y `<<Factory>>` marcan los dos patrones creacionales que evalúa la rúbrica; `<<interface>>` marca los puertos (contratos); `<<MOCK>>`/`<<REAL>>` marcan las implementaciones intercambiables.
 - Flecha punteada abierta (`..>`) — **dependencia**: una clase usa a otra de forma transitoria (variable local, parámetro o valor de retorno), sin guardarla como atributo. Así se relacionan la Vista con el Servicio, el Servicio con el Builder, el Builder con `Carro`, y cada Factory con las clases que instancia.
 - Flecha sólida (`-->`) — **asociación**: el Servicio sí guarda `_validador` y `_notificador` como atributos propios, y apunta a la **interfaz**, no a la clase concreta (así se ve la Inversión de Dependencias).
 - Diamante hueco (`o--`) — **agregación**: el Builder agrega los `DocumentoCarro` que recibe, pero no es dueño de su ciclo de vida.
 - Triángulo hueco punteado (`<|..`) — **realización**: `ValidadorDocumentalMock`/`Runt` y `NotificadorConsola`/`Email` implementan el contrato de su interfaz.
-- Color naranja — los patrones creacionales evaluados en la rúbrica (Builder y las dos Factory). Azul — las clases principales del flujo. Blanco punteado — los puertos (interfaces). Gris — las implementaciones intercambiables MOCK/REAL.
 
 ### Flujo de interacción
 
