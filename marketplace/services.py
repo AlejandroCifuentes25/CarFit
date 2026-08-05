@@ -1,0 +1,105 @@
+"""Capa de Aplicación (Service Layer).
+
+Aquí vive el *algoritmo* del caso de uso "Crear Artículo": el orden de los
+pasos, la transaccionalidad y la coordinación entre el Builder (dominio) y
+las dependencias externas (infraestructura).
+
+Reglas que se respetan aquí:
+
+* **SRP** — el servicio orquesta; no valida atributos (eso es del Builder) ni
+  sabe cómo se envía un correo (eso es de `infra/`).
+* **DIP** — depende de los puertos `ValidadorDocumental` y `Notificador`, no
+  de sus implementaciones. Las Factories resuelven el default; los tests
+  inyectan dobles por constructor.
+* El servicio **no conoce HTTP**: no recibe `request` ni devuelve
+  `HttpResponse`. Se puede llamar desde un comando de consola o una tarea
+  asíncrona sin cambiar nada.
+"""
+
+from django.db import transaction
+from django.db.models import F
+
+from .domain.builders import CarroBuilder
+from .domain.exceptions import DocumentacionInvalidaError
+from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
+from .models import DocumentoCarro, Inventario
+
+
+class PublicacionArticuloService:
+    """Publica un vehículo en el marketplace a nombre de un vendedor."""
+
+    def __init__(self, validador=None, notificador=None):
+        # Inyección de dependencias: si no se inyecta nada, las Factories
+        # deciden la implementación según las variables de entorno.
+        self._validador = validador or ValidadorDocumentalFactory.crear()
+        self._notificador = notificador or NotificadorFactory.crear()
+
+    @transaction.atomic
+    def crear_articulo(self, vendedor, datos):
+        """Publica un carro y devuelve la instancia ya persistida.
+
+        Args:
+            vendedor: `Vendedor` dueño del artículo.
+            datos: diccionario con los campos del formulario.
+
+        Raises:
+            ArticuloInvalidoError: el vehículo no cumple las invariantes.
+            DocumentacionInvalidaError: los documentos no están vigentes.
+        """
+        documentos = self._armar_documentos(datos)
+
+        carro = (
+            CarroBuilder()
+            .para_vendedor(vendedor)
+            .con_identificacion(datos["placa"], datos["marca"], datos["modelo"])
+            .con_caracteristicas(datos["color"], datos["kilometraje"], datos["estado"])
+            .con_precio(datos["precio"])
+            .con_descripcion(datos.get("descripcion", ""))
+            .con_documentos(documentos)
+            .build()
+        )
+
+        self._verificar_documentacion(carro.placa, documentos)
+
+        carro.save()
+        self._persistir_documentos(carro, documentos)
+        self._actualizar_inventario(vendedor)
+        self._notificador.notificar_publicacion(carro)
+
+        return carro
+
+    # ------------------------------------------------------------------
+    # Pasos internos
+    # ------------------------------------------------------------------
+
+    def _armar_documentos(self, datos):
+        """Traduce los campos planos del formulario a objetos del modelo."""
+        especificaciones = (
+            (DocumentoCarro.Tipo.SOAT, "soat"),
+            (DocumentoCarro.Tipo.TECNOMECANICA, "tecnomecanica"),
+        )
+        return [
+            DocumentoCarro(
+                tipo_documento=tipo,
+                fecha_expedicion=datos[f"{prefijo}_expedicion"],
+                fecha_vencimiento=datos[f"{prefijo}_vencimiento"],
+                archivo=datos.get(f"{prefijo}_archivo"),
+            )
+            for tipo, prefijo in especificaciones
+        ]
+
+    def _verificar_documentacion(self, placa, documentos):
+        resultado = self._validador.validar(placa, documentos)
+        if not resultado.es_valido:
+            raise DocumentacionInvalidaError(resultado.motivos)
+
+    def _persistir_documentos(self, carro, documentos):
+        for documento in documentos:
+            documento.carro = carro
+        DocumentoCarro.objects.bulk_create(documentos)
+
+    def _actualizar_inventario(self, vendedor):
+        Inventario.objects.get_or_create(vendedor=vendedor)
+        Inventario.objects.filter(vendedor=vendedor).update(
+            cantidad_carro=F("cantidad_carro") + 1
+        )
