@@ -1,0 +1,12 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Artículo publicado — CarFit{% endblock %}
+
+{% block contenido %}
+  <h1>¡Tu artículo quedó publicado!</h1>
+  <p class="ayuda">
+    Ya es visible para los compradores en CarFit. Te enviamos la confirmación
+    al correo registrado.
+  </p>
+  <p><a href="{% url 'marketplace:crear_articulo' %}">Publicar otro artículo</a></p>
+{% endblock %}

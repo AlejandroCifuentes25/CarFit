@@ -1,0 +1,26 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Publicar artículo — CarFit{% endblock %}
+
+{% block contenido %}
+  <h1>Publicar vehículo</h1>
+  <p class="ayuda">
+    Completa los datos del vehículo y su documentación legal. Validamos que el
+    SOAT y la tecnomecánica estén vigentes antes de publicar.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="errores">
+        <strong>No pudimos publicar el artículo:</strong>
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    {{ form.as_p }}
+
+    <button type="submit">Publicar artículo</button>
+  </form>
+{% endblock %}
