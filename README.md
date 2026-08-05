@@ -41,14 +41,31 @@ marketplace/
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Luego entra a <http://127.0.0.1:8000/articulos/nuevo/>. Necesitas un `Vendedor`
-asociado a tu usuario: créalo desde <http://127.0.0.1:8000/admin/>.
+1. Entra a <http://127.0.0.1:8000/admin/> e inicia sesión con el superusuario
+   que acabas de crear.
+2. En **Marketplace → Vendedors**, crea un `Vendedor` asociado a ese mismo
+   usuario (campo `usuario`) — es obligatorio para poder publicar artículos.
+3. Ve a <http://127.0.0.1:8000/articulos/nuevo/>. Si no habías iniciado sesión
+   fuera del admin, te pedirá loguearte en <http://127.0.0.1:8000/cuentas/login/>
+   con el mismo usuario.
+
+Por defecto la app corre en modo **MOCK**: aprueba cualquier documento y
+notifica por consola, sin necesidad de configurar nada. `.env.example` lista
+las variables que se pueden **exportar en la terminal** para cambiar a modo
+`REAL` (el proyecto no carga `.env` automáticamente, no existe `python-dotenv`
+como dependencia — hay que exportarlas a mano si las quieres probar):
+
+```bash
+# PowerShell
+$env:VALIDADOR_DOCUMENTAL = "REAL"
+$env:NOTIFICADOR = "REAL"
+python manage.py runserver
+```
 
 ## Pruebas
 
