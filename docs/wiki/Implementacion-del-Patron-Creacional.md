@@ -53,58 +53,133 @@ Tres consecuencias concretas:
 ```mermaid
 classDiagram
     class CrearArticuloView {
-        <<Capa de Interfaz>>
-        +form_valid(form)
+        +template_name : string
+        +form_class : CrearArticuloForm
+        +success_url : string
+        +service_factory : PublicacionArticuloService
+        +form_valid(form) HttpResponse
     }
+
     class PublicacionArticuloService {
-        <<Capa de Aplicación>>
-        -_validador : ValidadorDocumental
-        -_notificador : Notificador
+        -validador : ValidadorDocumental
+        -notificador : Notificador
         +crear_articulo(vendedor, datos) Carro
     }
+
     class CarroBuilder {
-        <<Dominio · Builder>>
-        +para_vendedor(v) CarroBuilder
+        -vendedor : Vendedor
+        -placa : string
+        -marca : string
+        -modelo : string
+        -color : string
+        -estado : string
+        -kilometraje : int
+        -precio : int
+        -descripcion : string
+        -documentos : DocumentoCarro[]
+        +para_vendedor(vendedor) CarroBuilder
         +con_identificacion(placa, marca, modelo) CarroBuilder
         +con_caracteristicas(color, km, estado) CarroBuilder
         +con_precio(precio) CarroBuilder
-        +con_documentos(docs) CarroBuilder
+        +con_descripcion(descripcion) CarroBuilder
+        +con_documentos(documentos) CarroBuilder
         +build() Carro
     }
+
+    class Carro {
+        +placa : string
+        +marca : string
+        +modelo : string
+        +estado : string
+        +color : string
+        +kilometraje : int
+        +descripcion : string
+        +precio : int
+        +puntaje : float
+    }
+
+    class DocumentoCarro {
+        +tipoDocumento : string
+        +fechaExpedicion : date
+        +fechaVencimiento : date
+        +archivo : file
+    }
+
     class ValidadorDocumental {
-        <<interface · Puerto>>
+        <<interface>>
         +validar(placa, documentos) ResultadoValidacion
     }
+
+    class ValidadorDocumentalMock {
+        +validar(placa, documentos) ResultadoValidacion
+    }
+
+    class ValidadorDocumentalRunt {
+        -hoy : date
+        +validar(placa, documentos) ResultadoValidacion
+    }
+
     class Notificador {
-        <<interface · Puerto>>
+        <<interface>>
         +notificar_publicacion(articulo)
     }
-    class ValidadorDocumentalFactory {
-        <<Infra · Factory>>
-        +crear() ValidadorDocumental
-    }
-    class NotificadorFactory {
-        <<Infra · Factory>>
-        +crear() Notificador
-    }
-    class ValidadorDocumentalMock
-    class ValidadorDocumentalRunt
-    class NotificadorConsola
-    class NotificadorEmail
-    class Carro
 
-    CrearArticuloView --> PublicacionArticuloService : delega
-    PublicacionArticuloService --> CarroBuilder : construye con
-    PublicacionArticuloService ..> ValidadorDocumental : depende de la abstracción
-    PublicacionArticuloService ..> Notificador : depende de la abstracción
-    CarroBuilder --> Carro : produce (sin guardar)
+    class NotificadorConsola {
+        +notificar_publicacion(articulo)
+    }
+
+    class NotificadorEmail {
+        +notificar_publicacion(articulo)
+    }
+
+    class ValidadorDocumentalFactory {
+        -registro : dict
+        +crear(tipo) ValidadorDocumental
+    }
+
+    class NotificadorFactory {
+        -registro : dict
+        +crear(tipo) Notificador
+    }
+
+    CrearArticuloView ..> PublicacionArticuloService : usa
+    PublicacionArticuloService ..> CarroBuilder : usa
+    PublicacionArticuloService --> ValidadorDocumental : valida con
+    PublicacionArticuloService --> Notificador : notifica con
+    CarroBuilder o-- DocumentoCarro : agrega
+    CarroBuilder ..> Carro : crea
+
     ValidadorDocumentalFactory ..> ValidadorDocumental : crea
+    ValidadorDocumentalFactory ..> ValidadorDocumentalMock : instancia
+    ValidadorDocumentalFactory ..> ValidadorDocumentalRunt : instancia
     NotificadorFactory ..> Notificador : crea
-    ValidadorDocumental <|.. ValidadorDocumentalMock
-    ValidadorDocumental <|.. ValidadorDocumentalRunt
-    Notificador <|.. NotificadorConsola
-    Notificador <|.. NotificadorEmail
+    NotificadorFactory ..> NotificadorConsola : instancia
+    NotificadorFactory ..> NotificadorEmail : instancia
+
+    ValidadorDocumental <|.. ValidadorDocumentalMock : realiza
+    ValidadorDocumental <|.. ValidadorDocumentalRunt : realiza
+    Notificador <|.. NotificadorConsola : realiza
+    Notificador <|.. NotificadorEmail : realiza
+
+    classDef capaPrincipal fill:#D6E4F5,stroke:#2E5C8A,color:#12233A
+    classDef patronCreacional fill:#FBE0C2,stroke:#C97A24,color:#5C3A0E,stroke-width:2px
+    classDef puerto fill:#FFFFFF,stroke:#2E5C8A,color:#12233A,stroke-dasharray: 4 3
+    classDef implementacion fill:#F1F5F8,stroke:#5A6A7A,color:#16212E
+
+    class CrearArticuloView,PublicacionArticuloService,Carro,DocumentoCarro capaPrincipal
+    class CarroBuilder,ValidadorDocumentalFactory,NotificadorFactory patronCreacional
+    class ValidadorDocumental,Notificador puerto
+    class ValidadorDocumentalMock,ValidadorDocumentalRunt,NotificadorConsola,NotificadorEmail implementacion
 ```
+
+**Notación UML aplicada:**
+
+- `+` público / `-` privado — el estado interno del Builder (`_placa`, `_precio`...) y el registro de las Factories son privados; solo los métodos fluidos y `crear()` son públicos.
+- Flecha punteada abierta (`..>`) — **dependencia**: una clase usa a otra de forma transitoria (variable local, parámetro o valor de retorno), sin guardarla como atributo. Así se relacionan la Vista con el Servicio, el Servicio con el Builder, el Builder con `Carro`, y cada Factory con las clases que instancia.
+- Flecha sólida (`-->`) — **asociación**: el Servicio sí guarda `_validador` y `_notificador` como atributos propios, y apunta a la **interfaz**, no a la clase concreta (así se ve la Inversión de Dependencias).
+- Diamante hueco (`o--`) — **agregación**: el Builder agrega los `DocumentoCarro` que recibe, pero no es dueño de su ciclo de vida.
+- Triángulo hueco punteado (`<|..`) — **realización**: `ValidadorDocumentalMock`/`Runt` y `NotificadorConsola`/`Email` implementan el contrato de su interfaz.
+- Color naranja — los patrones creacionales evaluados en la rúbrica (Builder y las dos Factory). Azul — las clases principales del flujo. Blanco punteado — los puertos (interfaces). Gris — las implementaciones intercambiables MOCK/REAL.
 
 ### Flujo de interacción
 
