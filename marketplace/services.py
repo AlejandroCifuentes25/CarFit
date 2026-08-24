@@ -16,11 +16,12 @@ Reglas que se respetan aquí:
   asíncrona sin cambiar nada.
 """
 
+from django.contrib.auth import authenticate, login
 from django.db import transaction
 from django.db.models import F
 
 from .domain.builders import CarroBuilder
-from .domain.exceptions import DocumentacionInvalidaError
+from .domain.exceptions import CredencialesInvalidasError, DocumentacionInvalidaError
 from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
 from .models import DocumentoCarro, Inventario
 
@@ -103,3 +104,21 @@ class PublicacionArticuloService:
         Inventario.objects.filter(vendedor=vendedor).update(
             cantidad_carro=F("cantidad_carro") + 1
         )
+
+
+class AutenticacionService:
+    """Orquesta el caso de uso "Iniciar sesión".
+
+    Igual que `PublicacionArticuloService`, no conoce DRF ni `Response`:
+    recibe el `request` (lo necesita `authenticate`/`login` de Django para
+    asociar la sesión) y las credenciales ya validadas en *formato* por el
+    Serializer, y devuelve el usuario autenticado o levanta un error de
+    dominio. La vista es quien lo traduce a un código HTTP.
+    """
+
+    def iniciar_sesion(self, request, username, password):
+        usuario = authenticate(request, username=username, password=password)
+        if usuario is None:
+            raise CredencialesInvalidasError()
+        login(request, usuario)
+        return usuario

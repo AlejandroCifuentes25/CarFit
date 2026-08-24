@@ -23,3 +23,10 @@ class DocumentacionInvalidaError(ErrorDeDominio):
     def __init__(self, motivos):
         self.motivos = list(motivos)
         super().__init__(" ".join(self.motivos))
+
+
+class CredencialesInvalidasError(ErrorDeDominio):
+    """El usuario o la contraseña no son correctos."""
+
+    def __init__(self):
+        super().__init__("Usuario o contraseña incorrectos.")

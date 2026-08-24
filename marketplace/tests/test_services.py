@@ -10,11 +10,11 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from ..domain.exceptions import ArticuloInvalidoError, DocumentacionInvalidaError
+from ..domain.exceptions import ArticuloInvalidoError, CredencialesInvalidasError, DocumentacionInvalidaError
 from ..domain.ports import Notificador, ResultadoValidacion, ValidadorDocumental
 from ..infra.validadores import ValidadorDocumentalRunt
 from ..models import Carro, DocumentoCarro, Inventario, Vendedor
-from ..services import PublicacionArticuloService
+from ..services import AutenticacionService, PublicacionArticuloService
 
 
 class ValidadorEspia(ValidadorDocumental):
@@ -157,3 +157,44 @@ class ValidadorDocumentalRuntTest(TestCase):
 
         self.assertFalse(resultado.es_valido)
         self.assertIn("vencido", resultado.motivos[0])
+
+
+class AutenticacionServiceTest(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user("alejandro", password="clave-correcta")
+        self.servicio = AutenticacionService()
+
+    def test_inicia_sesion_con_credenciales_correctas(self):
+        peticion = self._peticion()
+
+        usuario = self.servicio.iniciar_sesion(
+            peticion, username="alejandro", password="clave-correcta"
+        )
+
+        self.assertEqual(usuario, self.usuario)
+        self.assertEqual(peticion.session["_auth_user_id"], str(self.usuario.pk))
+
+    def test_rechaza_contrasena_incorrecta(self):
+        peticion = self._peticion()
+
+        with self.assertRaises(CredencialesInvalidasError):
+            self.servicio.iniciar_sesion(
+                peticion, username="alejandro", password="clave-incorrecta"
+            )
+
+    def test_rechaza_usuario_inexistente(self):
+        peticion = self._peticion()
+
+        with self.assertRaises(CredencialesInvalidasError):
+            self.servicio.iniciar_sesion(
+                peticion, username="no-existe", password="lo-que-sea"
+            )
+
+    def _peticion(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+
+        peticion = RequestFactory().post("/api/login/")
+        SessionMiddleware(lambda request: None).process_request(peticion)
+        peticion.session.save()
+        return peticion

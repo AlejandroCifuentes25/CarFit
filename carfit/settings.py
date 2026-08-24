@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'marketplace',
 ]
 
@@ -131,6 +132,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'marketplace:crear_articulo'
+
+
+# Django REST Framework — API administrativa (ver marketplace/api_views.py).
+# Autenticación por cookie de sesión (la misma que usan las vistas HTML) y
+# acceso denegado por defecto: cada vista habilita explícitamente el
+# permiso que necesita (p. ej. LoginAPIView es la única AllowAny).
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 
 # Correo. El notificador REAL usa este backend; el MOCK no lo toca.
