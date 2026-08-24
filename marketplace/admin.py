@@ -8,6 +8,7 @@ from .models import (
     Pago,
     Repuesto,
     Resena,
+    TransaccionPago,
     Vendedor,
 )
 
@@ -38,4 +39,54 @@ class VendedorAdmin(admin.ModelAdmin):
     search_fields = ("nombre", "correo")
 
 
-admin.site.register([Cliente, Inventario, Resena, Pago])
+class TransaccionPagoInline(admin.TabularInline):
+    """Bitácora del pago. Es evidencia de auditoría: se lee, no se edita."""
+
+    model = TransaccionPago
+    extra = 0
+    can_delete = False
+    readonly_fields = (
+        "operacion",
+        "pasarela",
+        "estado_resultante",
+        "codigo_autorizacion",
+        "mensaje",
+        "creado_en",
+    )
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Pago)
+class PagoAdmin(admin.ModelAdmin):
+    list_display = (
+        "referencia",
+        "cliente",
+        "metodo_pago",
+        "estado",
+        "total",
+        "fecha",
+    )
+    list_filter = ("estado", "metodo_pago", "pasarela")
+    search_fields = ("referencia", "referencia_pasarela", "codigo_autorizacion")
+    date_hierarchy = "fecha"
+    inlines = [TransaccionPagoInline]
+
+    # Un pago se corrige con una anulación o un reembolso, nunca editándolo
+    # a mano: los importes y el estado los fija el flujo de cobro.
+    readonly_fields = (
+        "referencia",
+        "precio",
+        "comision",
+        "total",
+        "moneda",
+        "pasarela",
+        "referencia_pasarela",
+        "codigo_autorizacion",
+        "fecha",
+        "actualizado_en",
+    )
+
+
+admin.site.register([Cliente, Inventario, Resena])

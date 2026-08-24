@@ -123,14 +123,94 @@ class Resena(models.Model):
 
 
 class Pago(models.Model):
+    """Pago de un artículo del marketplace.
+
+    Persistencia pura. Los importes (`comision`, `total`) llegan ya
+    calculados por la especificación del método de pago
+    (`domain/metodos_pago.py`) y el `estado` lo fija el Service Layer con la
+    respuesta de la pasarela: este modelo no calcula ni decide nada.
+
+    `referencia` es la clave de idempotencia del pago. Es única, así que dos
+    envíos del mismo formulario (o un reintento de la pasarela) no pueden
+    generar dos cobros: la base de datos lo impide.
+    """
+
+    class Metodo(models.TextChoices):
+        TARJETA_CREDITO = "TARJETA_CREDITO", "Tarjeta de crédito"
+        TARJETA_DEBITO = "TARJETA_DEBITO", "Tarjeta débito"
+        PSE = "PSE", "PSE (débito desde cuenta bancaria)"
+        BILLETERA_DIGITAL = "BILLETERA_DIGITAL", "Billetera digital"
+        EFECTIVO = "EFECTIVO", "Efectivo en corresponsal"
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente de confirmación"
+        APROBADO = "APROBADO", "Aprobado"
+        RECHAZADO = "RECHAZADO", "Rechazado"
+        ANULADO = "ANULADO", "Anulado"
+        REEMBOLSADO = "REEMBOLSADO", "Reembolsado"
+
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name="pagos")
     carro = models.ForeignKey(
         Carro, on_delete=models.PROTECT, related_name="pagos", null=True, blank=True
     )
+    repuesto = models.ForeignKey(
+        Repuesto, on_delete=models.PROTECT, related_name="pagos", null=True, blank=True
+    )
+    referencia = models.CharField(max_length=60, unique=True)
     precio = models.PositiveBigIntegerField()
+    comision = models.PositiveBigIntegerField(default=0)
+    total = models.PositiveBigIntegerField(default=0)
+    moneda = models.CharField(max_length=3, default="COP")
+    cuotas = models.PositiveSmallIntegerField(default=1)
+    metodo_pago = models.CharField(max_length=30, choices=Metodo.choices)
+    estado = models.CharField(
+        max_length=20, choices=Estado.choices, default=Estado.PENDIENTE
+    )
+    pasarela = models.CharField(max_length=40, blank=True)
+    referencia_pasarela = models.CharField(max_length=80, blank=True)
+    codigo_autorizacion = models.CharField(max_length=60, blank=True)
+    mensaje = models.CharField(max_length=200, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
-    metodo_pago = models.CharField(max_length=40)
-    estado = models.CharField(max_length=20, default="PENDIENTE")
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-fecha"]
+        # El historial de un cliente y el tablero de pagos por estado son las
+        # dos consultas que la API hace todo el tiempo.
+        indexes = [
+            models.Index(fields=["cliente", "estado"], name="pago_cliente_estado_idx")
+        ]
 
     def __str__(self):
-        return f"Pago #{self.pk} - {self.estado}"
+        return f"Pago {self.referencia} - {self.estado}"
+
+
+class TransaccionPago(models.Model):
+    """Bitácora de cada interacción con una pasarela de pago.
+
+    Un `Pago` puede tener varias transacciones: el intento inicial, las
+    consultas de estado y la confirmación asíncrona (PSE y efectivo no
+    responden aprobado en el momento). Sirve de evidencia de auditoría
+    cuando un cliente reclama por un cobro.
+    """
+
+    class Operacion(models.TextChoices):
+        PROCESAR = "PROCESAR", "Procesar"
+        CONSULTAR = "CONSULTAR", "Consultar"
+        CONFIRMAR = "CONFIRMAR", "Confirmar"
+
+    pago = models.ForeignKey(
+        Pago, on_delete=models.CASCADE, related_name="transacciones"
+    )
+    operacion = models.CharField(max_length=20, choices=Operacion.choices)
+    pasarela = models.CharField(max_length=40)
+    estado_resultante = models.CharField(max_length=20, choices=Pago.Estado.choices)
+    codigo_autorizacion = models.CharField(max_length=60, blank=True)
+    mensaje = models.CharField(max_length=200, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["creado_en"]
+
+    def __str__(self):
+        return f"{self.operacion} de {self.pago.referencia} -> {self.estado_resultante}"
