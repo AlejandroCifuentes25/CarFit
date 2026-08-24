@@ -8,6 +8,9 @@ from django.urls import include, path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('cuentas/', include('django.contrib.auth.urls')),
+    # La API vive bajo un prefijo propio para que un API Gateway pueda
+    # enrutarla por separado del front web sin tocar el código.
+    path('api/', include('marketplace.api.urls')),
     path('', include('marketplace.urls')),
 ]
 
