@@ -1,0 +1,39 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Mis pagos | CarFit{% endblock %}
+{% block ancho %}780px{% endblock %}
+{% block ancho_nav %}780px{% endblock %}
+
+{% block contenido %}
+  <h1>Mis pagos</h1>
+
+  {% if pagos %}
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Referencia</th>
+          <th>Artículo</th>
+          <th>Método</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pago in pagos %}
+          <tr>
+            <td><a href="{% url 'marketplace:detalle_pago' referencia=pago.referencia %}">{{ pago.referencia }}</a></td>
+            <td>{{ pago.carro|default:pago.repuesto }}</td>
+            <td>{{ pago.get_metodo_pago_display }}</td>
+            <td>${{ pago.total|floatformat:0 }}</td>
+            <td><span class="badge badge-{{ pago.estado }}">{{ pago.get_estado_display }}</span></td>
+            <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="vacio">Todavía no has hecho ningún pago.</p>
+    <p><a href="{% url 'marketplace:catalogo_compras' %}">Ver el catálogo</a></p>
+  {% endif %}
+{% endblock %}

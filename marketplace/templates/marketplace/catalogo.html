@@ -1,0 +1,44 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Comprar | CarFit{% endblock %}
+{% block ancho %}860px{% endblock %}
+{% block ancho_nav %}860px{% endblock %}
+
+{% block contenido %}
+  <h1>Vehículos y repuestos disponibles</h1>
+  <p class="ayuda">Elige un artículo para ver los métodos de pago disponibles.</p>
+
+  <h2>Carros</h2>
+  {% if carros %}
+    <div class="rejilla">
+      {% for carro in carros %}
+        <div class="tarjeta-articulo">
+          <span class="etiqueta">{{ carro.get_estado_display }}</span>
+          <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
+          <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
+          <span class="precio">${{ carro.precio|floatformat:0 }} COP</span>
+          <a class="boton" href="{% url 'marketplace:pagar_articulo' tipo='carro' pk=carro.pk %}">Pagar</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="vacio">No hay carros disponibles en este momento.</p>
+  {% endif %}
+
+  <h2>Repuestos</h2>
+  {% if repuestos %}
+    <div class="rejilla">
+      {% for repuesto in repuestos %}
+        <div class="tarjeta-articulo">
+          <span class="etiqueta">{{ repuesto.get_estado_display }}</span>
+          <strong>{{ repuesto.tipo }}</strong>
+          <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
+          <span class="precio">${{ repuesto.precio|floatformat:0 }} COP</span>
+          <a class="boton" href="{% url 'marketplace:pagar_articulo' tipo='repuesto' pk=repuesto.pk %}">Pagar</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="vacio">No hay repuestos disponibles en este momento.</p>
+  {% endif %}
+{% endblock %}

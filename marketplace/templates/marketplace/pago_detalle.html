@@ -1,0 +1,38 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Pago {{ pago.referencia }} | CarFit{% endblock %}
+
+{% block contenido %}
+  <h1>Pago {{ pago.referencia }}</h1>
+  <p><span class="badge badge-{{ pago.estado }}">{{ pago.get_estado_display }}</span></p>
+
+  {% if pago.mensaje %}
+    <p class="ayuda">{{ pago.mensaje }}</p>
+  {% endif %}
+
+  <ul class="lista-datos">
+    <li><span class="clave">Artículo</span><span>{{ pago.carro|default:pago.repuesto }}</span></li>
+    <li><span class="clave">Método</span><span>{{ pago.get_metodo_pago_display }}</span></li>
+    <li><span class="clave">Precio</span><span>${{ pago.precio|floatformat:0 }} COP</span></li>
+    <li><span class="clave">Comisión</span><span>${{ pago.comision|floatformat:0 }} COP</span></li>
+    <li><span class="clave">Total</span><span><strong>${{ pago.total|floatformat:0 }} COP</strong></span></li>
+    {% if pago.cuotas > 1 %}
+      <li><span class="clave">Cuotas</span><span>{{ pago.cuotas }}</span></li>
+    {% endif %}
+    {% if pago.codigo_autorizacion %}
+      <li><span class="clave">Autorización</span><span>{{ pago.codigo_autorizacion }}</span></li>
+    {% endif %}
+    <li><span class="clave">Fecha</span><span>{{ pago.fecha|date:"d/m/Y H:i" }}</span></li>
+  </ul>
+
+  {% if pago.estado == "PENDIENTE" %}
+    <form method="post" action="{% url 'marketplace:confirmar_pago' referencia=pago.referencia %}">
+      {% csrf_token %}
+      <button type="submit">Consultar estado con la pasarela</button>
+    </form>
+  {% elif pago.estado == "APROBADO" %}
+    <p><a class="boton" href="{% url 'marketplace:factura_pago' referencia=pago.referencia %}">Ver factura</a></p>
+  {% endif %}
+
+  <p><a href="{% url 'marketplace:historial_pagos' %}">Ver mis pagos</a></p>
+{% endblock %}
