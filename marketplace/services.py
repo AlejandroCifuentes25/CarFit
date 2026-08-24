@@ -17,13 +17,18 @@ Reglas que se respetan aquí:
 """
 
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import F
 
 from .domain.builders import CarroBuilder
-from .domain.exceptions import CredencialesInvalidasError, DocumentacionInvalidaError
+from .domain.exceptions import (
+    CredencialesInvalidasError,
+    DocumentacionInvalidaError,
+    NombreDeUsuarioEnUsoError,
+)
 from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
-from .models import DocumentoCarro, Inventario
+from .models import Cliente, DocumentoCarro, Inventario, Vendedor
 
 
 class PublicacionArticuloService:
@@ -120,5 +125,40 @@ class AutenticacionService:
         usuario = authenticate(request, username=username, password=password)
         if usuario is None:
             raise CredencialesInvalidasError()
+        login(request, usuario)
+        return usuario
+
+
+class RegistroUsuarioService:
+    """Orquesta el registro de una cuenta nueva (Cliente o Vendedor).
+
+    Crea el `User` de Django y el registro de rol en una única transacción
+    y, si todo sale bien, inicia sesión de una vez. Como el resto del
+    Service Layer, no conoce `forms` ni `HttpResponse`: recibe datos ya
+    validados en *formato* y levanta un error de dominio si el nombre de
+    usuario ya existe.
+    """
+
+    ROLES = {"CLIENTE": Cliente, "VENDEDOR": Vendedor}
+
+    def registrar(self, request, rol, datos):
+        username = datos["username"]
+        if User.objects.filter(username=username).exists():
+            raise NombreDeUsuarioEnUsoError(username)
+
+        modelo_rol = self.ROLES[rol]
+
+        with transaction.atomic():
+            usuario = User.objects.create_user(
+                username=username, password=datos["password"]
+            )
+            modelo_rol.objects.create(
+                usuario=usuario,
+                nombre=datos["nombre"],
+                correo=datos["correo"],
+                direccion=datos["direccion"],
+                numero_tel=datos["numero_tel"],
+            )
+
         login(request, usuario)
         return usuario

@@ -1,0 +1,24 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}CarFit — Compra y venta de vehículos{% endblock %}
+
+{% block contenido %}
+  <h1>CarFit</h1>
+  <p class="ayuda">Compra y venta de vehículos entre particulares.</p>
+
+  {% if user.is_authenticated %}
+    <p>Hola, <strong>{{ user.username }}</strong>.</p>
+    <p>
+      <a href="{% url 'marketplace:crear_articulo' %}"><button type="button">Publicar un vehículo</button></a>
+    </p>
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  {% else %}
+    <p>
+      <a href="{% url 'login' %}"><button type="button">Iniciar sesión</button></a>
+      <a href="{% url 'marketplace:registro' %}"><button type="button">Registrarse</button></a>
+    </p>
+  {% endif %}
+{% endblock %}

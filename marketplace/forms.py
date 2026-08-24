@@ -36,3 +36,37 @@ class CrearArticuloForm(forms.Form):
     tecnomecanica_archivo = forms.FileField(
         required=False, label="Tecnomecánica — archivo"
     )
+
+
+class RegistroForm(forms.Form):
+    """Formulario de registro de cuenta (Cliente o Vendedor).
+
+    Igual que `CrearArticuloForm`, solo valida formato: que las contraseñas
+    coincidan y que los campos requeridos estén presentes. La regla de
+    negocio "el nombre de usuario debe ser único" vive en
+    `RegistroUsuarioService`.
+    """
+
+    ROL_CHOICES = [
+        ("CLIENTE", "Cliente — quiero comprar"),
+        ("VENDEDOR", "Vendedor — quiero publicar vehículos"),
+    ]
+
+    rol = forms.ChoiceField(choices=ROL_CHOICES, label="Tipo de cuenta")
+    username = forms.CharField(max_length=150, label="Usuario")
+    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
+    password_confirmacion = forms.CharField(
+        widget=forms.PasswordInput, label="Confirmar contraseña"
+    )
+    nombre = forms.CharField(max_length=120, label="Nombre completo")
+    correo = forms.EmailField(label="Correo")
+    direccion = forms.CharField(max_length=200, label="Dirección")
+    numero_tel = forms.CharField(max_length=20, label="Teléfono")
+
+    def clean(self):
+        datos = super().clean()
+        password = datos.get("password")
+        confirmacion = datos.get("password_confirmacion")
+        if password and confirmacion and password != confirmacion:
+            self.add_error("password_confirmacion", "Las contraseñas no coinciden.")
+        return datos

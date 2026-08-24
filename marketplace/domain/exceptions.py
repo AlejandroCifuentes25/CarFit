@@ -30,3 +30,11 @@ class CredencialesInvalidasError(ErrorDeDominio):
 
     def __init__(self):
         super().__init__("Usuario o contraseña incorrectos.")
+
+
+class NombreDeUsuarioEnUsoError(ErrorDeDominio):
+    """Ya existe una cuenta con ese nombre de usuario."""
+
+    def __init__(self, username):
+        self.username = username
+        super().__init__(f"El usuario '{username}' ya está en uso.")
