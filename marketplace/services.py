@@ -16,6 +16,8 @@ Reglas que se respetan aquí:
   asíncrona sin cambiar nada.
 """
 
+from dataclasses import dataclass
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -25,10 +27,31 @@ from .domain.builders import CarroBuilder
 from .domain.exceptions import (
     CredencialesInvalidasError,
     DocumentacionInvalidaError,
+    ErrorDeDominio,
     NombreDeUsuarioEnUsoError,
 )
 from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
-from .models import Cliente, DocumentoCarro, Inventario, Vendedor
+from .models import (
+    Carro,
+    CarritoCompra,
+    Cliente,
+    DocumentoCarro,
+    Inventario,
+    Repuesto,
+    Vendedor,
+)
+
+
+@dataclass(frozen=True)
+class ArticuloCarrito:
+    accion: str
+    tipo_articulo: str
+    articulo_id: int
+    titulo: str
+    precio: int
+    vendedor_id: int
+    vendedor_nombre: str
+    detalle: dict
 
 
 class PublicacionArticuloService:
@@ -162,3 +185,93 @@ class RegistroUsuarioService:
 
         login(request, usuario)
         return usuario
+
+
+class CarritoComprasService:
+    """Gestiona los artículos y los totales del carrito de compras."""
+
+    def __init__(self, carro_model=Carro, repuesto_model=Repuesto):
+        self._carro_model = carro_model
+        self._repuesto_model = repuesto_model
+
+    def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
+        carrito = self._obtener_o_crear_carrito()
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        articulo.carrito_compra = carrito
+        articulo.save(update_fields=["carrito_compra"])
+        self._recalcular_carrito(carrito)
+        return self._armar_articulo_carrito("agregado", tipo_articulo, articulo)
+
+    def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
+        carrito = self._obtener_o_crear_carrito()
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        if articulo.carrito_compra_id != carrito.id:
+            raise ErrorDeDominio("El artículo no está en el carrito.")
+        articulo.carrito_compra = None
+        articulo.save(update_fields=["carrito_compra"])
+        self._recalcular_carrito(carrito)
+        return self._armar_articulo_carrito("quitado", tipo_articulo, articulo)
+
+    def vaciar_carrito(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        carrito.carros.update(carrito_compra=None)
+        carrito.repuestos.update(carrito_compra=None)
+        carrito.cantidad_producto = 0
+        carrito.precio_total = 0
+        carrito.save(update_fields=["cantidad_producto", "precio_total"])
+        return carrito
+
+    def calcular_total(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._recalcular_carrito(carrito)
+        return carrito.precio_total
+
+    def confirmar_compra(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._recalcular_carrito(carrito)
+        if carrito.cantidad_producto == 0:
+            raise ErrorDeDominio("El carrito está vacío.")
+        return {
+            "carrito_id": carrito.pk,
+            "cantidad_producto": carrito.cantidad_producto,
+            "precio_total": carrito.precio_total,
+            "estado": "PENDIENTE_PAGO",
+        }
+
+    def _obtener_o_crear_carrito(self):
+        return CarritoCompra.objects.first() or CarritoCompra.objects.create()
+
+    def _recalcular_carrito(self, carrito):
+        carros = carrito.carros.all()
+        repuestos = carrito.repuestos.all()
+        carrito.cantidad_producto = carros.count() + repuestos.count()
+        carrito.precio_total = sum(carro.precio for carro in carros) + sum(
+            repuesto.precio for repuesto in repuestos
+        )
+        carrito.save(update_fields=["cantidad_producto", "precio_total"])
+
+    def _obtener_articulo(self, tipo_articulo, articulo_id):
+        modelos = {"carro": self._carro_model, "repuesto": self._repuesto_model}
+        modelo = modelos.get(tipo_articulo)
+        if modelo is None:
+            raise ErrorDeDominio("Tipo de artículo no soportado.")
+        try:
+            return modelo.objects.select_related("vendedor").get(pk=articulo_id)
+        except modelo.DoesNotExist as error:
+            raise ErrorDeDominio(f"No existe el {tipo_articulo} solicitado.") from error
+
+    def _armar_articulo_carrito(self, accion, tipo_articulo, articulo):
+        if isinstance(articulo, Carro):
+            titulo = f"{articulo.marca} {articulo.modelo}"
+            detalle = {"placa": articulo.placa, "estado": articulo.estado,
+                      "color": articulo.color, "kilometraje": articulo.kilometraje,
+                      "descripcion": articulo.descripcion}
+        else:
+            titulo = f"{articulo.tipo} - {articulo.modelo_carro}"
+            detalle = {"tipo": articulo.tipo, "modelo_carro": articulo.modelo_carro,
+                      "numero_serie": articulo.numero_serie, "estado": articulo.estado}
+        return ArticuloCarrito(
+            accion=accion, tipo_articulo=tipo_articulo, articulo_id=articulo.pk,
+            titulo=titulo, precio=articulo.precio, vendedor_id=articulo.vendedor_id,
+            vendedor_nombre=articulo.vendedor.nombre, detalle=detalle,
+        )

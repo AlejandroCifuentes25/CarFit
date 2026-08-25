@@ -48,6 +48,13 @@ class Carro(models.Model):
     vendedor = models.ForeignKey(
         Vendedor, on_delete=models.CASCADE, related_name="carros"
     )
+    carrito_compra = models.ForeignKey(
+        "CarritoCompra",
+        on_delete=models.SET_NULL,
+        related_name="carros",
+        null=True,
+        blank=True,
+    )
     placa = models.CharField(max_length=6, unique=True)
     marca = models.CharField(max_length=60)
     modelo = models.CharField(max_length=60)
@@ -70,6 +77,13 @@ class Repuesto(models.Model):
 
     vendedor = models.ForeignKey(
         Vendedor, on_delete=models.CASCADE, related_name="repuestos"
+    )
+    carrito_compra = models.ForeignKey(
+        "CarritoCompra",
+        on_delete=models.SET_NULL,
+        related_name="repuestos",
+        null=True,
+        blank=True,
     )
     tipo = models.CharField(max_length=80)
     modelo_carro = models.CharField(max_length=80)
@@ -134,3 +148,11 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago #{self.pk} - {self.estado}"
+
+
+class CarritoCompra(models.Model):
+    cantidad_producto = models.PositiveIntegerField(default=0)
+    precio_total = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return f"Carrito de compras #{self.pk}"
