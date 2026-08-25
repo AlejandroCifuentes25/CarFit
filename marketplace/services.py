@@ -197,6 +197,32 @@ class CatalogoMetodosPagoService:
         return obtener_especificacion(codigo)
 
 
+class CatalogoComprasService:
+    """Determina qué artículos pueden mostrarse como comprables.
+
+    La disponibilidad es una regla de negocio: un artículo con un pago
+    pendiente o aprobado no se puede ofrecer de nuevo. La presentación solo
+    consume el resultado de este servicio y lo entrega a la plantilla.
+    """
+
+    def __init__(self, carro_model=Carro, repuesto_model=Repuesto):
+        self._carro_model = carro_model
+        self._repuesto_model = repuesto_model
+
+    def listar_disponibles(self, usuario):
+        carros = self._carro_model.objects.exclude(
+            pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO
+        )
+        repuestos = self._repuesto_model.objects.exclude(
+            pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO
+        )
+        vendedor_propio = getattr(usuario, "vendedor", None)
+        if vendedor_propio is not None:
+            carros = carros.exclude(vendedor=vendedor_propio)
+            repuestos = repuestos.exclude(vendedor=vendedor_propio)
+        return carros.distinct(), repuestos.distinct()
+
+
 class ProcesarPagoService:
     """Cobra un artículo del marketplace a nombre de un cliente.
 

@@ -23,7 +23,7 @@ from .domain.exceptions import ErrorDeDominio
 from .forms import CrearArticuloForm, PagoForm, RegistroForm
 from .models import Carro, Repuesto
 from .services import (
-    ESTADOS_QUE_COMPROMETEN_ARTICULO,
+    CatalogoComprasService,
     ConfirmarPagoService,
     ConsultarPagoService,
     FacturaService,
@@ -96,29 +96,16 @@ class ClienteRequeridoMixin:
 
 
 class CatalogoComprasView(LoginRequiredMixin, TemplateView):
-    """Artículos disponibles para comprar.
-
-    Excluye lo que ya tiene un pago aprobado o en curso, y lo que publicó el
-    propio usuario si también es vendedor: nadie necesita ver su propio
-    artículo en la vitrina de compras.
-    """
+    """Muestra el catálogo calculado por la capa de aplicación."""
 
     template_name = "marketplace/catalogo.html"
+    service_factory = CatalogoComprasService
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        vendedor_propio = getattr(self.request.user, "vendedor", None)
-
-        carros = Carro.objects.exclude(pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO)
-        repuestos = Repuesto.objects.exclude(
-            pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO
+        contexto["carros"], contexto["repuestos"] = self.service_factory().listar_disponibles(
+            self.request.user
         )
-        if vendedor_propio is not None:
-            carros = carros.exclude(vendedor=vendedor_propio)
-            repuestos = repuestos.exclude(vendedor=vendedor_propio)
-
-        contexto["carros"] = carros.distinct()
-        contexto["repuestos"] = repuestos.distinct()
         return contexto
 
 
