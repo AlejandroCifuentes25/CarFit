@@ -5,8 +5,12 @@ llama al servicio y convierte los errores de negocio en errores de
 formulario. No contiene ni una regla de negocio.
 """
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import FormView, TemplateView
 
 from rest_framework import status
@@ -16,34 +20,33 @@ from rest_framework.views import APIView
 
 from .api.serializers import ArticuloCarritoSerializer, MovimientoCarritoSerializer
 from .domain.exceptions import ErrorDeDominio
-from .forms import CrearArticuloForm, RegistroForm
+from .forms import CrearArticuloForm, PagoForm, RegistroForm
+from .models import Carro, Repuesto
 from .services import (
-    CarritoComprasService,
+    ESTADOS_QUE_COMPROMETEN_ARTICULO,
+    ConfirmarPagoService,
+    ConsultarPagoService,
+    FacturaService,
+    ProcesarPagoService,
     PublicacionArticuloService,
+    CarritoComprasService,
     RegistroUsuarioService,
 )
 
 
 class IndexView(TemplateView):
-    """Página principal: punto de entrada con enlaces a iniciar sesión o
-    registrarse (o, si ya hay sesión iniciada, a publicar un artículo)."""
-
     template_name = "marketplace/index.html"
 
 
 class RegistroView(FormView):
-    """Registro de una cuenta nueva, como Cliente o como Vendedor."""
-
     template_name = "marketplace/registro.html"
     form_class = RegistroForm
     success_url = reverse_lazy("marketplace:crear_articulo")
-    # Inyectable desde las pruebas: RegistroView.as_view(service_factory=...)
     service_factory = RegistroUsuarioService
 
     def form_valid(self, form):
-        datos = form.cleaned_data
         try:
-            self.service_factory().registrar(self.request, datos["rol"], datos)
+            self.service_factory().registrar(self.request, form.cleaned_data["rol"], form.cleaned_data)
         except ErrorDeDominio as error:
             form.add_error(None, str(error))
             return self.form_invalid(form)
@@ -74,6 +77,159 @@ class ArticuloPublicadoView(LoginRequiredMixin, TemplateView):
     template_name = "marketplace/articulo_publicado.html"
 
 
+# ----------------------------------------------------------------------
+# Compra y pagos
+# ----------------------------------------------------------------------
+
+
+class ClienteRequeridoMixin:
+    """Exige que el usuario autenticado tenga perfil de `Cliente`.
+
+    Publicar es de vendedores; comprar es de clientes. Un usuario sin perfil
+    de cliente recibe una página explicativa en vez de un 404 críptico.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not hasattr(request.user, "cliente"):
+            return render(request, "marketplace/sin_perfil_cliente.html", status=403)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CatalogoComprasView(LoginRequiredMixin, TemplateView):
+    """Artículos disponibles para comprar.
+
+    Excluye lo que ya tiene un pago aprobado o en curso, y lo que publicó el
+    propio usuario si también es vendedor: nadie necesita ver su propio
+    artículo en la vitrina de compras.
+    """
+
+    template_name = "marketplace/catalogo.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        vendedor_propio = getattr(self.request.user, "vendedor", None)
+
+        carros = Carro.objects.exclude(pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO)
+        repuestos = Repuesto.objects.exclude(
+            pagos__estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO
+        )
+        if vendedor_propio is not None:
+            carros = carros.exclude(vendedor=vendedor_propio)
+            repuestos = repuestos.exclude(vendedor=vendedor_propio)
+
+        contexto["carros"] = carros.distinct()
+        contexto["repuestos"] = repuestos.distinct()
+        return contexto
+
+
+class PagarArticuloView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Formulario de pago de un carro o un repuesto.
+
+    Traduce entre HTTP y `ProcesarPagoService`: arma el diccionario que el
+    servicio espera, delega el cobro y convierte los errores de dominio en
+    errores de formulario. La comisión que se ve en pantalla mientras se
+    elige el método es una vista previa en JavaScript; la que de verdad
+    cobra la calcula el dominio en el servidor.
+    """
+
+    template_name = "marketplace/pagar_articulo.html"
+    servicio = ProcesarPagoService
+    modelos = {"carro": Carro, "repuesto": Repuesto}
+
+    def get(self, request, tipo, pk):
+        articulo = self._articulo(tipo, pk)
+        formulario = PagoForm(monto=articulo.precio)
+        return render(request, self.template_name, self._contexto(articulo, tipo, formulario))
+
+    def post(self, request, tipo, pk):
+        articulo = self._articulo(tipo, pk)
+        formulario = PagoForm(request.POST, monto=articulo.precio)
+
+        if formulario.is_valid():
+            datos = dict(formulario.cleaned_data)
+            datos[tipo] = articulo.pk
+            try:
+                pago = self.servicio().procesar(request.user.cliente, datos)
+            except ErrorDeDominio as error:
+                formulario.add_error(None, str(error))
+            else:
+                return redirect("marketplace:detalle_pago", referencia=pago.referencia)
+
+        return render(request, self.template_name, self._contexto(articulo, tipo, formulario))
+
+    def _articulo(self, tipo, pk):
+        modelo = self.modelos.get(tipo)
+        if modelo is None:
+            raise Http404("Tipo de artículo desconocido.")
+        return get_object_or_404(modelo, pk=pk)
+
+    def _contexto(self, articulo, tipo, formulario):
+        metodos = formulario.metodos
+        seleccionado = formulario["metodo_pago"].value() if formulario.metodos else None
+        return {
+            "articulo": articulo,
+            "tipo": tipo,
+            "metodos": metodos,
+            "form": formulario,
+            "metodo_inicial": seleccionado or (metodos[0].codigo if metodos else None),
+        }
+
+
+class DetallePagoView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Estado de un pago propio."""
+
+    template_name = "marketplace/pago_detalle.html"
+    servicio = ConsultarPagoService
+
+    def get(self, request, referencia):
+        try:
+            pago = self.servicio().obtener(referencia, request.user.cliente)
+        except ErrorDeDominio as error:
+            raise Http404(str(error)) from error
+        return render(request, self.template_name, {"pago": pago})
+
+
+class FacturaPagoView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Factura imprimible de un pago aprobado."""
+
+    template_name = "marketplace/pago_factura.html"
+    servicio = FacturaService
+
+    def get(self, request, referencia):
+        try:
+            factura = self.servicio().generar(referencia, request.user.cliente)
+        except ErrorDeDominio as error:
+            raise Http404(str(error)) from error
+        return render(request, self.template_name, {"factura": factura})
+
+
+class ConfirmarPagoView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Resuelve un pago pendiente (PSE, efectivo) contra la pasarela."""
+
+    servicio = ConfirmarPagoService
+
+    def post(self, request, referencia):
+        try:
+            self.servicio().confirmar(referencia, request.user.cliente)
+        except ErrorDeDominio as error:
+            messages.error(request, str(error))
+        else:
+            messages.success(request, "Actualizamos el estado de tu pago.")
+        return redirect("marketplace:detalle_pago", referencia=referencia)
+
+
+class HistorialPagosView(LoginRequiredMixin, ClienteRequeridoMixin, TemplateView):
+    """Historial de pagos del cliente autenticado."""
+
+    template_name = "marketplace/historial_pagos.html"
+    servicio = ConsultarPagoService
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["pagos"] = self.servicio().listar(self.request.user.cliente)
+        return contexto
+
+
 class BaseCarritoView(APIView):
     permission_classes = [IsAuthenticated]
     service_factory = CarritoComprasService
@@ -83,52 +239,38 @@ class BaseCarritoView(APIView):
 
 
 class BaseArticuloCarritoView(BaseCarritoView):
-    request_serializer_class = MovimientoCarritoSerializer
-    response_serializer_class = ArticuloCarritoSerializer
-
     def post(self, request, *args, **kwargs):
-        serializer = self.request_serializer_class(data=kwargs)
+        serializer = MovimientoCarritoSerializer(data=kwargs)
         serializer.is_valid(raise_exception=True)
         try:
-            resultado = self.ejecutar(
-                self.get_service(), request.user, serializer.validated_data
-            )
+            resultado = self.ejecutar(self.get_service(), request.user, serializer.validated_data)
         except ErrorDeDominio as error:
             return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(self.response_serializer_class(resultado).data)
+        return Response(ArticuloCarritoSerializer(resultado).data)
+
+
+class AgregarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.agregar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
+
+
+class QuitarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.quitar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
 
 
 class BaseCarritoOperacionView(BaseCarritoView):
     def post(self, request, *args, **kwargs):
         try:
-            resultado = self.ejecutar(self.get_service(), request.user)
+            return Response(self.ejecutar(self.get_service(), request.user))
         except ErrorDeDominio as error:
             return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(resultado)
-
-
-class AgregarArticuloCarrito(BaseArticuloCarritoView):
-    def ejecutar(self, servicio, usuario, datos):
-        return servicio.agregar_articulo(
-            usuario, datos["tipo_articulo"], datos["articulo_id"]
-        )
-
-
-class QuitarArticuloCarrito(BaseArticuloCarritoView):
-    def ejecutar(self, servicio, usuario, datos):
-        return servicio.quitar_articulo(
-            usuario, datos["tipo_articulo"], datos["articulo_id"]
-        )
 
 
 class VaciarCarritoView(BaseCarritoOperacionView):
     def ejecutar(self, servicio, usuario):
         carrito = servicio.vaciar_carrito(usuario)
-        return {
-            "carrito_id": carrito.pk,
-            "cantidad_producto": carrito.cantidad_producto,
-            "precio_total": carrito.precio_total,
-        }
+        return {"carrito_id": carrito.pk, "cantidad_producto": carrito.cantidad_producto, "precio_total": carrito.precio_total}
 
 
 class CalcularTotalCarritoView(BaseCarritoOperacionView):

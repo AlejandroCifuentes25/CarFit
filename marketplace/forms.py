@@ -2,14 +2,15 @@
 
 Deliberadamente es un `forms.Form` y **no** un `ModelForm`: el formulario
 solo valida el *formato* de la entrada (que la fecha sea una fecha, que el
-kilometraje sea un entero). Las reglas de *negocio* — que un carro NUEVO no
-tenga 80.000 km, que la placa cumpla el formato colombiano — pertenecen al
+kilometraje sea un entero). Las reglas de *negocio* (que un carro NUEVO no
+tenga 80.000 km, que la placa cumpla el formato colombiano) pertenecen al
 `CarroBuilder`, para que también se apliquen cuando el artículo se cree
 desde un comando de consola o una API, sin pasar por este formulario.
 """
 
 from django import forms
 
+from .domain.metodos_pago import metodos_disponibles
 from .models import Carro
 
 
@@ -27,37 +28,70 @@ class CrearArticuloForm(forms.Form):
         label="Descripción",
     )
 
-    soat_expedicion = forms.DateField(label="SOAT — expedición")
-    soat_vencimiento = forms.DateField(label="SOAT — vencimiento")
-    soat_archivo = forms.FileField(required=False, label="SOAT — archivo")
+    soat_expedicion = forms.DateField(label="SOAT: expedición")
+    soat_vencimiento = forms.DateField(label="SOAT: vencimiento")
+    soat_archivo = forms.FileField(required=False, label="SOAT: archivo")
 
-    tecnomecanica_expedicion = forms.DateField(label="Tecnomecánica — expedición")
-    tecnomecanica_vencimiento = forms.DateField(label="Tecnomecánica — vencimiento")
+    tecnomecanica_expedicion = forms.DateField(label="Tecnomecánica: expedición")
+    tecnomecanica_vencimiento = forms.DateField(label="Tecnomecánica: vencimiento")
     tecnomecanica_archivo = forms.FileField(
-        required=False, label="Tecnomecánica — archivo"
+        required=False, label="Tecnomecánica: archivo"
     )
+
+
+class PagoForm(forms.Form):
+    """Formulario para pagar un artículo publicado.
+
+    Igual que `CrearArticuloForm`: valida formato, no negocio. Que un método
+    exija un token de tarjeta, que el rango de cuotas dependa del método o
+    que el monto esté fuera de límite lo decide `PagoBuilder`. Este
+    formulario ni siquiera conoce esas reglas: solo pasa los datos.
+
+    `metodo_pago` se filtra por el precio del artículo al construir el
+    formulario: no tiene sentido ofrecerle a alguien pagar $85.000.000 en
+    efectivo en un corresponsal.
+    """
+
+    metodo_pago = forms.ChoiceField(
+        label="Método de pago", widget=forms.RadioSelect
+    )
+    cuotas = forms.IntegerField(
+        min_value=1, required=False, initial=1, label="Cuotas"
+    )
+    referencia = forms.CharField(
+        max_length=60, required=False, label="Referencia (opcional)"
+    )
+
+    # Datos propios de cada método. Cuáles son obligatorios lo decide la
+    # especificación del método en el dominio, no este formulario.
+    token_tarjeta = forms.CharField(
+        max_length=120, required=False, label="Número de tarjeta / token"
+    )
+    banco = forms.CharField(max_length=60, required=False, label="Banco")
+    tipo_persona = forms.ChoiceField(
+        choices=[("NATURAL", "Persona natural"), ("JURIDICA", "Persona jurídica")],
+        required=False,
+        label="Tipo de persona",
+    )
+    documento_pagador = forms.CharField(
+        max_length=20, required=False, label="Documento del pagador"
+    )
+    telefono = forms.CharField(max_length=20, required=False, label="Teléfono")
+
+    def __init__(self, *args, monto=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metodos = metodos_disponibles(monto)
+        self.fields["metodo_pago"].choices = [
+            (metodo.codigo, metodo.etiqueta) for metodo in self.metodos
+        ]
 
 
 class RegistroForm(forms.Form):
-    """Formulario de registro de cuenta (Cliente o Vendedor).
-
-    Igual que `CrearArticuloForm`, solo valida formato: que las contraseñas
-    coincidan y que los campos requeridos estén presentes. La regla de
-    negocio "el nombre de usuario debe ser único" vive en
-    `RegistroUsuarioService`.
-    """
-
-    ROL_CHOICES = [
-        ("CLIENTE", "Cliente — quiero comprar"),
-        ("VENDEDOR", "Vendedor — quiero publicar vehículos"),
-    ]
-
+    ROL_CHOICES = [("CLIENTE", "Cliente — quiero comprar"), ("VENDEDOR", "Vendedor — quiero publicar vehículos")]
     rol = forms.ChoiceField(choices=ROL_CHOICES, label="Tipo de cuenta")
     username = forms.CharField(max_length=150, label="Usuario")
     password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
-    password_confirmacion = forms.CharField(
-        widget=forms.PasswordInput, label="Confirmar contraseña"
-    )
+    password_confirmacion = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
     nombre = forms.CharField(max_length=120, label="Nombre completo")
     correo = forms.EmailField(label="Correo")
     direccion = forms.CharField(max_length=200, label="Dirección")
@@ -65,8 +99,6 @@ class RegistroForm(forms.Form):
 
     def clean(self):
         datos = super().clean()
-        password = datos.get("password")
-        confirmacion = datos.get("password_confirmacion")
-        if password and confirmacion and password != confirmacion:
+        if datos.get("password") and datos.get("password") != datos.get("password_confirmacion"):
             self.add_error("password_confirmacion", "Las contraseñas no coinciden.")
         return datos

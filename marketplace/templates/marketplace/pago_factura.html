@@ -1,0 +1,55 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Factura {{ factura.numero }} | CarFit{% endblock %}
+
+{% block estilos %}
+  @media print {
+    nav.principal, .no-imprimir { display: none !important; }
+    body { background: #fff; padding: 0; }
+    main { border: 0; padding: 0; }
+  }
+  .encabezado-factura { display: flex; justify-content: space-between;
+                         align-items: baseline; border-bottom: 2px solid var(--tinta);
+                         padding-bottom: 1rem; margin-bottom: 1.25rem; }
+  .encabezado-factura .numero { font-size: .9rem; color: var(--tinta-suave); }
+{% endblock %}
+
+{% block contenido %}
+  <div class="encabezado-factura">
+    <div>
+      <strong style="font-size:1.3rem;">CarFit</strong>
+      <div class="ayuda">Marketplace de vehículos y repuestos</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="numero">Factura</div>
+      <strong>{{ factura.numero }}</strong>
+      <div class="ayuda">{{ factura.fecha_emision|date:"d/m/Y H:i" }}</div>
+    </div>
+  </div>
+
+  <ul class="lista-datos">
+    <li><span class="clave">Cliente</span><span>{{ factura.cliente_nombre }}</span></li>
+    <li><span class="clave">Correo</span><span>{{ factura.cliente_correo }}</span></li>
+    <li><span class="clave">Vendedor</span><span>{{ factura.vendedor_nombre }}</span></li>
+    <li><span class="clave">Artículo</span><span>{{ factura.articulo_descripcion }}</span></li>
+    <li><span class="clave">Método de pago</span><span>{{ factura.metodo_pago }}</span></li>
+    {% if factura.cuotas > 1 %}
+      <li><span class="clave">Cuotas</span><span>{{ factura.cuotas }}</span></li>
+    {% endif %}
+    {% if factura.codigo_autorizacion %}
+      <li><span class="clave">Autorización</span><span>{{ factura.codigo_autorizacion }}</span></li>
+    {% endif %}
+    <li><span class="clave">Referencia de pago</span><span>{{ factura.referencia_pago }}</span></li>
+  </ul>
+
+  <div class="resumen">
+    <div class="fila"><span>Subtotal</span><span>${{ factura.subtotal|floatformat:0 }} {{ factura.moneda }}</span></div>
+    <div class="fila"><span>Comisión</span><span>${{ factura.comision|floatformat:0 }} {{ factura.moneda }}</span></div>
+    <div class="fila total"><span>Total pagado</span><span>${{ factura.total|floatformat:0 }} {{ factura.moneda }}</span></div>
+  </div>
+
+  <p class="no-imprimir">
+    <button type="button" onclick="window.print()">Imprimir factura</button>
+    <a class="boton secundario" href="{% url 'marketplace:detalle_pago' referencia=factura.referencia_pago %}">Volver al pago</a>
+  </p>
+{% endblock %}

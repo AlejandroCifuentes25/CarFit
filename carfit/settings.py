@@ -116,6 +116,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Con es-co, formatea los enteros con puntos de miles al mostrarlos en las
+# plantillas ($95.000.000 en vez de $95000000).
+USE_THOUSAND_SEPARATOR = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -157,11 +161,40 @@ EMAIL_BACKEND = os.getenv(
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-responder@carfit.co')
 
 
+# Django REST Framework.
+#
+# La autenticación por sesión sirve para probar la API desde el navegador con
+# el mismo login del sitio; la básica, para hacerlo con curl o Postman sin
+# montar tokens todavía. La API queda cerrada por defecto: cada vista pide
+# explícitamente lo que necesita.
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+}
+
+
 # Selección de implementaciones vía Factory (ver marketplace/infra/factories.py).
 # Se leen con os.getenv dentro de las factories; se listan aquí como
 # documentación del contrato de configuración:
 #   VALIDADOR_DOCUMENTAL = MOCK | REAL   (default: MOCK)
 #   NOTIFICADOR          = MOCK | REAL   (default: MOCK)
+#   PASARELA_PAGO        = MOCK | REAL   (default: MOCK)
+#   NOTIFICADOR_PAGOS    = MOCK | REAL   (default: MOCK)
+#
+# Con PASARELA_PAGO=REAL, el agregador necesita además:
+#   PASARELA_URL         URL base de la API del agregador
+#   PASARELA_LLAVE       llave privada de comercio
+#   PASARELA_TIMEOUT     segundos de espera (default: 10)
 
 
 LOGGING = {
