@@ -10,8 +10,34 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 
 from .domain.exceptions import ErrorDeDominio
-from .forms import CrearArticuloForm
-from .services import PublicacionArticuloService
+from .forms import CrearArticuloForm, RegistroForm
+from .services import PublicacionArticuloService, RegistroUsuarioService
+
+
+class IndexView(TemplateView):
+    """Página principal: punto de entrada con enlaces a iniciar sesión o
+    registrarse (o, si ya hay sesión iniciada, a publicar un artículo)."""
+
+    template_name = "marketplace/index.html"
+
+
+class RegistroView(FormView):
+    """Registro de una cuenta nueva, como Cliente o como Vendedor."""
+
+    template_name = "marketplace/registro.html"
+    form_class = RegistroForm
+    success_url = reverse_lazy("marketplace:crear_articulo")
+    # Inyectable desde las pruebas: RegistroView.as_view(service_factory=...)
+    service_factory = RegistroUsuarioService
+
+    def form_valid(self, form):
+        datos = form.cleaned_data
+        try:
+            self.service_factory().registrar(self.request, datos["rol"], datos)
+        except ErrorDeDominio as error:
+            form.add_error(None, str(error))
+            return self.form_invalid(form)
+        return super().form_valid(form)
 
 
 class CrearArticuloView(LoginRequiredMixin, FormView):

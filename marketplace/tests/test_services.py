@@ -10,11 +10,16 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from ..domain.exceptions import ArticuloInvalidoError, DocumentacionInvalidaError
+from ..domain.exceptions import (
+    ArticuloInvalidoError,
+    CredencialesInvalidasError,
+    DocumentacionInvalidaError,
+    NombreDeUsuarioEnUsoError,
+)
 from ..domain.ports import Notificador, ResultadoValidacion, ValidadorDocumental
 from ..infra.validadores import ValidadorDocumentalRunt
-from ..models import Carro, DocumentoCarro, Inventario, Vendedor
-from ..services import PublicacionArticuloService
+from ..models import Carro, Cliente, DocumentoCarro, Inventario, Vendedor
+from ..services import AutenticacionService, PublicacionArticuloService, RegistroUsuarioService
 
 
 class ValidadorEspia(ValidadorDocumental):
@@ -157,3 +162,90 @@ class ValidadorDocumentalRuntTest(TestCase):
 
         self.assertFalse(resultado.es_valido)
         self.assertIn("vencido", resultado.motivos[0])
+
+
+class AutenticacionServiceTest(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user("alejandro", password="clave-correcta")
+        self.servicio = AutenticacionService()
+
+    def test_inicia_sesion_con_credenciales_correctas(self):
+        peticion = self._peticion()
+
+        usuario = self.servicio.iniciar_sesion(
+            peticion, username="alejandro", password="clave-correcta"
+        )
+
+        self.assertEqual(usuario, self.usuario)
+        self.assertEqual(peticion.session["_auth_user_id"], str(self.usuario.pk))
+
+    def test_rechaza_contrasena_incorrecta(self):
+        peticion = self._peticion()
+
+        with self.assertRaises(CredencialesInvalidasError):
+            self.servicio.iniciar_sesion(
+                peticion, username="alejandro", password="clave-incorrecta"
+            )
+
+    def test_rechaza_usuario_inexistente(self):
+        peticion = self._peticion()
+
+        with self.assertRaises(CredencialesInvalidasError):
+            self.servicio.iniciar_sesion(
+                peticion, username="no-existe", password="lo-que-sea"
+            )
+
+    def _peticion(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+
+        peticion = RequestFactory().post("/api/login/")
+        SessionMiddleware(lambda request: None).process_request(peticion)
+        peticion.session.save()
+        return peticion
+
+
+class RegistroUsuarioServiceTest(TestCase):
+    def setUp(self):
+        self.servicio = RegistroUsuarioService()
+        self.datos = {
+            "username": "sofia",
+            "password": "clave-segura",
+            "nombre": "Sofía Restrepo",
+            "correo": "sofia@carfit.co",
+            "direccion": "Calle 10 #5-20",
+            "numero_tel": "3011234567",
+        }
+
+    def test_registra_un_cliente_y_lo_autentica(self):
+        peticion = self._peticion()
+
+        usuario = self.servicio.registrar(peticion, "CLIENTE", self.datos)
+
+        self.assertTrue(Cliente.objects.filter(usuario=usuario).exists())
+        self.assertFalse(Vendedor.objects.filter(usuario=usuario).exists())
+        self.assertEqual(peticion.session["_auth_user_id"], str(usuario.pk))
+
+    def test_registra_un_vendedor(self):
+        peticion = self._peticion()
+
+        usuario = self.servicio.registrar(peticion, "VENDEDOR", self.datos)
+
+        self.assertTrue(Vendedor.objects.filter(usuario=usuario).exists())
+        self.assertFalse(Cliente.objects.filter(usuario=usuario).exists())
+
+    def test_rechaza_nombre_de_usuario_repetido(self):
+        peticion = self._peticion()
+        self.servicio.registrar(peticion, "CLIENTE", self.datos)
+
+        with self.assertRaises(NombreDeUsuarioEnUsoError):
+            self.servicio.registrar(self._peticion(), "VENDEDOR", self.datos)
+
+    def _peticion(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+
+        peticion = RequestFactory().post("/registro/")
+        SessionMiddleware(lambda request: None).process_request(peticion)
+        peticion.session.save()
+        return peticion

@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..domain.exceptions import DocumentacionInvalidaError
-from ..models import Vendedor
+from ..models import Cliente, Vendedor
 from ..views import CrearArticuloView
 from .test_services import DATOS_VALIDOS
 
@@ -92,3 +92,69 @@ class CrearArticuloViewTest(TestCase):
         peticion = RequestFactory().post(self.url, datos)
         peticion.user = self.usuario
         return peticion
+
+
+class IndexViewTest(TestCase):
+    def test_muestra_iniciar_sesion_y_registrarse_a_un_anonimo(self):
+        respuesta = self.client.get(reverse("marketplace:index"))
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Iniciar sesión")
+        self.assertContains(respuesta, "Registrarse")
+
+    def test_muestra_publicar_a_un_usuario_autenticado(self):
+        usuario = User.objects.create_user("alejandro", password="clave")
+        self.client.force_login(usuario)
+
+        respuesta = self.client.get(reverse("marketplace:index"))
+
+        self.assertContains(respuesta, "Publicar un vehículo")
+        self.assertNotContains(respuesta, "Registrarse")
+
+
+class RegistroViewTest(TestCase):
+    def setUp(self):
+        self.url = reverse("marketplace:registro")
+        self.datos = {
+            "rol": "CLIENTE",
+            "username": "sofia",
+            "password": "clave-segura",
+            "password_confirmacion": "clave-segura",
+            "nombre": "Sofía Restrepo",
+            "correo": "sofia@carfit.co",
+            "direccion": "Calle 10 #5-20",
+            "numero_tel": "3011234567",
+        }
+
+    def test_muestra_el_formulario(self):
+        respuesta = self.client.get(self.url)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Crear una cuenta")
+
+    def test_registra_e_inicia_sesion(self):
+        respuesta = self.client.post(self.url, self.datos)
+
+        self.assertRedirects(respuesta, reverse("marketplace:crear_articulo"))
+        self.assertTrue(Cliente.objects.filter(usuario__username="sofia").exists())
+
+    def test_rechaza_contrasenas_que_no_coinciden(self):
+        self.datos["password_confirmacion"] = "otra-clave"
+
+        respuesta = self.client.post(self.url, self.datos)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn(
+            "Las contraseñas no coinciden.",
+            respuesta.context_data["form"].errors["password_confirmacion"],
+        )
+
+    def test_rechaza_nombre_de_usuario_repetido(self):
+        User.objects.create_user("sofia", password="lo-que-sea")
+
+        respuesta = self.client.post(self.url, self.datos)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn(
+            "ya está en uso", respuesta.context_data["form"].non_field_errors()[0]
+        )
