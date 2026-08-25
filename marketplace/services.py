@@ -139,6 +139,31 @@ class CarritoComprasService:
         self._recalcular_carrito(carrito)
         return self._armar_articulo_carrito("quitado", tipo_articulo, articulo)
 
+    def vaciar_carrito(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._desasignar_todos_los_items(carrito)
+        carrito.cantidad_producto = 0
+        carrito.precio_total = 0
+        carrito.save(update_fields=["cantidad_producto", "precio_total"])
+        return carrito
+
+    def calcular_total(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._recalcular_carrito(carrito)
+        return carrito.precio_total
+
+    def confirmar_compra(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._recalcular_carrito(carrito)
+        if carrito.cantidad_producto == 0:
+            raise ErrorDeDominio("El carrito está vacío.")
+        return {
+            "carrito_id": carrito.pk,
+            "cantidad_producto": carrito.cantidad_producto,
+            "precio_total": carrito.precio_total,
+            "estado": "PENDIENTE_PAGO",
+        }
+
     def _obtener_o_crear_carrito(self):
         carrito = CarritoCompra.objects.first()
         if carrito is None:
@@ -154,6 +179,10 @@ class CarritoComprasService:
             raise ErrorDeDominio("El artículo no está en el carrito.")
         articulo.carrito_compra = None
         articulo.save(update_fields=["carrito_compra"])
+
+    def _desasignar_todos_los_items(self, carrito):
+        carrito.carros.update(carrito_compra=None)
+        carrito.repuestos.update(carrito_compra=None)
 
     def _recalcular_carrito(self, carrito):
         cantidad_carros = carrito.carros.count()

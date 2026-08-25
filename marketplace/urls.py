@@ -21,4 +21,19 @@ urlpatterns = [
         views.QuitarArticuloCarrito.as_view(),
         name="quitar_articulo_carrito",
     ),
+    path(
+        "carrito/vaciar/",
+        views.VaciarCarritoView.as_view(),
+        name="vaciar_carrito",
+    ),
+    path(
+        "carrito/total/",
+        views.CalcularTotalCarritoView.as_view(),
+        name="calcular_total_carrito",
+    ),
+    path(
+        "carrito/confirmar/",
+        views.ConfirmarCompraCarritoView.as_view(),
+        name="confirmar_compra_carrito",
+    ),
 ]

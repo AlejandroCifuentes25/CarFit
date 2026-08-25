@@ -217,3 +217,60 @@ class CarritoComprasServiceTest(TestCase):
     def test_rechaza_tipo_de_articulo_no_soportado(self):
         with self.assertRaises(ErrorDeDominio):
             self.service.agregar_articulo(object(), "moto", 1)
+
+    def test_vacia_el_carrito(self):
+        carro = Carro.objects.create(
+            vendedor=self.vendedor,
+            placa="XYZ124",
+            marca="Honda",
+            modelo="Civic",
+            estado=Carro.Estado.USADO,
+            color="Gris",
+            kilometraje=35000,
+            descripcion="",
+            precio=80000000,
+        )
+        self.service.agregar_articulo(object(), "carro", carro.pk)
+
+        carrito = self.service.vaciar_carrito(object())
+
+        self.assertEqual(carrito.cantidad_producto, 0)
+        self.assertEqual(carrito.precio_total, 0)
+        self.assertIsNone(Carro.objects.get(pk=carro.pk).carrito_compra_id)
+
+    def test_calcula_el_total_del_carrito(self):
+        carro = Carro.objects.create(
+            vendedor=self.vendedor,
+            placa="XYZ125",
+            marca="Nissan",
+            modelo="Versa",
+            estado=Carro.Estado.NUEVO,
+            color="Blanco",
+            kilometraje=12000,
+            descripcion="",
+            precio=60000000,
+        )
+        self.service.agregar_articulo(object(), "carro", carro.pk)
+
+        total = self.service.calcular_total(object())
+
+        self.assertEqual(total, 60000000)
+
+    def test_confirma_compra_como_pendiente(self):
+        carro = Carro.objects.create(
+            vendedor=self.vendedor,
+            placa="XYZ126",
+            marca="Mazda",
+            modelo="2",
+            estado=Carro.Estado.USADO,
+            color="Rojo",
+            kilometraje=22000,
+            descripcion="",
+            precio=55000000,
+        )
+        self.service.agregar_articulo(object(), "carro", carro.pk)
+
+        resultado = self.service.confirmar_compra(object())
+
+        self.assertEqual(resultado["estado"], "PENDIENTE_PAGO")
+        self.assertEqual(resultado["precio_total"], 55000000)

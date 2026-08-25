@@ -42,9 +42,20 @@ class CrearArticuloView(LoginRequiredMixin, FormView):
 class ArticuloPublicadoView(LoginRequiredMixin, TemplateView):
     template_name = "marketplace/articulo_publicado.html"
 
-class BaseArticuloCarritoView(APIView):
+
+class BaseCarritoView(APIView):
+    """Vista base del carrito: centraliza autenticación e inyección del servicio."""
+
     permission_classes = [IsAuthenticated]
     service_factory = CarritoComprasService
+
+    def get_service(self):
+        return self.service_factory()
+
+
+class BaseArticuloCarritoView(BaseCarritoView):
+    """Plantilla para acciones que reciben un artículo y delegan al servicio."""
+
     request_serializer_class = MovimientoCarritoSerializer
     response_serializer_class = ArticuloCarritoSerializer
 
@@ -54,7 +65,7 @@ class BaseArticuloCarritoView(APIView):
 
         try:
             resultado = self.ejecutar(
-                self.service_factory(), request.user, serializer.validated_data
+                self.get_service(), request.user, serializer.validated_data
             )
         except ErrorDeDominio as error:
             return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
@@ -68,8 +79,23 @@ class BaseArticuloCarritoView(APIView):
         raise NotImplementedError
 
 
+class BaseCarritoOperacionView(BaseCarritoView):
+    """Plantilla para operaciones del carrito que no necesitan datos extra."""
+
+    def post(self, request, *args, **kwargs):
+        try:
+            resultado = self.ejecutar(self.get_service(), request.user)
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(resultado, status=status.HTTP_200_OK)
+
+    def ejecutar(self, servicio, usuario):
+        raise NotImplementedError
+
+
 class AgregarArticuloCarrito(BaseArticuloCarritoView):
-    """Orquesta la logica para Agrega un artículo al carrito del usuario autenticado."""
+    """Agrega un carro o repuesto al carrito actual."""
 
     def ejecutar(self, servicio, usuario, datos):
         return servicio.agregar_articulo(
@@ -77,9 +103,36 @@ class AgregarArticuloCarrito(BaseArticuloCarritoView):
         )
 
 class QuitarArticuloCarrito(BaseArticuloCarritoView):
-    """ Orquesta la logica para quitar un artículo del carrito del usuario autenticado."""
+    """Quita un carro o repuesto del carrito actual."""
 
     def ejecutar(self, servicio, usuario, datos):
         return servicio.quitar_articulo(
             usuario, datos["tipo_articulo"], datos["articulo_id"]
         )
+
+
+class VaciarCarritoView(BaseCarritoOperacionView):
+    """Vacía por completo el carrito actual."""
+
+    def ejecutar(self, servicio, usuario):
+        carrito = servicio.vaciar_carrito(usuario)
+        return {
+            "carrito_id": carrito.pk,
+            "cantidad_producto": carrito.cantidad_producto,
+            "precio_total": carrito.precio_total,
+        }
+
+
+class CalcularTotalCarritoView(BaseCarritoOperacionView):
+    """Devuelve el precio total acumulado del carrito."""
+
+    def ejecutar(self, servicio, usuario):
+        total = servicio.calcular_total(usuario)
+        return {"precio_total": total}
+
+
+class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
+    """Confirma el carrito y lo deja listo para la capa de pagos."""
+
+    def ejecutar(self, servicio, usuario):
+        return servicio.confirmar_compra(usuario)

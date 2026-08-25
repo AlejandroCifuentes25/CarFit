@@ -10,7 +10,14 @@ from django.urls import reverse
 
 from ..domain.exceptions import DocumentacionInvalidaError
 from ..models import Vendedor
-from ..views import AgregarArticuloCarrito, CrearArticuloView, QuitarArticuloCarrito
+from ..views import (
+    AgregarArticuloCarrito,
+    CalcularTotalCarritoView,
+    ConfirmarCompraCarritoView,
+    CrearArticuloView,
+    QuitarArticuloCarrito,
+    VaciarCarritoView,
+)
 from .test_services import DATOS_VALIDOS
 
 
@@ -44,6 +51,24 @@ class ServicioFalso:
         if self.error:
             raise self.error
         return object()
+
+    def vaciar_carrito(self, usuario):
+        self.llamadas.append((usuario,))
+        if self.error:
+            raise self.error
+        return type("Carrito", (), {"pk": 1, "cantidad_producto": 0, "precio_total": 0})()
+
+    def calcular_total(self, usuario):
+        self.llamadas.append((usuario,))
+        if self.error:
+            raise self.error
+        return 125000
+
+    def confirmar_compra(self, usuario):
+        self.llamadas.append((usuario,))
+        if self.error:
+            raise self.error
+        return {"carrito_id": 1, "cantidad_producto": 2, "precio_total": 125000, "estado": "PENDIENTE_PAGO"}
 
 
 class CrearArticuloViewTest(TestCase):
@@ -132,6 +157,34 @@ class CarritoViewsTest(TestCase):
         self.assertEqual(len(servicio.llamadas), 1)
         self.assertEqual(servicio.llamadas[0][1], "repuesto")
         self.assertEqual(servicio.llamadas[0][2], 9)
+
+    def test_vaciar_carrito_delega_en_el_servicio(self):
+        servicio = ServicioFalso()
+        vista = VaciarCarritoView.as_view(service_factory=lambda: servicio)
+
+        respuesta = vista(self._peticion_post())
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(len(servicio.llamadas), 1)
+        self.assertEqual(servicio.llamadas[0][0], self.usuario)
+
+    def test_calcular_total_delega_en_el_servicio(self):
+        servicio = ServicioFalso()
+        vista = CalcularTotalCarritoView.as_view(service_factory=lambda: servicio)
+
+        respuesta = vista(self._peticion_post())
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["precio_total"], 125000)
+
+    def test_confirmar_compra_delega_en_el_servicio(self):
+        servicio = ServicioFalso()
+        vista = ConfirmarCompraCarritoView.as_view(service_factory=lambda: servicio)
+
+        respuesta = vista(self._peticion_post())
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.data["estado"], "PENDIENTE_PAGO")
 
     def _peticion_post(self):
         from django.test import RequestFactory
