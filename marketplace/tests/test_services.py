@@ -13,7 +13,7 @@ from django.test import TestCase
 from ..domain.exceptions import ArticuloInvalidoError, DocumentacionInvalidaError, ErrorDeDominio
 from ..domain.ports import Notificador, ResultadoValidacion, ValidadorDocumental
 from ..infra.validadores import ValidadorDocumentalRunt
-from ..models import Carro, DocumentoCarro, Inventario, Repuesto, Vendedor
+from ..models import Carro, CarritoCompra, DocumentoCarro, Inventario, Repuesto, Vendedor
 from ..services import ArticuloCarrito, CarritoComprasService, PublicacionArticuloService
 
 
@@ -190,6 +190,9 @@ class CarritoComprasServiceTest(TestCase):
         self.assertEqual(resultado.accion, "agregado")
         self.assertEqual(resultado.titulo, "Toyota Corolla")
         self.assertEqual(resultado.detalle["placa"], "XYZ123")
+        self.assertEqual(CarritoCompra.objects.count(), 1)
+        self.assertEqual(Carro.objects.get(pk=carro.pk).carrito_compra_id, CarritoCompra.objects.first().id)
+        self.assertEqual(CarritoCompra.objects.first().cantidad_producto, 1)
 
     def test_quita_un_repuesto_y_normaliza_sus_datos(self):
         repuesto = Repuesto.objects.create(
@@ -201,12 +204,15 @@ class CarritoComprasServiceTest(TestCase):
             estado=Repuesto.Estado.NUEVO,
         )
 
+        self.service.agregar_articulo(object(), "repuesto", repuesto.pk)
         resultado = self.service.quitar_articulo(object(), "repuesto", repuesto.pk)
 
         self.assertIsInstance(resultado, ArticuloCarrito)
         self.assertEqual(resultado.accion, "quitado")
         self.assertEqual(resultado.titulo, "Filtro de aceite - Corolla")
         self.assertEqual(resultado.detalle["numero_serie"], "REP-001")
+        self.assertIsNone(Repuesto.objects.get(pk=repuesto.pk).carrito_compra_id)
+        self.assertEqual(CarritoCompra.objects.first().cantidad_producto, 0)
 
     def test_rechaza_tipo_de_articulo_no_soportado(self):
         with self.assertRaises(ErrorDeDominio):

@@ -24,7 +24,7 @@ from .domain.exceptions import ArticuloInvalidoError, ErrorDeDominio
 from .domain.builders import CarroBuilder
 from .domain.exceptions import DocumentacionInvalidaError
 from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
-from .models import Carro, DocumentoCarro, Inventario, Repuesto
+from .models import Carro, CarritoCompra, DocumentoCarro, Inventario, Repuesto
 
 
 @dataclass(frozen=True)
@@ -126,12 +126,43 @@ class CarritoComprasService:
         self._repuesto_model = repuesto_model
 
     def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
+        carrito = self._obtener_o_crear_carrito()
         articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        self._asignar_al_carrito(carrito, articulo)
+        self._recalcular_carrito(carrito)
         return self._armar_articulo_carrito("agregado", tipo_articulo, articulo)
 
     def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
+        carrito = self._obtener_o_crear_carrito()
         articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        self._quitar_del_carrito(carrito, articulo)
+        self._recalcular_carrito(carrito)
         return self._armar_articulo_carrito("quitado", tipo_articulo, articulo)
+
+    def _obtener_o_crear_carrito(self):
+        carrito = CarritoCompra.objects.first()
+        if carrito is None:
+            carrito = CarritoCompra.objects.create()
+        return carrito
+
+    def _asignar_al_carrito(self, carrito, articulo):
+        articulo.carrito_compra = carrito
+        articulo.save(update_fields=["carrito_compra"])
+
+    def _quitar_del_carrito(self, carrito, articulo):
+        if articulo.carrito_compra_id != carrito.id:
+            raise ErrorDeDominio("El artículo no está en el carrito.")
+        articulo.carrito_compra = None
+        articulo.save(update_fields=["carrito_compra"])
+
+    def _recalcular_carrito(self, carrito):
+        cantidad_carros = carrito.carros.count()
+        cantidad_repuestos = carrito.repuestos.count()
+        carrito.cantidad_producto = cantidad_carros + cantidad_repuestos
+        carrito.precio_total = sum(carro.precio for carro in carrito.carros.all()) + sum(
+            repuesto.precio for repuesto in carrito.repuestos.all()
+        )
+        carrito.save(update_fields=["cantidad_producto", "precio_total"])
 
     def _obtener_articulo(self, tipo_articulo, articulo_id):
         if tipo_articulo == "carro":
