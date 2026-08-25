@@ -11,4 +11,14 @@ urlpatterns = [
         views.ArticuloPublicadoView.as_view(),
         name="articulo_publicado",
     ),
+    path(
+        "carrito/agregar/<str:tipo_articulo>/<int:articulo_id>/",
+        views.AgregarArticuloCarrito.as_view(),
+        name="agregar_articulo_carrito",
+    ),
+    path(
+        "carrito/quitar/<str:tipo_articulo>/<int:articulo_id>/",
+        views.QuitarArticuloCarrito.as_view(),
+        name="quitar_articulo_carrito",
+    ),
 ]

@@ -9,10 +9,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
 
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from .domain.exceptions import ErrorDeDominio
 from .forms import CrearArticuloForm
-from .services import PublicacionArticuloService
-
+from .api.serializers import ArticuloCarritoSerializer, MovimientoCarritoSerializer
+from .services import CarritoComprasService, PublicacionArticuloService
 
 class CrearArticuloView(LoginRequiredMixin, FormView):
     """Publica un artículo del vendedor autenticado."""
@@ -36,3 +41,45 @@ class CrearArticuloView(LoginRequiredMixin, FormView):
 
 class ArticuloPublicadoView(LoginRequiredMixin, TemplateView):
     template_name = "marketplace/articulo_publicado.html"
+
+class BaseArticuloCarritoView(APIView):
+    permission_classes = [IsAuthenticated]
+    service_factory = CarritoComprasService
+    request_serializer_class = MovimientoCarritoSerializer
+    response_serializer_class = ArticuloCarritoSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.request_serializer_class(data=kwargs)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            resultado = self.ejecutar(
+                self.service_factory(), request.user, serializer.validated_data
+            )
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            self.response_serializer_class(resultado).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def ejecutar(self, servicio, usuario, datos):
+        raise NotImplementedError
+
+
+class AgregarArticuloCarrito(BaseArticuloCarritoView):
+    """Orquesta la logica para Agrega un artículo al carrito del usuario autenticado."""
+
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.agregar_articulo(
+            usuario, datos["tipo_articulo"], datos["articulo_id"]
+        )
+
+class QuitarArticuloCarrito(BaseArticuloCarritoView):
+    """ Orquesta la logica para quitar un artículo del carrito del usuario autenticado."""
+
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.quitar_articulo(
+            usuario, datos["tipo_articulo"], datos["articulo_id"]
+        )

@@ -10,11 +10,11 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from ..domain.exceptions import ArticuloInvalidoError, DocumentacionInvalidaError
+from ..domain.exceptions import ArticuloInvalidoError, DocumentacionInvalidaError, ErrorDeDominio
 from ..domain.ports import Notificador, ResultadoValidacion, ValidadorDocumental
 from ..infra.validadores import ValidadorDocumentalRunt
-from ..models import Carro, DocumentoCarro, Inventario, Vendedor
-from ..services import PublicacionArticuloService
+from ..models import Carro, DocumentoCarro, Inventario, Repuesto, Vendedor
+from ..services import ArticuloCarrito, CarritoComprasService, PublicacionArticuloService
 
 
 class ValidadorEspia(ValidadorDocumental):
@@ -157,3 +157,57 @@ class ValidadorDocumentalRuntTest(TestCase):
 
         self.assertFalse(resultado.es_valido)
         self.assertIn("vencido", resultado.motivos[0])
+
+
+class CarritoComprasServiceTest(TestCase):
+    def setUp(self):
+        usuario = User.objects.create_user("maria", password="clave-de-prueba")
+        self.vendedor = Vendedor.objects.create(
+            usuario=usuario,
+            nombre="María López",
+            correo="maria@carfit.co",
+            direccion="Cra 12 #34-56",
+            numero_tel="3015557788",
+        )
+        self.service = CarritoComprasService()
+
+    def test_agrega_un_carro_y_normaliza_sus_datos(self):
+        carro = Carro.objects.create(
+            vendedor=self.vendedor,
+            placa="XYZ123",
+            marca="Toyota",
+            modelo="Corolla",
+            estado=Carro.Estado.USADO,
+            color="Blanco",
+            kilometraje=45000,
+            descripcion="",
+            precio=70000000,
+        )
+
+        resultado = self.service.agregar_articulo(object(), "carro", carro.pk)
+
+        self.assertIsInstance(resultado, ArticuloCarrito)
+        self.assertEqual(resultado.accion, "agregado")
+        self.assertEqual(resultado.titulo, "Toyota Corolla")
+        self.assertEqual(resultado.detalle["placa"], "XYZ123")
+
+    def test_quita_un_repuesto_y_normaliza_sus_datos(self):
+        repuesto = Repuesto.objects.create(
+            vendedor=self.vendedor,
+            tipo="Filtro de aceite",
+            modelo_carro="Corolla",
+            precio=120000,
+            numero_serie="REP-001",
+            estado=Repuesto.Estado.NUEVO,
+        )
+
+        resultado = self.service.quitar_articulo(object(), "repuesto", repuesto.pk)
+
+        self.assertIsInstance(resultado, ArticuloCarrito)
+        self.assertEqual(resultado.accion, "quitado")
+        self.assertEqual(resultado.titulo, "Filtro de aceite - Corolla")
+        self.assertEqual(resultado.detalle["numero_serie"], "REP-001")
+
+    def test_rechaza_tipo_de_articulo_no_soportado(self):
+        with self.assertRaises(ErrorDeDominio):
+            self.service.agregar_articulo(object(), "moto", 1)

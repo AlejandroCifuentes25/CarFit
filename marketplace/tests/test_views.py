@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from ..domain.exceptions import DocumentacionInvalidaError
 from ..models import Vendedor
-from ..views import CrearArticuloView
+from ..views import AgregarArticuloCarrito, CrearArticuloView, QuitarArticuloCarrito
 from .test_services import DATOS_VALIDOS
 
 
@@ -29,6 +29,18 @@ class ServicioFalso:
 
     def crear_articulo(self, vendedor, datos):
         self.llamadas.append((vendedor, datos))
+        if self.error:
+            raise self.error
+        return object()
+
+    def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
+        self.llamadas.append((usuario, tipo_articulo, articulo_id))
+        if self.error:
+            raise self.error
+        return object()
+
+    def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
+        self.llamadas.append((usuario, tipo_articulo, articulo_id))
         if self.error:
             raise self.error
         return object()
@@ -90,5 +102,40 @@ class CrearArticuloViewTest(TestCase):
         from django.test import RequestFactory
 
         peticion = RequestFactory().post(self.url, datos)
+        peticion.user = self.usuario
+        return peticion
+
+
+class CarritoViewsTest(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user("cliente", password="clave-de-prueba")
+
+    def test_agregar_articulo_delega_en_el_servicio(self):
+        servicio = ServicioFalso()
+        vista = AgregarArticuloCarrito.as_view(service_factory=lambda: servicio)
+
+        respuesta = vista(self._peticion_post(), tipo_articulo="carro", articulo_id=7)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(len(servicio.llamadas), 1)
+        self.assertEqual(servicio.llamadas[0][0], self.usuario)
+        self.assertEqual(servicio.llamadas[0][1], "carro")
+        self.assertEqual(servicio.llamadas[0][2], 7)
+
+    def test_quitar_articulo_delega_en_el_servicio(self):
+        servicio = ServicioFalso()
+        vista = QuitarArticuloCarrito.as_view(service_factory=lambda: servicio)
+
+        respuesta = vista(self._peticion_post(), tipo_articulo="repuesto", articulo_id=9)
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(len(servicio.llamadas), 1)
+        self.assertEqual(servicio.llamadas[0][1], "repuesto")
+        self.assertEqual(servicio.llamadas[0][2], 9)
+
+    def _peticion_post(self):
+        from django.test import RequestFactory
+
+        peticion = RequestFactory().post("/carrito/")
         peticion.user = self.usuario
         return peticion

@@ -18,11 +18,25 @@ Reglas que se respetan aquí:
 
 from django.db import transaction
 from django.db.models import F
+from dataclasses import dataclass
 
+from .domain.exceptions import ArticuloInvalidoError, ErrorDeDominio
 from .domain.builders import CarroBuilder
 from .domain.exceptions import DocumentacionInvalidaError
 from .infra.factories import NotificadorFactory, ValidadorDocumentalFactory
-from .models import DocumentoCarro, Inventario
+from .models import Carro, DocumentoCarro, Inventario, Repuesto
+
+
+@dataclass(frozen=True)
+class ArticuloCarrito:
+    accion: str
+    tipo_articulo: str
+    articulo_id: int
+    titulo: str
+    precio: int
+    vendedor_id: int
+    vendedor_nombre: str
+    detalle: dict
 
 
 class PublicacionArticuloService:
@@ -102,4 +116,73 @@ class PublicacionArticuloService:
         Inventario.objects.get_or_create(vendedor=vendedor)
         Inventario.objects.filter(vendedor=vendedor).update(
             cantidad_carro=F("cantidad_carro") + 1
+        )
+
+class CarritoComprasService:
+    """Normaliza Carro y Repuesto para que un carrito los consuma después."""
+
+    def __init__(self, carro_model=Carro, repuesto_model=Repuesto):
+        self._carro_model = carro_model
+        self._repuesto_model = repuesto_model
+
+    def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        return self._armar_articulo_carrito("agregado", tipo_articulo, articulo)
+
+    def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        return self._armar_articulo_carrito("quitado", tipo_articulo, articulo)
+
+    def _obtener_articulo(self, tipo_articulo, articulo_id):
+        if tipo_articulo == "carro":
+            try:
+                return self._carro_model.objects.select_related("vendedor").get(
+                    pk=articulo_id
+                )
+            except self._carro_model.DoesNotExist as error:
+                raise ErrorDeDominio("No existe el carro solicitado.") from error
+
+        if tipo_articulo == "repuesto":
+            try:
+                return self._repuesto_model.objects.select_related("vendedor").get(
+                    pk=articulo_id
+                )
+            except self._repuesto_model.DoesNotExist as error:
+                raise ErrorDeDominio("No existe el repuesto solicitado.") from error
+
+        raise ErrorDeDominio("Tipo de artículo no soportado.")
+
+    def _armar_articulo_carrito(self, accion, tipo_articulo, articulo):
+        if isinstance(articulo, Carro):
+            return ArticuloCarrito(
+                accion=accion,
+                tipo_articulo=tipo_articulo,
+                articulo_id=articulo.pk,
+                titulo=f"{articulo.marca} {articulo.modelo}",
+                precio=articulo.precio,
+                vendedor_id=articulo.vendedor_id,
+                vendedor_nombre=articulo.vendedor.nombre,
+                detalle={
+                    "placa": articulo.placa,
+                    "estado": articulo.estado,
+                    "color": articulo.color,
+                    "kilometraje": articulo.kilometraje,
+                    "descripcion": articulo.descripcion,
+                },
+            )
+
+        return ArticuloCarrito(
+            accion=accion,
+            tipo_articulo=tipo_articulo,
+            articulo_id=articulo.pk,
+            titulo=f"{articulo.tipo} - {articulo.modelo_carro}",
+            precio=articulo.precio,
+            vendedor_id=articulo.vendedor_id,
+            vendedor_nombre=articulo.vendedor.nombre,
+            detalle={
+                "tipo": articulo.tipo,
+                "modelo_carro": articulo.modelo_carro,
+                "numero_serie": articulo.numero_serie,
+                "estado": articulo.estado,
+            },
         )
