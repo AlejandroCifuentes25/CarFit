@@ -119,13 +119,13 @@ class EditarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, UpdateView)
             class CarroForm(forms.ModelForm):
                 class Meta:
                     model = Carro
-                    fields = ["precio", "descripcion", "color", "kilometraje", "estado"]
+                    fields = ["placa", "marca", "modelo", "color", "estado", "kilometraje", "precio", "descripcion"]
             return CarroForm
         else:
             class RepuestoForm(forms.ModelForm):
                 class Meta:
                     model = Repuesto
-                    fields = ["precio", "estado"]
+                    fields = ["tipo", "modelo_carro", "numero_serie", "estado", "precio"]
             return RepuestoForm
 
     def get_context_data(self, **kwargs):
@@ -174,7 +174,17 @@ class ClienteRequeridoMixin:
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not hasattr(request.user, "cliente"):
-            return render(request, "marketplace/sin_perfil_cliente.html", status=403)
+            from .models import Cliente
+            vendedor = getattr(request.user, "vendedor", None)
+            cliente = Cliente.objects.create(
+                usuario=request.user,
+                nombre=vendedor.nombre if vendedor else request.user.username,
+                correo=vendedor.correo if vendedor else request.user.email,
+                direccion=vendedor.direccion if vendedor else "",
+                numero_tel=vendedor.numero_tel if vendedor else ""
+            )
+            # Asignarlo manualmente al request para evitar problemas de caché en esta misma petición
+            request.user.cliente = cliente
         return super().dispatch(request, *args, **kwargs)
 
 
