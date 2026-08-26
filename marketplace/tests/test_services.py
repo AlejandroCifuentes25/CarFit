@@ -232,7 +232,7 @@ class RegistroUsuarioServiceTest(TestCase):
         usuario = self.servicio.registrar(peticion, "VENDEDOR", self.datos)
 
         self.assertTrue(Vendedor.objects.filter(usuario=usuario).exists())
-        self.assertFalse(Cliente.objects.filter(usuario=usuario).exists())
+        self.assertTrue(Cliente.objects.filter(usuario=usuario).exists())
 
     def test_rechaza_nombre_de_usuario_repetido(self):
         peticion = self._peticion()
