@@ -6,6 +6,8 @@
 
 {% block contenido %}
   <h1>Pagar {{ articulo }}</h1>
+  <p class="ayuda">Este formulario paga un solo artículo. Si quieres cambiar la selección, vuelve al carrito.</p>
+  <p><a href="{% url 'marketplace:carrito' %}">Volver al carrito</a></p>
 
   <ul class="lista-datos">
     <li><span class="clave">Artículo</span><span>{{ articulo }}</span></li>

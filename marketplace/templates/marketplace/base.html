@@ -28,6 +28,17 @@
     nav.principal a { color: var(--tinta-suave); text-decoration: none; font-weight: 600; }
     nav.principal a:hover { color: var(--acento); }
     nav.principal .separador { flex: 1; }
+    nav.principal .carrito-resumen {
+      display: inline-flex; align-items: center; gap: .55rem;
+      padding: .45rem .75rem; border: 1px solid var(--borde);
+      border-radius: 999px; background: #fff; color: var(--tinta);
+    }
+    nav.principal .carrito-resumen:hover { border-color: var(--acento); color: var(--acento); }
+    nav.principal .carrito-icono {
+      width: 1.1rem; height: 1.1rem; display: inline-block; flex: 0 0 auto;
+      color: currentColor;
+    }
+    nav.principal .carrito-resumen strong { font-size: .95rem; }
     nav.principal form { margin: 0; }
     nav.principal button.enlace {
       background: none; border: 0; padding: 0; color: var(--tinta-suave);
@@ -82,6 +93,7 @@
     .tarjeta-articulo .precio { font-size: 1.15rem; font-weight: 800; color: var(--tinta); }
     .tarjeta-articulo .etiqueta { font-size: .78rem; color: var(--tinta-suave);
                                    text-transform: uppercase; letter-spacing: .04em; }
+    .acciones-carrito { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .35rem; }
 
     /* Selección de método de pago: tarjetas-radio */
     .metodos { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -132,6 +144,15 @@
     <a href="{% url 'marketplace:catalogo_compras' %}">Comprar</a>
     <a href="{% url 'marketplace:crear_articulo' %}">Publicar</a>
     <a href="{% url 'marketplace:historial_pagos' %}">Mis pagos</a>
+    <a href="{% url 'marketplace:carrito' %}" class="carrito-resumen" aria-label="Carrito de compras">
+      <svg class="carrito-icono" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L20.5 8H6.1" />
+        <circle cx="10" cy="20" r="1.3" />
+        <circle cx="17" cy="20" r="1.3" />
+      </svg>
+      <strong data-carrito-total>${{ carrito_total|default:0 }}</strong>
+      <span class="ayuda" data-carrito-cantidad>{{ carrito_cantidad|default:0 }} productos</span>
+    </a>
     <span class="separador"></span>
     <span class="ayuda">{{ user.username }}</span>
     <form method="post" action="{% url 'logout' %}">
@@ -150,5 +171,141 @@
       {% block contenido %}{% endblock %}
     </main>
   </div>
+  <script>
+    (function () {
+      var totalEndpoint = "{% url 'marketplace:calcular_total_carrito' %}";
+
+      function getCookie(name) {
+        var value = "; " + document.cookie;
+        var parts = value.split("; " + name + "=");
+        if (parts.length === 2) {
+          return parts.pop().split(";").shift();
+        }
+        return "";
+      }
+
+      function formatearPesos(valor) {
+        return "$" + Math.round(Number(valor || 0)).toLocaleString("es-CO");
+      }
+
+      function localizarBotonArticulo(datos) {
+        return document.querySelector(
+          '[data-carrito-toggle][data-tipo-articulo="' + datos.tipo_articulo + '"][data-articulo-id="' + datos.articulo_id + '"]'
+        );
+      }
+
+      function actualizarBotonArticulo(boton, accion) {
+        if (!boton) { return; }
+        var agregarUrl = boton.dataset.agregarUrl;
+        var quitarUrl = boton.dataset.quitarUrl;
+
+        if (accion === "agregado") {
+          boton.textContent = "Quitar del carrito";
+          boton.dataset.url = quitarUrl || boton.dataset.url;
+          boton.dataset.estado = "dentro";
+          return;
+        }
+
+        if (accion === "quitado") {
+          boton.textContent = "Agregar al carrito";
+          boton.dataset.url = agregarUrl || boton.dataset.url;
+          boton.dataset.estado = "fuera";
+        }
+      }
+
+      function actualizarVistaCarrito(datos) {
+        if (!datos) { return; }
+        var articulo = datos.articulo || {};
+        var carrito = datos.carrito || {};
+        var boton = localizarBotonArticulo(articulo);
+
+        actualizarBotonArticulo(boton, articulo.accion);
+        pintarResumen(carrito);
+
+        if (!boton || !boton.closest) { return; }
+        var tarjeta = boton.closest("[data-carrito-item]");
+        if (tarjeta && articulo.accion === "quitado") {
+          tarjeta.remove();
+        }
+
+        var lista = document.querySelector("[data-carrito-lista]");
+        var vacio = document.querySelector("[data-carrito-vacio]");
+        var formulario = document.querySelector("[data-carrito-form]");
+        if (lista && vacio) {
+          vacio.style.display = carrito.cantidad_producto > 0 ? "none" : "block";
+          lista.style.display = carrito.cantidad_producto > 0 ? "grid" : "none";
+        }
+        if (formulario) {
+          formulario.style.display = carrito.cantidad_producto > 0 ? "block" : "none";
+        }
+      }
+
+      function pintarResumen(carrito) {
+        var total = carrito && carrito.precio_total !== undefined ? carrito.precio_total : 0;
+        var cantidad = carrito && carrito.cantidad_producto !== undefined ? carrito.cantidad_producto : 0;
+
+        document.querySelectorAll("[data-carrito-total]").forEach(function (elemento) {
+          elemento.textContent = formatearPesos(total);
+        });
+        document.querySelectorAll("[data-carrito-cantidad]").forEach(function (elemento) {
+          elemento.textContent = cantidad + " productos";
+        });
+      }
+
+      function actualizarResumen() {
+        return fetch(totalEndpoint, { headers: { Accept: "application/json" } })
+          .then(function (respuesta) { return respuesta.json(); })
+          .then(function (datos) {
+            if (datos && datos.carrito) {
+              pintarResumen(datos.carrito);
+            }
+          });
+      }
+
+      function ejecutar(url) {
+        return fetch(url, {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+        }).then(function (respuesta) {
+          return respuesta.json().catch(function () { return {}; }).then(function (datos) {
+            if (!respuesta.ok) {
+              throw new Error(datos.detail || datos.error || "No se pudo actualizar el carrito.");
+            }
+            actualizarVistaCarrito(datos);
+            return datos;
+          });
+        });
+      }
+
+      window.CarFitCart = {
+        agregar: function (url) { return ejecutar(url); },
+        quitar: function (url) { return ejecutar(url); },
+        vaciar: function (url) {
+          return ejecutar(url).then(function () {
+            document.querySelectorAll("[data-carrito-item]").forEach(function (tarjeta) {
+              tarjeta.remove();
+            });
+            var lista = document.querySelector("[data-carrito-lista]");
+            var vacio = document.querySelector("[data-carrito-vacio]");
+            var formulario = document.querySelector("[data-carrito-form]");
+            if (lista && vacio) {
+              lista.style.display = "none";
+              vacio.style.display = "block";
+            }
+            if (formulario) {
+              formulario.style.display = "none";
+            }
+          });
+        },
+        confirmar: function (url) { return ejecutar(url); },
+        refrescar: actualizarResumen,
+      };
+
+      document.addEventListener("DOMContentLoaded", actualizarResumen);
+    })();
+  </script>
 </body>
 </html>
