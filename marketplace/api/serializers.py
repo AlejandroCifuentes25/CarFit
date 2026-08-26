@@ -100,9 +100,24 @@ class ArticuloCarritoSerializer(serializers.Serializer):
     detalle = serializers.DictField()
 
 
-# ---------------------------------------------------------------------
-# Pagos
-# ---------------------------------------------------------------------
+class ResumenCarritoSerializer(serializers.Serializer):
+    carrito_id = serializers.IntegerField()
+    cantidad_producto = serializers.IntegerField()
+    precio_total = serializers.IntegerField()
+
+
+class RespuestaMovimientoCarritoSerializer(serializers.Serializer):
+    articulo = ArticuloCarritoSerializer()
+    carrito = ResumenCarritoSerializer()
+
+
+class RespuestaCarritoSerializer(serializers.Serializer):
+    carrito = ResumenCarritoSerializer()
+
+
+class RespuestaEstadoCarritoSerializer(serializers.Serializer):
+    estado = serializers.CharField()
+    carrito = ResumenCarritoSerializer()
 
 
 class EspecificacionMetodoPagoSerializer(serializers.Serializer):

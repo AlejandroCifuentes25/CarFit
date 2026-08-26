@@ -19,8 +19,10 @@ from ..domain.ports import NotificadorPagos, PasarelaPago, ResultadoPago
 from ..models import Pago, TransaccionPago
 from ..services import (
     CatalogoMetodosPagoService,
+    CarritoComprasService,
     ConfirmarPagoService,
     ConsultarPagoService,
+    PagarCarritoService,
     ProcesarPagoService,
 )
 from .test_pagos_dominio import (
@@ -348,6 +350,34 @@ class ConfirmarPagoServiceTest(BaseDePagosTest):
 
         with self.assertRaises(RecursoNoEncontradoError):
             self.servicio.confirmar(self.pago.referencia, intruso)
+
+
+class PagarCarritoServiceTest(BaseDePagosTest):
+    def setUp(self):
+        super().setUp()
+        self.repuesto = crear_repuesto(self.vendedor, precio=350_000)
+        self.carrito_service = CarritoComprasService()
+        self.carrito_service.agregar_articulo(
+            self.cliente.usuario, "carro", self.carro.pk
+        )
+        self.carrito_service.agregar_articulo(
+            self.cliente.usuario, "repuesto", self.repuesto.pk
+        )
+        self.servicio = PagarCarritoService()
+
+    def test_procesa_todos_los_articulos_y_vacia_el_carrito(self):
+        resultado = self.servicio.procesar(
+            self.cliente,
+            {
+                "metodo_pago": Pago.Metodo.TARJETA_CREDITO,
+                "cuotas": 1,
+                **TOKEN_DE_PRUEBA,
+            },
+        )
+
+        self.assertEqual(len(resultado["pagos"]), 2)
+        self.assertEqual(Pago.objects.count(), 2)
+        self.assertEqual(self.carrito_service.calcular_total(self.cliente.usuario), 0)
 
 
 class CatalogoMetodosPagoServiceTest(TestCase):

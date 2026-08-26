@@ -9,13 +9,24 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .api.serializers import MovimientoCarritoSerializer
+from .api.serializers import (
+    RespuestaCarritoSerializer,
+    RespuestaEstadoCarritoSerializer,
+    RespuestaMovimientoCarritoSerializer,
+)
 from .domain.exceptions import ErrorDeDominio
 from .forms import CrearArticuloForm, PagoForm, RegistroForm
-from .models import Carro, Repuesto
+from .models import Carro, CarritoCompra, Repuesto
 from .services import (
     CatalogoComprasService,
     ConfirmarPagoService,
@@ -23,6 +34,8 @@ from .services import (
     FacturaService,
     ProcesarPagoService,
     PublicacionArticuloService,
+    CarritoComprasService,
+    PagarCarritoService,
     RegistroUsuarioService,
 )
 
@@ -112,6 +125,77 @@ class CatalogoComprasView(LoginRequiredMixin, TemplateView):
             self.request.user
         )
         return contexto
+
+
+class CarritoComprasView(LoginRequiredMixin, ClienteRequeridoMixin, FormView):
+    """Muestra el carrito y confirma el pago de todos sus artículos."""
+
+    template_name = "marketplace/carrito.html"
+    form_class = PagoForm
+    service_factory = CarritoComprasService
+    checkout_service_factory = PagarCarritoService
+    success_url = reverse_lazy("marketplace:historial_pagos")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["monto"] = self._resumen_carrito()["carrito"].precio_total
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        resumen = self._resumen_carrito()
+
+        articulos = []
+        for articulo in resumen["articulos"]:
+            articulos.append(
+                {
+                    "tipo_articulo": articulo.tipo_articulo,
+                    "articulo_id": articulo.articulo_id,
+                    "titulo": articulo.titulo,
+                    "precio": articulo.precio,
+                    "vendedor_nombre": articulo.vendedor_nombre,
+                    "detalle": articulo.detalle,
+                    "quitar_url": reverse(
+                        "marketplace:quitar_articulo_carrito",
+                        kwargs={
+                            "tipo_articulo": articulo.tipo_articulo,
+                            "articulo_id": articulo.articulo_id,
+                        },
+                    ),
+                }
+            )
+
+        contexto.update(
+            {
+                "carrito": resumen["carrito"],
+                "articulos": articulos,
+                "metodo_inicial": contexto["form"].metodos[0].codigo if contexto["form"].metodos else None,
+            }
+        )
+        return contexto
+
+    def form_valid(self, form):
+        try:
+            resultado = self.checkout_service_factory().procesar(
+                self.request.user.cliente, form.cleaned_data
+            )
+        except ErrorDeDominio as error:
+            form.add_error(None, str(error))
+            return self.form_invalid(form)
+
+        pagos = resultado.get("pagos", [])
+        if pagos:
+            messages.success(
+                self.request,
+                f"Procesamos {len(pagos)} pagos. Te llevamos al primer recibo.",
+            )
+            return redirect("marketplace:detalle_pago", referencia=pagos[0].referencia)
+
+        messages.success(self.request, "Procesamos tu compra.")
+        return super().form_valid(form)
+
+    def _resumen_carrito(self):
+        return self.service_factory().obtener_resumen(self.request.user)
 
 
 class PagarArticuloView(LoginRequiredMixin, ClienteRequeridoMixin, View):
@@ -220,3 +304,76 @@ class HistorialPagosView(LoginRequiredMixin, ClienteRequeridoMixin, TemplateView
         contexto = super().get_context_data(**kwargs)
         contexto["pagos"] = self.servicio().listar(self.request.user.cliente)
         return contexto
+
+
+class BaseCarritoView(APIView):
+    permission_classes = [IsAuthenticated]
+    service_factory = CarritoComprasService
+
+    def get_service(self):
+        return self.service_factory()
+
+
+class BaseArticuloCarritoView(BaseCarritoView):
+    def post(self, request, *args, **kwargs):
+        serializer = MovimientoCarritoSerializer(data=kwargs)
+        serializer.is_valid(raise_exception=True)
+        try:
+            servicio = self.get_service()
+            resultado = self.ejecutar(servicio, request.user, serializer.validated_data)
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        resumen = servicio.obtener_resumen(request.user)
+        return Response(
+            RespuestaMovimientoCarritoSerializer(
+                {"articulo": resultado, "carrito": resumen["carrito"]}
+            ).data
+        )
+
+
+class AgregarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.agregar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
+
+
+class QuitarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.quitar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
+
+
+class BaseCarritoOperacionView(BaseCarritoView):
+    def post(self, request, *args, **kwargs):
+        try:
+            resultado = self.ejecutar(self.get_service(), request.user)
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        if "estado" in resultado:
+            return Response(RespuestaEstadoCarritoSerializer(resultado).data)
+        return Response(RespuestaCarritoSerializer(resultado).data)
+
+
+class VaciarCarritoView(BaseCarritoOperacionView):
+    def ejecutar(self, servicio, usuario):
+        servicio.vaciar_carrito(usuario)
+        return {"carrito": servicio.obtener_resumen(usuario)["carrito"]}
+
+
+class CalcularTotalCarritoView(BaseCarritoOperacionView):
+    def get(self, request, *args, **kwargs):
+        try:
+            resultado = self.ejecutar(self.get_service(), request.user)
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(RespuestaCarritoSerializer(resultado).data)
+
+    def ejecutar(self, servicio, usuario):
+        return {"carrito": servicio.obtener_resumen(usuario)["carrito"]}
+
+
+class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
+    def ejecutar(self, servicio, usuario):
+        resultado = servicio.confirmar_compra(usuario)
+        return {
+            "estado": resultado["estado"],
+            "carrito": servicio.obtener_resumen(usuario)["carrito"],
+        }
