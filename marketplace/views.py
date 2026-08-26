@@ -41,7 +41,6 @@ class IndexView(TemplateView):
 class RegistroView(FormView):
     template_name = "marketplace/registro.html"
     form_class = RegistroForm
-    success_url = reverse_lazy("marketplace:crear_articulo")
     service_factory = RegistroUsuarioService
 
     def form_valid(self, form):
@@ -50,10 +49,23 @@ class RegistroView(FormView):
         except ErrorDeDominio as error:
             form.add_error(None, str(error))
             return self.form_invalid(form)
+        if form.cleaned_data["rol"] == "CLIENTE":
+            self.success_url = reverse_lazy("marketplace:catalogo_compras")
+        else:
+            self.success_url = reverse_lazy("marketplace:crear_articulo")
         return super().form_valid(form)
 
 
-class CrearArticuloView(LoginRequiredMixin, FormView):
+class VendedorRequeridoMixin:
+    """Impide que cuentas de cliente accedan al flujo de publicación."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not hasattr(request.user, "vendedor"):
+            return render(request, "marketplace/sin_perfil_vendedor.html", status=403)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CrearArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
     """Publica un artículo del vendedor autenticado."""
 
     template_name = "marketplace/crear_articulo.html"

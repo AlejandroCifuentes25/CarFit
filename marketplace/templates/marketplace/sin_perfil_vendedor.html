@@ -1,0 +1,9 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Perfil de vendedor requerido — CarFit{% endblock %}
+
+{% block contenido %}
+  <h1>Necesitas un perfil de vendedor</h1>
+  <p class="ayuda">Solo las cuentas registradas como vendedor pueden publicar vehículos.</p>
+  <p><a href="{% url 'marketplace:index' %}">Volver al inicio</a></p>
+{% endblock %}

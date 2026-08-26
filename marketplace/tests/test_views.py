@@ -60,6 +60,22 @@ class CrearArticuloViewTest(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Publicar vehículo")
 
+    def test_rechaza_a_un_cliente_autenticado(self):
+        usuario_cliente = User.objects.create_user("cliente", password="clave")
+        Cliente.objects.create(
+            usuario=usuario_cliente,
+            nombre="Cliente de prueba",
+            correo="cliente@carfit.co",
+            direccion="Calle 1",
+            numero_tel="3000000000",
+        )
+        self.client.force_login(usuario_cliente)
+
+        respuesta = self.client.get(self.url)
+
+        self.assertEqual(respuesta.status_code, 403)
+        self.assertContains(respuesta, "perfil de vendedor", status_code=403)
+
     def test_delega_en_el_servicio_y_redirige(self):
         self.client.force_login(self.usuario)
 
@@ -102,14 +118,36 @@ class IndexViewTest(TestCase):
         self.assertContains(respuesta, "Iniciar sesión")
         self.assertContains(respuesta, "Registrarse")
 
-    def test_muestra_publicar_a_un_usuario_autenticado(self):
+    def test_muestra_publicar_a_un_vendedor_autenticado(self):
         usuario = User.objects.create_user("alejandro", password="clave")
+        Vendedor.objects.create(
+            usuario=usuario,
+            nombre="Alejandro",
+            correo="alejandro@carfit.co",
+            direccion="Calle 1",
+            numero_tel="3000000000",
+        )
         self.client.force_login(usuario)
 
         respuesta = self.client.get(reverse("marketplace:index"))
 
         self.assertContains(respuesta, "Publicar un vehículo")
         self.assertNotContains(respuesta, "Registrarse")
+
+    def test_no_muestra_publicar_a_un_cliente_autenticado(self):
+        usuario = User.objects.create_user("cliente", password="clave")
+        Cliente.objects.create(
+            usuario=usuario,
+            nombre="Cliente",
+            correo="cliente@carfit.co",
+            direccion="Calle 1",
+            numero_tel="3000000000",
+        )
+        self.client.force_login(usuario)
+
+        respuesta = self.client.get(reverse("marketplace:index"))
+
+        self.assertNotContains(respuesta, "Publicar un vehículo")
 
 
 class RegistroViewTest(TestCase):
@@ -135,7 +173,7 @@ class RegistroViewTest(TestCase):
     def test_registra_e_inicia_sesion(self):
         respuesta = self.client.post(self.url, self.datos)
 
-        self.assertRedirects(respuesta, reverse("marketplace:crear_articulo"))
+        self.assertRedirects(respuesta, reverse("marketplace:catalogo_compras"))
         self.assertTrue(Cliente.objects.filter(usuario__username="sofia").exists())
 
     def test_rechaza_contrasenas_que_no_coinciden(self):
