@@ -96,7 +96,11 @@ class PublicacionArticuloService:
 
         self._verificar_documentacion(carro.placa, documentos)
 
-        carro.save()
+        try:
+            carro.save()
+        except IntegrityError:
+            raise ErrorDeDominio("Ya existe un vehículo registrado con esta placa.")
+
         self._persistir_documentos(carro, documentos)
         self._actualizar_inventario(vendedor)
         self._notificador.notificar_publicacion(carro)
