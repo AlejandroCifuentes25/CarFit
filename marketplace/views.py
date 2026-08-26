@@ -87,20 +87,28 @@ class CrearArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
             return self.form_invalid(form)
 
 
-class CrearRepuestoView(LoginRequiredMixin, VendedorRequeridoMixin, CreateView):
-    model = Repuesto
-    fields = ["tipo", "modelo_carro", "numero_serie", "estado", "precio"]
+class CrearRepuestoView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
     template_name = "marketplace/crear_repuesto.html"
     success_url = reverse_lazy("marketplace:articulo_publicado")
 
+    def get_form_class(self):
+        from django import forms
+        from .models import Repuesto
+        class RepuestoForm(forms.ModelForm):
+            class Meta:
+                model = Repuesto
+                fields = ["tipo", "modelo_carro", "numero_serie", "estado", "precio"]
+        return RepuestoForm
+
     def form_valid(self, form):
-        from django.db import IntegrityError
-        
-        form.instance.vendedor = self.request.user.vendedor
+        from .domain.exceptions import ErrorDeDominio
+
         try:
+            servicio = PublicacionArticuloService()
+            servicio.crear_repuesto(self.request.user.vendedor, form.cleaned_data)
             return super().form_valid(form)
-        except IntegrityError:
-            form.add_error(None, "Ya existe un repuesto publicado con este número de serie.")
+        except (ValueError, ErrorDeDominio) as e:
+            form.add_error(None, str(e))
             return self.form_invalid(form)
 
 

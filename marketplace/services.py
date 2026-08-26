@@ -107,6 +107,30 @@ class PublicacionArticuloService:
 
         return carro
 
+    @transaction.atomic
+    def crear_repuesto(self, vendedor, datos):
+        """Publica un repuesto.
+        """
+        from .models import Repuesto
+
+        repuesto = Repuesto(
+            vendedor=vendedor,
+            tipo=datos["tipo"],
+            modelo_carro=datos["modelo_carro"],
+            numero_serie=datos["numero_serie"],
+            estado=datos["estado"],
+            precio=datos["precio"]
+        )
+        try:
+            repuesto.save()
+        except IntegrityError:
+            raise ErrorDeDominio("Ya existe un repuesto publicado con este número de serie.")
+
+        self._actualizar_inventario(vendedor)
+        self._notificador.notificar_publicacion(repuesto)
+
+        return repuesto
+
     # ------------------------------------------------------------------
     # Pasos internos
     # ------------------------------------------------------------------
