@@ -10,103 +10,7 @@ sistema debe soportar **varios métodos de pago** con reglas distintas, hablar
 con **proveedores externos** que pueden fallar, y no cobrar dos veces bajo
 ninguna circunstancia.
 
-Métodos soportados hoy:
-
-| Método | Comisión | Rango | Cuotas | Confirma en el momento |
-|---|---|---|---|---|
-| Tarjeta de crédito | 2,9% + $900 | $1.500 a $200.000.000 | hasta 36 | Sí |
-| Tarjeta débito | 1,9% + $900 | $1.500 a $50.000.000 | No | Sí |
-| PSE | $2.500 | $5.000 a $500.000.000 | No | No |
-| Billetera digital | 1,75% | $1.000 a $10.000.000 | No | Sí |
-| Efectivo en corresponsal | $4.500 | $5.000 a $4.000.000 | No | No |
-
-## 2. Estructura de carpetas
-
-```
-marketplace/
-├── api/                       # Capa de Presentación (DRF)
-│   ├── serializers.py         #   valida formato, nunca negocio
-│   ├── views.py               #   APIView: HTTP entra, HTTP sale
-│   ├── errores.py             #   único lugar que traduce dominio -> códigos HTTP
-│   └── urls.py
-├── services.py                # Capa de Aplicación
-│   ├── ProcesarPagoService    #   el caso de uso completo
-│   ├── ConfirmarPagoService   #   resuelve PSE y efectivo
-│   ├── ConsultarPagoService
-│   ├── CatalogoMetodosPagoService
-│   └── BitacoraPagos          #   auditoría, separada del cobro
-├── domain/                    # Capa de Dominio (sin HTTP, sin proveedores)
-│   ├── metodos_pago.py        #   catálogo: comisiones, límites, requisitos
-│   ├── builders.py            #   PagoBuilder (Builder + Fluent Interface)
-│   ├── ports.py               #   PasarelaPago, NotificadorPagos, SolicitudPago
-│   └── exceptions.py
-├── infra/                     # Infraestructura reemplazable
-│   ├── pasarelas.py           #   Simulada / Agregador / Corresponsal
-│   ├── notificadores.py       #   comprobante por consola o correo
-│   └── factories.py           #   PasarelaPagoFactory, NotificadorPagosFactory
-└── models.py                  # Persistencia: Pago y TransaccionPago
-```
-
-La regla que ordena todo: **las dependencias apuntan hacia el dominio**. La
-API conoce a los servicios, los servicios conocen al dominio, y el dominio no
-conoce a nadie. `infra/` implementa interfaces que declara el dominio, así que
-la flecha también apunta hacia adentro.
-
-## 3. Diagrama de secuencia: `POST /api/pagos/`
-
-```mermaid
-sequenceDiagram
-    actor Comprador
-    participant V as PagosAPIView
-    participant SE as CrearPagoSerializer
-    participant S as ProcesarPagoService
-    participant B as PagoBuilder
-    participant CAT as Catálogo de métodos
-    participant F as PasarelaPagoFactory
-    participant P as PasarelaPago
-    participant BD as Base de datos
-    participant N as NotificadorPagos
-
-    Comprador->>V: POST /api/pagos/ (método, artículo, datos)
-    V->>SE: is_valid()
-    SE-->>V: datos con formato correcto (si no: 400)
-    V->>S: procesar(cliente, datos)
-
-    S->>BD: ¿existe el artículo?
-    BD-->>S: Carro / Repuesto (si no: 404)
-    S->>BD: ¿tiene pagos aprobados o en curso?
-    BD-->>S: no (si sí: 409)
-
-    S->>B: para_cliente().por_carro().con_metodo().build()
-    B->>CAT: obtener_especificacion(metodo)
-    CAT-->>B: comisión, límites, campos requeridos
-    B-->>S: Pago válido en memoria (si no: 400)
-
-    S->>BD: ¿la referencia ya se usó?
-    BD-->>S: no (si sí: 409)
-
-    S->>F: crear(metodo_pago)
-    F-->>S: pasarela concreta
-    S->>P: procesar(SolicitudPago)
-    P-->>S: ResultadoPago (aprobado / pendiente / rechazado)
-
-    S->>BD: guardar Pago + TransaccionPago
-    S->>N: notificar_resultado(pago)
-    S-->>V: Pago persistido
-    V-->>Comprador: 201 aprobado o pendiente / 409 rechazado
-```
-
-Tres detalles que el diagrama hace evidentes:
-
-1. **La llamada a la pasarela ocurre fuera de la transacción de base de
-   datos.** Mantener una transacción abierta mientras se espera una respuesta
-   de red bloquea filas durante segundos sin ninguna necesidad.
-2. **El Builder valida antes de que exista cualquier cobro.** Un pago mal
-   armado nunca llega al proveedor.
-3. **Un rechazo del emisor no es una excepción.** Es un desenlace válido: se
-   registra, se notifica, y la vista lo representa con 409.
-
-## 4. Patrones creacionales
+## 2. Patrones creacionales
 
 ### Builder: `PagoBuilder`
 
@@ -143,7 +47,7 @@ apuntarlo a una pasarela lógica en el catálogo del dominio; agregar un
 proveedor nuevo es una entrada más en el registro. Ni el servicio ni la API
 cambian.
 
-## 5. Cómo se evita el doble cobro
+## 3. Cómo se evita el doble cobro
 
 Tres barreras, de la más barata a la más definitiva:
 
@@ -155,7 +59,7 @@ Tres barreras, de la más barata a la más definitiva:
    simultáneas con la misma referencia hacen que la segunda falle en el
    `INSERT`, y esa falla se traduce también a 409.
 
-## 6. Preparación para un API Gateway
+## 4. Preparación para un API Gateway
 
 * **Prefijo propio**: toda la API vive bajo `/api/`, separada del front web.
   Un gateway puede enrutar `/api/pagos/*` hacia un servicio de pagos
@@ -173,7 +77,7 @@ Tres barreras, de la más barata a la más definitiva:
   diccionario. El día que los pagos se extraigan a su propio microservicio,
   la lógica se mueve intacta y solo cambia el transporte.
 
-## 7. Contrato de la API
+## 5. Contrato de la API
 
 ### `GET /api/pagos/metodos/`
 
