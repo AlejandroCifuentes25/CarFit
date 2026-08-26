@@ -11,6 +11,20 @@ Alejandro Cifuentes Arroyave
 Marketplace que **facilita y centraliza la compra y venta de repuestos y carros
 en un solo lugar**, de manera fácil y adaptada a las necesidades de cada usuario.
 
+## Funcionalidades integradas
+
+Esta versión reúne los tres frentes de trabajo del equipo:
+
+- **Administración y cuentas:** CRUD REST para carros, clientes y vendedores;
+  registro e inicio de sesión.
+- **Carrito de compras:** agregar, quitar, vaciar, calcular total y confirmar
+  artículos antes del pago.
+- **Pagos:** catálogo de métodos, creación y consulta de pagos, confirmación
+  de pagos pendientes y factura.
+
+Los permisos se aplican por rol: los **vendedores** publican vehículos y los
+**clientes** compran, usan el carrito y consultan sus pagos.
+
 
 ## Arquitectura
 
@@ -58,13 +72,25 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-1. Entra a <http://127.0.0.1:8000/admin/> e inicia sesión con el superusuario
-   que acabas de crear.
-2. En **Marketplace → Vendedors**, crea un `Vendedor` asociado a ese mismo
-   usuario (campo `usuario`); es obligatorio para poder publicar artículos.
-3. Ve a <http://127.0.0.1:8000/articulos/nuevo/>. Si no habías iniciado sesión
-   fuera del admin, te pedirá loguearte en <http://127.0.0.1:8000/cuentas/login/>
-   con el mismo usuario.
+Después de aplicar las migraciones queda incluido el esquema de carrito y
+pagos. Para comprobar la instalación completa, ejecuta:
+
+```bash
+python manage.py check
+python manage.py test marketplace
+```
+
+### Recorrido rápido
+
+1. Abre <http://127.0.0.1:8000/registro/> para crear una cuenta de cliente o
+   vendedor.
+2. Una cuenta de **vendedor** puede publicar en
+   <http://127.0.0.1:8000/articulos/nuevo/>.
+3. Una cuenta de **cliente** puede recorrer los artículos en
+   <http://127.0.0.1:8000/comprar/> y utilizar el carrito mediante sus
+   endpoints API.
+4. Como alternativa, entra a <http://127.0.0.1:8000/admin/> con un
+   superusuario para administrar clientes, vendedores y publicaciones.
 
 Por defecto la app corre en modo **MOCK**: aprueba cualquier documento y
 notifica por consola, sin necesidad de configurar nada. `.env.example` lista
