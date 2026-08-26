@@ -11,7 +11,7 @@ urlpatterns = [
     # La API vive bajo un prefijo propio para que un API Gateway pueda
     # enrutarla por separado del front web sin tocar el código.
     path('api/', include('marketplace.api.urls')),
-    path('api/', include('marketplace.api_urls')),
+    path('api/', include('marketplace.api.urls_cuentas')),
     path('', include('marketplace.urls')),
 ]
 

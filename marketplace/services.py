@@ -623,15 +623,25 @@ class CarritoComprasService:
     def __init__(self, carro_model=Carro, repuesto_model=Repuesto):
         self._carro_model, self._repuesto_model = carro_model, repuesto_model
 
+    def obtener_resumen(self, usuario):
+        carrito = self._obtener_o_crear_carrito()
+        self._recalcular(carrito)
+        return {
+            "carrito": carrito,
+            "articulos": self._articulos_del_carrito(carrito),
+        }
+
     def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
-        carrito, articulo = self._obtener_o_crear_carrito(), self._obtener_articulo(tipo_articulo, articulo_id)
+        carrito = self._obtener_o_crear_carrito()
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
         articulo.carrito_compra = carrito
         articulo.save(update_fields=["carrito_compra"])
         self._recalcular(carrito)
         return self._respuesta("agregado", tipo_articulo, articulo)
 
     def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
-        carrito, articulo = self._obtener_o_crear_carrito(), self._obtener_articulo(tipo_articulo, articulo_id)
+        carrito = self._obtener_o_crear_carrito()
+        articulo = self._obtener_articulo(tipo_articulo, articulo_id)
         if articulo.carrito_compra_id != carrito.id:
             raise ErrorDeDominio("El artículo no está en el carrito.")
         articulo.carrito_compra = None
@@ -677,8 +687,66 @@ class CarritoComprasService:
         carrito.save(update_fields=["cantidad_producto", "precio_total"])
 
     def _respuesta(self, accion, tipo, articulo):
+        return self._articulo_carrito(accion, tipo, articulo)
+
+    def _articulos_del_carrito(self, carrito):
+        articulos = []
+        for articulo in carrito.carros.select_related("vendedor").order_by("-publicado_en", "-pk"):
+            articulos.append(self._articulo_carrito("en_carrito", "carro", articulo))
+        for articulo in carrito.repuestos.select_related("vendedor").order_by("-pk"):
+            articulos.append(self._articulo_carrito("en_carrito", "repuesto", articulo))
+        return articulos
+
+    def _articulo_carrito(self, accion, tipo, articulo):
         if isinstance(articulo, Carro):
-            titulo, detalle = f"{articulo.marca} {articulo.modelo}", {"placa": articulo.placa}
+            titulo, detalle = (
+                f"{articulo.marca} {articulo.modelo}",
+                {"placa": articulo.placa, "estado": articulo.get_estado_display()},
+            )
         else:
-            titulo, detalle = f"{articulo.tipo} - {articulo.modelo_carro}", {"numero_serie": articulo.numero_serie}
-        return ArticuloCarrito(accion, tipo, articulo.pk, titulo, articulo.precio, articulo.vendedor_id, articulo.vendedor.nombre, detalle)
+            titulo, detalle = (
+                f"{articulo.tipo} - {articulo.modelo_carro}",
+                {
+                    "numero_serie": articulo.numero_serie,
+                    "estado": articulo.get_estado_display(),
+                },
+            )
+        return ArticuloCarrito(
+            accion,
+            tipo,
+            articulo.pk,
+            titulo,
+            articulo.precio,
+            articulo.vendedor_id,
+            articulo.vendedor.nombre,
+            detalle,
+        )
+
+
+class PagarCarritoService:
+    """Cobra todos los artículos seleccionados en el carrito.
+
+    La vista solo entrega el formulario validado y este servicio decide el
+    orden de ejecución: primero procesa cada artículo con el servicio de pago
+    existente y, si todo salió bien, vacía el carrito.
+    """
+
+    def __init__(self, carrito_service=None, pago_service=None):
+        self._carrito_service = carrito_service or CarritoComprasService()
+        self._pago_service = pago_service or ProcesarPagoService()
+
+    def procesar(self, cliente, datos):
+        resumen = self._carrito_service.obtener_resumen(cliente.usuario)
+        carrito = resumen["carrito"]
+
+        if not carrito.cantidad_producto:
+            raise ErrorDeDominio("El carrito está vacío.")
+
+        pagos = []
+        for articulo in resumen["articulos"]:
+            datos_articulo = dict(datos)
+            datos_articulo[articulo.tipo_articulo] = articulo.articulo_id
+            pagos.append(self._pago_service.procesar(cliente, datos_articulo))
+
+        self._carrito_service.vaciar_carrito(cliente.usuario)
+        return {"pagos": pagos, "carrito": carrito}

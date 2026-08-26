@@ -1,0 +1,175 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Mi carrito | CarFit{% endblock %}
+{% block ancho %}960px{% endblock %}
+{% block ancho_nav %}960px{% endblock %}
+
+{% block contenido %}
+  <h1>Carrito de compras</h1>
+  <p class="ayuda">El pago sigue siendo por artículo, pero desde aquí controlas tu selección y el total.</p>
+
+  <div class="resumen">
+    <div class="fila"><span>Artículos</span><span>{{ carrito.cantidad_producto }}</span></div>
+    <div class="fila total"><span>Total del carrito</span><span>${{ carrito.precio_total|floatformat:0 }} COP</span></div>
+  </div>
+
+  {% if articulos %}
+    <div class="rejilla" data-carrito-lista>
+      {% for articulo in articulos %}
+        <article class="tarjeta-articulo" data-carrito-item data-tipo-articulo="{{ articulo.tipo_articulo }}" data-articulo-id="{{ articulo.articulo_id }}">
+          <span class="etiqueta">{{ articulo.tipo_articulo }}</span>
+          <strong>{{ articulo.titulo }}</strong>
+          <span class="ayuda">{{ articulo.vendedor_nombre }}</span>
+          {% if articulo.tipo_articulo == 'carro' %}
+            <span class="ayuda">Placa {{ articulo.detalle.placa }} · {{ articulo.detalle.estado }}</span>
+          {% else %}
+            <span class="ayuda">Serie {{ articulo.detalle.numero_serie }} · {{ articulo.detalle.estado }}</span>
+          {% endif %}
+          <span class="precio">${{ articulo.precio|floatformat:0 }} COP</span>
+          <div class="acciones-carrito">
+            <button type="button" class="boton secundario" data-carrito-toggle data-estado="dentro" data-tipo-articulo="{{ articulo.tipo_articulo }}" data-articulo-id="{{ articulo.articulo_id }}" data-quitar-url="{{ articulo.quitar_url }}" data-url="{{ articulo.quitar_url }}" onclick="CarFitCart.quitar(this.dataset.url, this)">Quitar</button>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    <p style="margin-top: 1rem;">
+      <button type="button" class="boton secundario" data-url="{% url 'marketplace:vaciar_carrito' %}" onclick="CarFitCart.vaciar(this.dataset.url)">Vaciar carrito</button>
+    </p>
+
+    <form method="post" novalidate id="formulario-pago-carrito" data-carrito-form>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="errores">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <label>Método de pago</label>
+      {% if form.metodo_pago.errors %}
+        <div class="errores">{{ form.metodo_pago.errors }}</div>
+      {% endif %}
+      <div class="metodos">
+        {% for metodo in form.metodos %}
+          <div class="metodo">
+            <input
+              type="radio" name="metodo_pago" id="metodo_{{ metodo.codigo }}" value="{{ metodo.codigo }}"
+              data-comision-pct="{{ metodo.comision_porcentual|stringformat:'s' }}"
+              data-comision-fija="{{ metodo.comision_fija|stringformat:'d' }}"
+              data-permite-cuotas="{% if metodo.permite_cuotas %}1{% else %}0{% endif %}"
+              data-cuotas-max="{{ metodo.cuotas_maximas|stringformat:'d' }}"
+              data-campos="{{ metodo.campos_requeridos|join:',' }}"
+              {% if metodo.codigo == metodo_inicial %}checked{% endif %}
+              required
+            >
+            <label class="tarjeta-metodo" for="metodo_{{ metodo.codigo }}">
+              {{ metodo.etiqueta }}
+              <span class="comision">
+                {% if metodo.comision_fija or metodo.comision_porcentual %}
+                  {% if metodo.comision_porcentual %}{{ metodo.comision_porcentaje_legible|floatformat:2 }}%{% endif %}{% if metodo.comision_fija %} + ${{ metodo.comision_fija }}{% endif %}
+                {% else %}
+                  Sin comisión
+                {% endif %}
+              </span>
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div data-campo="token_tarjeta">
+        <label for="id_token_tarjeta">{{ form.token_tarjeta.label }}</label>
+        {{ form.token_tarjeta }}
+        {{ form.token_tarjeta.errors }}
+      </div>
+      <div data-campo="banco">
+        <label for="id_banco">{{ form.banco.label }}</label>
+        {{ form.banco }}
+        {{ form.banco.errors }}
+      </div>
+      <div data-campo="tipo_persona">
+        <label for="id_tipo_persona">{{ form.tipo_persona.label }}</label>
+        {{ form.tipo_persona }}
+        {{ form.tipo_persona.errors }}
+      </div>
+      <div data-campo="documento_pagador">
+        <label for="id_documento_pagador">{{ form.documento_pagador.label }}</label>
+        {{ form.documento_pagador }}
+        {{ form.documento_pagador.errors }}
+      </div>
+      <div data-campo="telefono">
+        <label for="id_telefono">{{ form.telefono.label }}</label>
+        {{ form.telefono }}
+        {{ form.telefono.errors }}
+      </div>
+
+      <div data-cuotas-wrap>
+        <label for="id_cuotas">{{ form.cuotas.label }}</label>
+        {{ form.cuotas }}
+        {{ form.cuotas.errors }}
+      </div>
+
+      <label for="id_referencia">{{ form.referencia.label }}</label>
+      {{ form.referencia }}
+      <p class="ayuda">Déjalo vacío y CarFit genera una referencia automáticamente.</p>
+
+      <div class="resumen">
+        <div class="fila"><span>Total del carrito</span><span>${{ carrito.precio_total|floatformat:0 }}</span></div>
+        <div class="fila"><span>Comisión estimada</span><span data-resumen-comision>$0</span></div>
+        <div class="fila total"><span>Total a pagar</span><span data-resumen-total>${{ carrito.precio_total|floatformat:0 }}</span></div>
+      </div>
+
+      <button type="submit">Confirmar compra del carrito</button>
+    </form>
+  {% else %}
+    <p class="vacio" data-carrito-vacio>Tu carrito está vacío. Vuelve al catálogo para agregar artículos.</p>
+    <p><a class="boton" href="{% url 'marketplace:catalogo_compras' %}">Ir al catálogo</a></p>
+  {% endif %}
+
+  {% if articulos %}
+  <script>
+  (function () {
+    var precio = {{ carrito.precio_total|stringformat:"d" }};
+    var radios = document.querySelectorAll('input[name="metodo_pago"]');
+    var camposDivs = document.querySelectorAll('[data-campo]');
+    var cuotasWrap = document.querySelector('[data-cuotas-wrap]');
+    var cuotasInput = document.getElementById('id_cuotas');
+    var elComision = document.querySelector('[data-resumen-comision]');
+    var elTotal = document.querySelector('[data-resumen-total]');
+
+    function formatearPesos(valor) {
+      return '$' + Math.round(valor).toLocaleString('es-CO');
+    }
+
+    function actualizar() {
+      var seleccionado = document.querySelector('input[name="metodo_pago"]:checked');
+      if (!seleccionado) { return; }
+
+      var campos = (seleccionado.dataset.campos || '').split(',').filter(Boolean);
+      camposDivs.forEach(function (div) {
+        var visible = campos.indexOf(div.dataset.campo) !== -1;
+        div.style.display = visible ? 'block' : 'none';
+        var input = div.querySelector('input, select');
+        if (input) { input.required = visible; }
+      });
+
+      var permiteCuotas = seleccionado.dataset.permiteCuotas === '1';
+      if (cuotasWrap) { cuotasWrap.style.display = permiteCuotas ? 'block' : 'none'; }
+      if (cuotasInput) {
+        cuotasInput.max = seleccionado.dataset.cuotasMax || 1;
+        if (!permiteCuotas) { cuotasInput.value = 1; }
+      }
+
+      var porcentaje = parseFloat(seleccionado.dataset.comisionPct || '0');
+      var fija = parseInt(seleccionado.dataset.comisionFija || '0', 10);
+      var comision = Math.round(precio * porcentaje) + fija;
+      var total = precio + comision;
+
+      if (elComision) { elComision.textContent = formatearPesos(comision); }
+      if (elTotal) { elTotal.textContent = formatearPesos(total); }
+    }
+
+    radios.forEach(function (radio) { radio.addEventListener('change', actualizar); });
+    actualizar();
+  })();
+  </script>
+  {% endif %}
+{% endblock %}

@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'marketplace.context_processors.carrito_compra',
             ],
         },
     },
@@ -139,7 +140,7 @@ LOGIN_REDIRECT_URL = 'marketplace:crear_articulo'
 LOGOUT_REDIRECT_URL = '/'
 
 
-# Django REST Framework — API administrativa (ver marketplace/api_views.py).
+# Django REST Framework: toda la API vive en marketplace/api/.
 # Autenticación por cookie de sesión (la misma que usan las vistas HTML) y
 # acceso denegado por defecto: cada vista habilita explícitamente el
 # permiso que necesita (p. ej. LoginAPIView es la única AllowAny).
