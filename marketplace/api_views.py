@@ -90,3 +90,29 @@ class CarroDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Carro.objects.all()
     serializer_class = CarroSerializer
     permission_classes = [permissions.IsAdminUser]
+
+from .serializers import RepuestoSerializer
+
+class PublicarRepuestoAPIView(APIView):
+    """Expone el flujo de negocio de publicar un repuesto usando APIView."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not hasattr(request.user, "vendedor"):
+            return Response({"detail": "Se requiere perfil de Vendedor."}, status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = RepuestoSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        from .services import PublicacionArticuloService
+        from .domain.exceptions import ErrorDeDominio
+        
+        servicio = PublicacionArticuloService()
+        try:
+            repuesto = servicio.crear_repuesto(request.user.vendedor, serializer.validated_data)
+        except ErrorDeDominio as error:
+            return Response({"detail": str(error)}, status=status.HTTP_409_CONFLICT)
+            
+        serializer_salida = RepuestoSerializer(repuesto)
+        return Response(serializer_salida.data, status=status.HTTP_201_CREATED)

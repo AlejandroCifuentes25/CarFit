@@ -1,9 +1,9 @@
-"""Rutas de la API (DRF).
+﻿"""Rutas de la API (DRF).
 
-Separadas de `urls.py` (HTML) y montadas bajo el prefijo `/api/` en
-`carfit/urls.py`. Este aislamiento es, además, el primer paso para poner un
+Separadas de urls.py (HTML) y montadas bajo el prefijo /api/ en
+carfit/urls.py. Este aislamiento es, ademas, el primer paso para poner un
 API Gateway delante: todo lo que necesita quedar expuesto como servicio
-cuelga de un único prefijo.
+cuelga de un unico prefijo.
 """
 
 from django.urls import path
@@ -40,4 +40,5 @@ urlpatterns = [
         api_views.CarroDetailAPIView.as_view(),
         name="carro_detalle",
     ),
+    path('publicar-repuesto/', api_views.PublicarRepuestoAPIView.as_view(), name='api_publicar_repuesto'),
 ]

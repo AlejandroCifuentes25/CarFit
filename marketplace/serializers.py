@@ -9,7 +9,7 @@ reutiliza la constante `KM_MAXIMO_NUEVO` para no duplicar el número mágico.
 from rest_framework import serializers
 
 from .domain.builders import KM_MAXIMO_NUEVO
-from .models import Carro, Cliente, Vendedor
+from .models import Carro, Repuesto, Cliente, Vendedor
 
 
 class LoginSerializer(serializers.Serializer):
@@ -65,3 +65,8 @@ class CarroSerializer(serializers.ModelSerializer):
                 f"(recibido: {kilometraje} km)."
             )
         return datos
+class RepuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Repuesto
+        fields = ['id', 'vendedor', 'tipo', 'modelo_carro', 'numero_serie', 'estado', 'precio']
+        read_only_fields = ['id', 'vendedor']
