@@ -1,7 +1,8 @@
-"""Capa de Presentación de pagos (Django REST Framework).
+"""Capa de Presentación de la API (Django REST Framework).
 
-Se usa `APIView` y no `ViewSet` para tener control explícito de cada método
-HTTP y de cada código de estado, que es lo que se está evaluando.
+Se usa `APIView` (o `generics.*APIView` para el CRUD administrativo) y no
+`ViewSet`, para tener control explícito de cada método HTTP y de cada
+código de estado, que es lo que se está evaluando.
 
 Ninguna de estas vistas contiene reglas de negocio. Su trabajo completo es:
 
@@ -11,16 +12,23 @@ Ninguna de estas vistas contiene reglas de negocio. Su trabajo completo es:
 
 Si alguna de estas clases empieza a calcular comisiones o a decidir si un
 artículo está disponible, la lógica está en el lugar equivocado.
+
+Se agrupan aquí las tres familias de endpoints (cuentas, carrito y pagos)
+en vez de un archivo por familia: es la misma convención que ya usan
+`services.py`, `domain/builders.py` e `infra/factories.py` en el resto del
+proyecto.
 """
 
-from rest_framework import status
+from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..domain.exceptions import ErrorDeDominio, RecursoNoEncontradoError
-from ..models import Pago
+from ..domain.exceptions import CredencialesInvalidasError, ErrorDeDominio, RecursoNoEncontradoError
+from ..models import Carro, Cliente, Pago, Vendedor
 from ..services import (
+    AutenticacionService,
+    CarritoComprasService,
     CatalogoMetodosPagoService,
     ConfirmarPagoService,
     ConsultarPagoService,
@@ -29,11 +37,158 @@ from ..services import (
 )
 from .errores import respuesta_de_error
 from .serializers import (
+    ArticuloCarritoSerializer,
+    CarroSerializer,
+    ClienteSerializer,
     CrearPagoSerializer,
     EspecificacionMetodoPagoSerializer,
     FacturaSerializer,
+    LoginSerializer,
+    MovimientoCarritoSerializer,
     PagoSerializer,
+    VendedorSerializer,
 )
+
+# ---------------------------------------------------------------------
+# Cuentas: login y CRUD administrativo (solo usuarios staff)
+# ---------------------------------------------------------------------
+
+
+class LoginAPIView(APIView):
+    """Inicia sesión de un usuario (Vendedor, Cliente o Administrador).
+
+    La sesión queda asociada por cookie, igual que el login HTML ya
+    existente en `/cuentas/login/`: ambos comparten `AutenticacionService`.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    # Inyectable desde las pruebas: LoginAPIView.as_view(service_factory=...)
+    service_factory = AutenticacionService
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            usuario = self.service_factory().iniciar_sesion(
+                request, **serializer.validated_data
+            )
+        except CredencialesInvalidasError as error:
+            return respuesta_de_error(error)
+
+        return Response(
+            {"id": usuario.id, "username": usuario.username, "is_staff": usuario.is_staff},
+            status=status.HTTP_200_OK,
+        )
+
+
+class VendedorListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Vendedor.objects.all()
+    serializer_class = VendedorSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class VendedorDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Vendedor.objects.all()
+    serializer_class = VendedorSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class ClienteListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class ClienteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class CarroListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Carro.objects.all()
+    serializer_class = CarroSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class CarroDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Carro.objects.all()
+    serializer_class = CarroSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+# ---------------------------------------------------------------------
+# Carrito de compras
+# ---------------------------------------------------------------------
+
+
+class BaseCarritoView(APIView):
+    """Comparten permisos, el service y la traducción de errores de dominio."""
+
+    permission_classes = [IsAuthenticated]
+    service_factory = CarritoComprasService
+
+    def get_service(self):
+        return self.service_factory()
+
+    def ejecutar_y_responder(self, operacion, serializar=lambda resultado: resultado):
+        try:
+            resultado = operacion()
+        except ErrorDeDominio as error:
+            return respuesta_de_error(error)
+        return Response(serializar(resultado))
+
+
+class BaseArticuloCarritoView(BaseCarritoView):
+    def post(self, request, *args, **kwargs):
+        serializer = MovimientoCarritoSerializer(data=kwargs)
+        serializer.is_valid(raise_exception=True)
+        datos = serializer.validated_data
+        return self.ejecutar_y_responder(
+            lambda: self.ejecutar(self.get_service(), request.user, datos),
+            serializar=lambda resultado: ArticuloCarritoSerializer(resultado).data,
+        )
+
+
+class AgregarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.agregar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
+
+
+class QuitarArticuloCarrito(BaseArticuloCarritoView):
+    def ejecutar(self, servicio, usuario, datos):
+        return servicio.quitar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
+
+
+class BaseCarritoOperacionView(BaseCarritoView):
+    def post(self, request, *args, **kwargs):
+        return self.ejecutar_y_responder(lambda: self.ejecutar(self.get_service(), request.user))
+
+
+class VaciarCarritoView(BaseCarritoOperacionView):
+    def ejecutar(self, servicio, usuario):
+        carrito = servicio.vaciar_carrito(usuario)
+        return {
+            "carrito_id": carrito.pk,
+            "cantidad_producto": carrito.cantidad_producto,
+            "precio_total": carrito.precio_total,
+        }
+
+
+class CalcularTotalCarritoView(BaseCarritoOperacionView):
+    def ejecutar(self, servicio, usuario):
+        return {"precio_total": servicio.calcular_total(usuario)}
+
+
+class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
+    def ejecutar(self, servicio, usuario):
+        return servicio.confirmar_compra(usuario)
+
+
+# ---------------------------------------------------------------------
+# Pagos
+# ---------------------------------------------------------------------
 
 #: Cómo se representa en HTTP cada desenlace del cobro. Un pago rechazado sí
 #: se registró (existe, tiene referencia y queda en el historial), pero el

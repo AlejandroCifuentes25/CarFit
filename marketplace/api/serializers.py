@@ -1,4 +1,4 @@
-"""Serializers de la API de pagos.
+"""Serializers de la API (cuentas, carrito y pagos).
 
 Los serializers validan **formato**, no negocio: que `cuotas` sea un entero,
 que `referencia` no pase de 60 caracteres, que `carro` venga como número.
@@ -12,10 +12,76 @@ programada, y ninguno de esos caminos pasa por un serializer.
 
 from rest_framework import serializers
 
-from ..models import Pago
+from ..domain.builders import KM_MAXIMO_NUEVO
+from ..models import Carro, Cliente, Pago, Vendedor
 
 
 TIPOS_ARTICULO = (("carro", "Carro"), ("repuesto", "Repuesto"))
+
+
+# ---------------------------------------------------------------------
+# Cuentas: login y CRUD administrativo
+# ---------------------------------------------------------------------
+
+
+class LoginSerializer(serializers.Serializer):
+    """Entrada del endpoint de inicio de sesión."""
+
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True, style={"input_type": "password"})
+
+
+class VendedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendedor
+        fields = ["id", "usuario", "nombre", "correo", "direccion", "numero_tel", "resena"]
+        read_only_fields = ["resena"]
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cliente
+        fields = ["id", "usuario", "nombre", "correo", "direccion", "numero_tel"]
+
+
+class CarroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Carro
+        fields = [
+            "id",
+            "vendedor",
+            "placa",
+            "marca",
+            "modelo",
+            "estado",
+            "color",
+            "kilometraje",
+            "descripcion",
+            "precio",
+            "puntaje",
+            "publicado_en",
+        ]
+        read_only_fields = ["puntaje", "publicado_en"]
+
+    def validate_placa(self, valor):
+        return valor.strip().upper()
+
+    def validate(self, datos):
+        instancia = self.instance
+        estado = datos.get("estado", getattr(instancia, "estado", None))
+        kilometraje = datos.get("kilometraje", getattr(instancia, "kilometraje", None))
+
+        if estado == Carro.Estado.NUEVO and kilometraje is not None and kilometraje > KM_MAXIMO_NUEVO:
+            raise serializers.ValidationError(
+                f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km "
+                f"(recibido: {kilometraje} km)."
+            )
+        return datos
+
+
+# ---------------------------------------------------------------------
+# Carrito de compras
+# ---------------------------------------------------------------------
 
 
 class MovimientoCarritoSerializer(serializers.Serializer):
@@ -32,6 +98,11 @@ class ArticuloCarritoSerializer(serializers.Serializer):
     vendedor_id = serializers.IntegerField()
     vendedor_nombre = serializers.CharField()
     detalle = serializers.DictField()
+
+
+# ---------------------------------------------------------------------
+# Pagos
+# ---------------------------------------------------------------------
 
 
 class EspecificacionMetodoPagoSerializer(serializers.Serializer):
