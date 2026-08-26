@@ -14,6 +14,7 @@ urlpatterns = [
         name="articulo_publicado",
     ),
     path("comprar/", views.CatalogoComprasView.as_view(), name="catalogo_compras"),
+    path("carrito/", views.CarritoComprasView.as_view(), name="carrito"),
     path(
         "comprar/<str:tipo>/<int:pk>/pagar/",
         views.PagarArticuloView.as_view(),

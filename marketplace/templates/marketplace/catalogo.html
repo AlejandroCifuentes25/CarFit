@@ -6,7 +6,7 @@
 
 {% block contenido %}
   <h1>Vehículos y repuestos disponibles</h1>
-  <p class="ayuda">Elige un artículo para ver los métodos de pago disponibles.</p>
+  <p class="ayuda">Agrega artículos al carrito y continúa el pago desde allí.</p>
 
   <h2>Carros</h2>
   {% if carros %}
@@ -17,7 +17,13 @@
           <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
           <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
           <span class="precio">${{ carro.precio|floatformat:0 }} COP</span>
-          <a class="boton" href="{% url 'marketplace:pagar_articulo' tipo='carro' pk=carro.pk %}">Pagar</a>
+          <div class="acciones-carrito">
+            {% if carro.pk in carrito_carros_ids %}
+              <button type="button" class="boton secundario" data-carrito-toggle data-estado="dentro" data-tipo-articulo="carro" data-articulo-id="{{ carro.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" onclick="CarFitCart.quitar(this.dataset.url)">Quitar del carrito</button>
+            {% else %}
+              <button type="button" class="boton secundario" data-carrito-toggle data-estado="fuera" data-tipo-articulo="carro" data-articulo-id="{{ carro.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" onclick="CarFitCart.agregar(this.dataset.url)">Agregar al carrito</button>
+            {% endif %}
+          </div>
         </div>
       {% endfor %}
     </div>
@@ -34,7 +40,13 @@
           <strong>{{ repuesto.tipo }}</strong>
           <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
           <span class="precio">${{ repuesto.precio|floatformat:0 }} COP</span>
-          <a class="boton" href="{% url 'marketplace:pagar_articulo' tipo='repuesto' pk=repuesto.pk %}">Pagar</a>
+          <div class="acciones-carrito">
+            {% if repuesto.pk in carrito_repuestos_ids %}
+              <button type="button" class="boton secundario" data-carrito-toggle data-estado="dentro" data-tipo-articulo="repuesto" data-articulo-id="{{ repuesto.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" onclick="CarFitCart.quitar(this.dataset.url)">Quitar del carrito</button>
+            {% else %}
+              <button type="button" class="boton secundario" data-carrito-toggle data-estado="fuera" data-tipo-articulo="repuesto" data-articulo-id="{{ repuesto.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" onclick="CarFitCart.agregar(this.dataset.url)">Agregar al carrito</button>
+            {% endif %}
+          </div>
         </div>
       {% endfor %}
     </div>
