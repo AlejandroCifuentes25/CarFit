@@ -160,6 +160,21 @@ class EditarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, UpdateView)
         contexto["tipo"] = self.kwargs.get("tipo")
         return contexto
 
+    def form_valid(self, form):
+        from .services import PublicacionArticuloService
+        from .domain.exceptions import ErrorDeDominio
+        
+        servicio = PublicacionArticuloService()
+        try:
+            if self.kwargs.get("tipo") == "carro":
+                self.object = servicio.editar_carro(self.get_object(), form.cleaned_data)
+            else:
+                self.object = servicio.editar_repuesto(self.get_object(), form.cleaned_data)
+            return redirect(self.get_success_url())
+        except ErrorDeDominio as e:
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
+
 
 class EliminarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, DeleteView):
     template_name = "marketplace/confirmar_eliminar.html"
@@ -174,12 +189,16 @@ class EliminarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, DeleteVie
         raise Http404
 
     def form_valid(self, form):
-        from .services import ESTADOS_QUE_COMPROMETEN_ARTICULO
-        obj = self.get_object()
-        if obj.pagos.filter(estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO).exists():
-            messages.error(self.request, "No puedes eliminar un artículo que está en proceso de pago.")
+        from .services import PublicacionArticuloService
+        from .domain.exceptions import ErrorDeDominio
+        
+        servicio = PublicacionArticuloService()
+        try:
+            servicio.eliminar_articulo(self.get_object())
+            return redirect(self.success_url)
+        except ErrorDeDominio as e:
+            messages.error(self.request, str(e))
             return redirect("marketplace:mis_publicaciones")
-        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)

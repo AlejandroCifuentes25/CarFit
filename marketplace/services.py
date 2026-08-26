@@ -131,6 +131,53 @@ class PublicacionArticuloService:
 
         return repuesto
 
+    @transaction.atomic
+    def editar_carro(self, carro, datos):
+        from .domain.builders import KM_MAXIMO_NUEVO
+        
+        carro.placa = datos.get("placa", carro.placa)
+        carro.marca = datos.get("marca", carro.marca)
+        carro.modelo = datos.get("modelo", carro.modelo)
+        carro.color = datos.get("color", carro.color)
+        carro.estado = datos.get("estado", carro.estado)
+        carro.kilometraje = datos.get("kilometraje", carro.kilometraje)
+        carro.precio = datos.get("precio", carro.precio)
+        carro.descripcion = datos.get("descripcion", carro.descripcion)
+        
+        if carro.estado == "NUEVO" and carro.kilometraje > KM_MAXIMO_NUEVO:
+            raise ErrorDeDominio(f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km.")
+            
+        try:
+            carro.save()
+        except IntegrityError:
+            raise ErrorDeDominio("Ya existe un vehículo registrado con esta placa.")
+            
+        return carro
+
+    @transaction.atomic
+    def editar_repuesto(self, repuesto, datos):
+        repuesto.tipo = datos.get("tipo", repuesto.tipo)
+        repuesto.modelo_carro = datos.get("modelo_carro", repuesto.modelo_carro)
+        repuesto.numero_serie = datos.get("numero_serie", repuesto.numero_serie)
+        repuesto.estado = datos.get("estado", repuesto.estado)
+        repuesto.precio = datos.get("precio", repuesto.precio)
+        
+        try:
+            repuesto.save()
+        except IntegrityError:
+            raise ErrorDeDominio("Ya existe un repuesto publicado con este número de serie.")
+            
+        return repuesto
+
+    @transaction.atomic
+    def eliminar_articulo(self, articulo):
+        if articulo.pagos.filter(estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO).exists():
+            raise ErrorDeDominio("No puedes eliminar un artículo que está en proceso de pago.")
+        
+        vendedor = articulo.vendedor
+        articulo.delete()
+        self._actualizar_inventario(vendedor)
+
     # ------------------------------------------------------------------
     # Pasos internos
     # ------------------------------------------------------------------

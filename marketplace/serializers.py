@@ -1,20 +1,15 @@
-"""Serializers de DRF.
+﻿"""Serializers de DRF.
 
-Igual que `forms.py`, solo validan *formato* de entrada/salida. Las
-invariantes de negocio de `Carro` (placa colombiana, kilometraje máximo
-para un vehículo NUEVO) viven en `domain/builders.py`; aquí solo se
-reutiliza la constante `KM_MAXIMO_NUEVO` para no duplicar el número mágico.
+Igual que forms.py, solo validan *formato* de entrada/salida. Las
+invariantes de negocio de Carro viven en domain/builders.py.
 """
 
 from rest_framework import serializers
-
-from .domain.builders import KM_MAXIMO_NUEVO
 from .models import Carro, Repuesto, Cliente, Vendedor
 
 
 class LoginSerializer(serializers.Serializer):
     """Entrada del endpoint de inicio de sesión."""
-
     username = serializers.CharField()
     password = serializers.CharField(write_only=True, style={"input_type": "password"})
 
@@ -54,19 +49,9 @@ class CarroSerializer(serializers.ModelSerializer):
     def validate_placa(self, valor):
         return valor.strip().upper()
 
-    def validate(self, datos):
-        instancia = self.instance
-        estado = datos.get("estado", getattr(instancia, "estado", None))
-        kilometraje = datos.get("kilometraje", getattr(instancia, "kilometraje", None))
 
-        if estado == Carro.Estado.NUEVO and kilometraje is not None and kilometraje > KM_MAXIMO_NUEVO:
-            raise serializers.ValidationError(
-                f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km "
-                f"(recibido: {kilometraje} km)."
-            )
-        return datos
 class RepuestoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Repuesto
-        fields = ['id', 'vendedor', 'tipo', 'modelo_carro', 'numero_serie', 'estado', 'precio']
-        read_only_fields = ['id', 'vendedor']
+        fields = ["id", "vendedor", "tipo", "modelo_carro", "numero_serie", "estado", "precio"]
+        read_only_fields = ["id", "vendedor"]
