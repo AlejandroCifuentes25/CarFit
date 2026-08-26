@@ -11,7 +11,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, UpdateView, DeleteView
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -87,6 +87,77 @@ class CrearArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
 
 class ArticuloPublicadoView(LoginRequiredMixin, TemplateView):
     template_name = "marketplace/articulo_publicado.html"
+
+
+class MisPublicacionesView(LoginRequiredMixin, VendedorRequeridoMixin, TemplateView):
+    template_name = "marketplace/mis_publicaciones.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        vendedor = self.request.user.vendedor
+        contexto["carros"] = vendedor.carros.all()
+        contexto["repuestos"] = vendedor.repuestos.all()
+        return contexto
+
+
+class EditarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, UpdateView):
+    template_name = "marketplace/editar_articulo.html"
+    success_url = reverse_lazy("marketplace:mis_publicaciones")
+
+    def get_queryset(self):
+        tipo = self.kwargs.get("tipo")
+        if tipo == "carro":
+            return Carro.objects.filter(vendedor=self.request.user.vendedor)
+        elif tipo == "repuesto":
+            return Repuesto.objects.filter(vendedor=self.request.user.vendedor)
+        raise Http404
+
+    def get_form_class(self):
+        from django import forms
+        tipo = self.kwargs.get("tipo")
+        if tipo == "carro":
+            class CarroForm(forms.ModelForm):
+                class Meta:
+                    model = Carro
+                    fields = ["precio", "descripcion", "color", "kilometraje", "estado"]
+            return CarroForm
+        else:
+            class RepuestoForm(forms.ModelForm):
+                class Meta:
+                    model = Repuesto
+                    fields = ["precio", "estado"]
+            return RepuestoForm
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["tipo"] = self.kwargs.get("tipo")
+        return contexto
+
+
+class EliminarArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, DeleteView):
+    template_name = "marketplace/confirmar_eliminar.html"
+    success_url = reverse_lazy("marketplace:mis_publicaciones")
+
+    def get_queryset(self):
+        tipo = self.kwargs.get("tipo")
+        if tipo == "carro":
+            return Carro.objects.filter(vendedor=self.request.user.vendedor)
+        elif tipo == "repuesto":
+            return Repuesto.objects.filter(vendedor=self.request.user.vendedor)
+        raise Http404
+
+    def form_valid(self, form):
+        from .services import ESTADOS_QUE_COMPROMETEN_ARTICULO
+        obj = self.get_object()
+        if obj.pagos.filter(estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO).exists():
+            messages.error(self.request, "No puedes eliminar un artículo que está en proceso de pago.")
+            return redirect("marketplace:mis_publicaciones")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["tipo"] = self.kwargs.get("tipo")
+        return contexto
 
 
 # ----------------------------------------------------------------------

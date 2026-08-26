@@ -523,8 +523,6 @@ class AutenticacionService:
 
 
 class RegistroUsuarioService:
-    ROLES = {"CLIENTE": Cliente, "VENDEDOR": Vendedor}
-
     def registrar(self, request, rol, datos):
         if User.objects.filter(username=datos["username"]).exists():
             raise NombreDeUsuarioEnUsoError(datos["username"])
@@ -532,10 +530,16 @@ class RegistroUsuarioService:
             usuario = User.objects.create_user(
                 username=datos["username"], password=datos["password"]
             )
-            self.ROLES[rol].objects.create(
+            # Siempre se crea perfil de Cliente para que puedan comprar
+            Cliente.objects.create(
                 usuario=usuario, nombre=datos["nombre"], correo=datos["correo"],
                 direccion=datos["direccion"], numero_tel=datos["numero_tel"],
             )
+            if rol == "VENDEDOR":
+                Vendedor.objects.create(
+                    usuario=usuario, nombre=datos["nombre"], correo=datos["correo"],
+                    direccion=datos["direccion"], numero_tel=datos["numero_tel"],
+                )
         login(request, usuario)
         return usuario
 

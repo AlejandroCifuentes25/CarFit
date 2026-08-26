@@ -13,6 +13,9 @@ urlpatterns = [
         views.ArticuloPublicadoView.as_view(),
         name="articulo_publicado",
     ),
+    path("mis-publicaciones/", views.MisPublicacionesView.as_view(), name="mis_publicaciones"),
+    path("articulos/editar/<str:tipo>/<int:pk>/", views.EditarArticuloView.as_view(), name="editar_articulo"),
+    path("articulos/eliminar/<str:tipo>/<int:pk>/", views.EliminarArticuloView.as_view(), name="eliminar_articulo"),
     path("comprar/", views.CatalogoComprasView.as_view(), name="catalogo_compras"),
     path(
         "comprar/<str:tipo>/<int:pk>/pagar/",

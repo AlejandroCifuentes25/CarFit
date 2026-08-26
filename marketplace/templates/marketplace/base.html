@@ -131,6 +131,9 @@
     <a class="marca" href="{% url 'marketplace:catalogo_compras' %}">CarFit</a>
     <a href="{% url 'marketplace:catalogo_compras' %}">Comprar</a>
     <a href="{% url 'marketplace:crear_articulo' %}">Publicar</a>
+    {% if user.vendedor %}
+    <a href="{% url 'marketplace:mis_publicaciones' %}">Mis publicaciones</a>
+    {% endif %}
     <a href="{% url 'marketplace:historial_pagos' %}">Mis pagos</a>
     <span class="separador"></span>
     <span class="ayuda">{{ user.username }}</span>

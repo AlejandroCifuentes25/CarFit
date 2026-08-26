@@ -1,0 +1,70 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Mis Publicaciones | CarFit{% endblock %}
+
+{% block contenido %}
+<h1>Mis Publicaciones</h1>
+<p class="ayuda">Aquí puedes ver, editar y eliminar los vehículos que has publicado.</p>
+
+<section>
+  <h2>Carros</h2>
+  {% if carros %}
+  <table class="datos">
+    <thead>
+      <tr>
+        <th>Vehículo</th>
+        <th>Precio</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for carro in carros %}
+      <tr>
+        <td>{{ carro.marca }} {{ carro.modelo }} ({{ carro.placa }})</td>
+        <td>${{ carro.precio }}</td>
+        <td>{{ carro.get_estado_display }}</td>
+        <td>
+          <a href="{% url 'marketplace:editar_articulo' 'carro' carro.pk %}" class="boton">Editar</a>
+          <a href="{% url 'marketplace:eliminar_articulo' 'carro' carro.pk %}" class="boton boton-secundario">Eliminar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="ayuda">No tienes carros publicados.</p>
+  {% endif %}
+</section>
+<br><br>
+<section>
+  <h2>Repuestos</h2>
+  {% if repuestos %}
+  <table class="datos">
+    <thead>
+      <tr>
+        <th>Repuesto</th>
+        <th>Precio</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for repuesto in repuestos %}
+      <tr>
+        <td>{{ repuesto.tipo }} - {{ repuesto.modelo_carro }}</td>
+        <td>${{ repuesto.precio }}</td>
+        <td>{{ repuesto.get_estado_display }}</td>
+        <td>
+          <a href="{% url 'marketplace:editar_articulo' 'repuesto' repuesto.pk %}" class="boton">Editar</a>
+          <a href="{% url 'marketplace:eliminar_articulo' 'repuesto' repuesto.pk %}" class="boton boton-secundario">Eliminar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="ayuda">No tienes repuestos publicados.</p>
+  {% endif %}
+</section>
+{% endblock %}
