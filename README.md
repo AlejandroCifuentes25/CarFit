@@ -34,17 +34,19 @@ dependencias apuntando siempre hacia el dominio:
 
 ```
 marketplace/
-├── views.py            # Capa de Interfaz:  CBV de 13 líneas, solo traduce HTTP
+├── views.py            # Capa de Interfaz:  CBV, solo traduce HTTP
 ├── forms.py            #                     valida formato, no reglas de negocio
 ├── api/                # Capa de Presentación (DRF): APIView + Serializers
 │   ├── serializers.py  #   validan formato, no reglas de negocio
 │   ├── views.py        #   una APIView por recurso, sin lógica
 │   ├── errores.py      #   traduce errores de dominio a códigos HTTP
-│   └── urls.py
+│   ├── urls.py         #   rutas de pagos y carrito
+│   └── urls_cuentas.py #   rutas de login y CRUD administrativo
 ├── services.py         # Capa de Aplicación: orquesta los casos de uso
 ├── domain/             # Capa de Dominio:   reglas de negocio, sin Django ni HTTP
 │   ├── builders.py     #   Patrón Builder (Fluent Interface)
 │   ├── metodos_pago.py #   catálogo de métodos de pago y sus reglas
+│   ├── facturas.py     #   generación de facturas
 │   ├── ports.py        #   Interfaces abstractas (Inversión de Dependencias)
 │   └── exceptions.py
 ├── infra/              # Infraestructura:   detalles reemplazables
