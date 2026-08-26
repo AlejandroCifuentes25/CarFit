@@ -80,7 +80,7 @@ class CrearArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
 
         try:
             servicio = PublicacionArticuloService()
-            servicio.publicar_carro(self.request.user.vendedor, form.cleaned_data)
+            servicio.crear_articulo(self.request.user.vendedor, form.cleaned_data)
             return super().form_valid(form)
         except (ValueError, ErrorDeDominio) as e:
             form.add_error(None, str(e))
