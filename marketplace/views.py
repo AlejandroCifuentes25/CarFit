@@ -11,7 +11,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import FormView, TemplateView, UpdateView, DeleteView
+from django.views.generic import FormView, TemplateView, UpdateView, DeleteView, CreateView
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -75,14 +75,33 @@ class CrearArticuloView(LoginRequiredMixin, VendedorRequeridoMixin, FormView):
     service_factory = PublicacionArticuloService
 
     def form_valid(self, form):
+        from django.db import IntegrityError
+        from .domain.exceptions import ErrorDeDominio
+
         try:
-            self.service_factory().crear_articulo(
-                self.request.user.vendedor, form.cleaned_data
-            )
-        except ErrorDeDominio as error:
-            form.add_error(None, str(error))
+            servicio = PublicacionArticuloService()
+            servicio.publicar_carro(self.request.user.vendedor, form.cleaned_data)
+            return super().form_valid(form)
+        except (ValueError, ErrorDeDominio) as e:
+            form.add_error(None, str(e))
             return self.form_invalid(form)
-        return super().form_valid(form)
+
+
+class CrearRepuestoView(LoginRequiredMixin, VendedorRequeridoMixin, CreateView):
+    model = Repuesto
+    fields = ["tipo", "modelo_carro", "numero_serie", "estado", "precio"]
+    template_name = "marketplace/crear_repuesto.html"
+    success_url = reverse_lazy("marketplace:articulo_publicado")
+
+    def form_valid(self, form):
+        from django.db import IntegrityError
+        
+        form.instance.vendedor = self.request.user.vendedor
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error(None, "Ya existe un repuesto publicado con este número de serie.")
+            return self.form_invalid(form)
 
 
 class ArticuloPublicadoView(LoginRequiredMixin, TemplateView):

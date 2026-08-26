@@ -1,0 +1,25 @@
+{% extends "marketplace/base.html" %}
+
+{% block titulo %}Publicar Repuesto | CarFit{% endblock %}
+
+{% block contenido %}
+  <h1>Publicar Repuesto</h1>
+  <p class="ayuda">
+    Completa los datos del repuesto que deseas vender.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="errores">
+        <strong>No pudimos publicar el repuesto:</strong>
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    {{ form.as_p }}
+
+    <button type="submit">Publicar repuesto</button>
+  </form>
+{% endblock %}

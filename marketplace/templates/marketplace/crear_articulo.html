@@ -8,6 +8,9 @@
     Completa los datos del vehículo y su documentación legal. Validamos que el
     SOAT y la tecnomecánica estén vigentes antes de publicar.
   </p>
+  <p class="ayuda">
+    ¿Deseas publicar un repuesto en lugar de un vehículo? <a href="{% url 'marketplace:crear_repuesto' %}">Haz clic aquí</a>.
+  </p>
 
   <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
