@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .api import views_carrito
 
 app_name = "marketplace"
 
@@ -35,9 +36,9 @@ urlpatterns = [
         views.FacturaPagoView.as_view(),
         name="factura_pago",
     ),
-    path("carrito/agregar/<str:tipo_articulo>/<int:articulo_id>/", views.AgregarArticuloCarrito.as_view(), name="agregar_articulo_carrito"),
-    path("carrito/quitar/<str:tipo_articulo>/<int:articulo_id>/", views.QuitarArticuloCarrito.as_view(), name="quitar_articulo_carrito"),
-    path("carrito/vaciar/", views.VaciarCarritoView.as_view(), name="vaciar_carrito"),
-    path("carrito/total/", views.CalcularTotalCarritoView.as_view(), name="calcular_total_carrito"),
-    path("carrito/confirmar/", views.ConfirmarCompraCarritoView.as_view(), name="confirmar_compra_carrito"),
+    path("carrito/agregar/<str:tipo_articulo>/<int:articulo_id>/", views_carrito.AgregarArticuloCarrito.as_view(), name="agregar_articulo_carrito"),
+    path("carrito/quitar/<str:tipo_articulo>/<int:articulo_id>/", views_carrito.QuitarArticuloCarrito.as_view(), name="quitar_articulo_carrito"),
+    path("carrito/vaciar/", views_carrito.VaciarCarritoView.as_view(), name="vaciar_carrito"),
+    path("carrito/total/", views_carrito.CalcularTotalCarritoView.as_view(), name="calcular_total_carrito"),
+    path("carrito/confirmar/", views_carrito.ConfirmarCompraCarritoView.as_view(), name="confirmar_compra_carrito"),
 ]

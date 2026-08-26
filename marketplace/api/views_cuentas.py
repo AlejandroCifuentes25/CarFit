@@ -1,26 +1,25 @@
-"""Capa de Presentación — API (Django REST Framework).
+"""Login y CRUD administrativo (DRF).
 
-Convive con `views.py` (HTML): esta es la interfaz para el CRUD
-administrativo y el inicio de sesión. Igual que la vista HTML de
-`CrearArticuloView`, ninguna de estas clases contiene lógica de negocio:
-el login delega en `AutenticacionService`; el CRUD delega la validación de
-formato al Serializer y usa `generics` de DRF para la persistencia (no hay
-invariante de negocio adicional que orquestar en estos flujos).
+Antes vivía en `marketplace/api_views.py`, como una segunda API paralela a
+la de pagos. Se mueve aquí para que exista un solo paquete `api/` con toda
+la presentación DRF del proyecto, en vez de dos estructuras que hacen lo
+mismo en lugares distintos.
 """
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .domain.exceptions import CredencialesInvalidasError
-from .models import Carro, Cliente, Vendedor
-from .serializers import (
+from ..domain.exceptions import CredencialesInvalidasError
+from ..models import Carro, Cliente, Vendedor
+from ..services import AutenticacionService
+from .errores import respuesta_de_error
+from .serializers_cuentas import (
     CarroSerializer,
     ClienteSerializer,
     LoginSerializer,
     VendedorSerializer,
 )
-from .services import AutenticacionService
 
 
 class LoginAPIView(APIView):
@@ -43,7 +42,7 @@ class LoginAPIView(APIView):
                 request, **serializer.validated_data
             )
         except CredencialesInvalidasError as error:
-            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+            return respuesta_de_error(error)
 
         return Response(
             {"id": usuario.id, "username": usuario.username, "is_staff": usuario.is_staff},

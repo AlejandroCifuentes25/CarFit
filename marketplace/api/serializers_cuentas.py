@@ -1,15 +1,15 @@
-"""Serializers de DRF.
+"""Serializers de cuentas (login) y del CRUD administrativo.
 
-Igual que `forms.py`, solo validan *formato* de entrada/salida. Las
-invariantes de negocio de `Carro` (placa colombiana, kilometraje máximo
-para un vehículo NUEVO) viven en `domain/builders.py`; aquí solo se
-reutiliza la constante `KM_MAXIMO_NUEVO` para no duplicar el número mágico.
+Antes vivían en `marketplace/serializers.py`, fuera de la carpeta `api/`,
+mientras que los de pagos y carrito sí estaban aquí: dos convenciones para
+el mismo tipo de cosa. Se unifican en un solo lugar para que toda la API
+cuelgue de `marketplace/api/`, tal como ya lo describe la wiki del proyecto.
 """
 
 from rest_framework import serializers
 
-from .domain.builders import KM_MAXIMO_NUEVO
-from .models import Carro, Cliente, Vendedor
+from ..domain.builders import KM_MAXIMO_NUEVO
+from ..models import Carro, Cliente, Vendedor
 
 
 class LoginSerializer(serializers.Serializer):

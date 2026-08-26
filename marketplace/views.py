@@ -13,12 +13,6 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from .api.serializers import ArticuloCarritoSerializer, MovimientoCarritoSerializer
 from .domain.exceptions import ErrorDeDominio
 from .forms import CrearArticuloForm, PagoForm, RegistroForm
 from .models import Carro, Repuesto
@@ -29,7 +23,6 @@ from .services import (
     FacturaService,
     ProcesarPagoService,
     PublicacionArticuloService,
-    CarritoComprasService,
     RegistroUsuarioService,
 )
 
@@ -227,56 +220,3 @@ class HistorialPagosView(LoginRequiredMixin, ClienteRequeridoMixin, TemplateView
         contexto = super().get_context_data(**kwargs)
         contexto["pagos"] = self.servicio().listar(self.request.user.cliente)
         return contexto
-
-
-class BaseCarritoView(APIView):
-    permission_classes = [IsAuthenticated]
-    service_factory = CarritoComprasService
-
-    def get_service(self):
-        return self.service_factory()
-
-
-class BaseArticuloCarritoView(BaseCarritoView):
-    def post(self, request, *args, **kwargs):
-        serializer = MovimientoCarritoSerializer(data=kwargs)
-        serializer.is_valid(raise_exception=True)
-        try:
-            resultado = self.ejecutar(self.get_service(), request.user, serializer.validated_data)
-        except ErrorDeDominio as error:
-            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(ArticuloCarritoSerializer(resultado).data)
-
-
-class AgregarArticuloCarrito(BaseArticuloCarritoView):
-    def ejecutar(self, servicio, usuario, datos):
-        return servicio.agregar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
-
-
-class QuitarArticuloCarrito(BaseArticuloCarritoView):
-    def ejecutar(self, servicio, usuario, datos):
-        return servicio.quitar_articulo(usuario, datos["tipo_articulo"], datos["articulo_id"])
-
-
-class BaseCarritoOperacionView(BaseCarritoView):
-    def post(self, request, *args, **kwargs):
-        try:
-            return Response(self.ejecutar(self.get_service(), request.user))
-        except ErrorDeDominio as error:
-            return Response({"detail": str(error)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class VaciarCarritoView(BaseCarritoOperacionView):
-    def ejecutar(self, servicio, usuario):
-        carrito = servicio.vaciar_carrito(usuario)
-        return {"carrito_id": carrito.pk, "cantidad_producto": carrito.cantidad_producto, "precio_total": carrito.precio_total}
-
-
-class CalcularTotalCarritoView(BaseCarritoOperacionView):
-    def ejecutar(self, servicio, usuario):
-        return {"precio_total": servicio.calcular_total(usuario)}
-
-
-class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
-    def ejecutar(self, servicio, usuario):
-        return servicio.confirmar_compra(usuario)
