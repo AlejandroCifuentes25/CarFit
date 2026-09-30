@@ -32,12 +32,12 @@ from marketplace.domain.exceptions import (
 )
 from marketplace.models import Cliente, Pago
 from marketplace.services import (
+    CatalogoMetodosPagoService,
     ConfirmarPagoService,
     ConsultarPagoService,
     FacturaService,
     ProcesarPagoService,
 )
-from marketplace.domain.metodos_pago import CatalogoMetodosPagoService
 
 
 app = Flask(__name__)
@@ -115,7 +115,7 @@ def health():
     return jsonify({"servicio": "pagos", "estado": "ok"})
 
 
-@app.get("/api/pagos/metodos")
+@app.get("/api/v2/pagos/metodos", strict_slashes=False)
 def metodos_pago():
     monto = request.args.get("monto")
     if monto is not None:
@@ -145,7 +145,7 @@ def metodos_pago():
     )
 
 
-@app.route("/api/pagos", methods=["GET", "POST"])
+@app.route("/api/v2/pagos", methods=["GET", "POST"], strict_slashes=False)
 def pagos():
     try:
         cliente = _cliente_desde_request()
@@ -165,7 +165,7 @@ def pagos():
         return _error_response(error)
 
 
-@app.get("/api/pagos/<string:referencia>")
+@app.get("/api/v2/pagos/<string:referencia>", strict_slashes=False)
 def detalle_pago(referencia):
     try:
         cliente = _cliente_desde_request()
@@ -175,7 +175,7 @@ def detalle_pago(referencia):
         return _error_response(error)
 
 
-@app.post("/api/pagos/<string:referencia>/confirmar")
+@app.post("/api/v2/pagos/<string:referencia>/confirmar", strict_slashes=False)
 def confirmar_pago(referencia):
     try:
         cliente = _cliente_desde_request()
@@ -185,7 +185,7 @@ def confirmar_pago(referencia):
         return _error_response(error)
 
 
-@app.get("/api/pagos/<string:referencia>/factura")
+@app.get("/api/v2/pagos/<string:referencia>/factura", strict_slashes=False)
 def factura_pago(referencia):
     try:
         cliente = _cliente_desde_request()

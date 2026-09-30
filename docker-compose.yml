@@ -30,8 +30,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8000:8000"
     volumes:
       - media_data:/app/media
 
@@ -56,10 +54,18 @@ services:
         condition: service_healthy
       django:
         condition: service_started
-    ports:
-      - "5001:5001"
     volumes:
       - media_data:/app/media
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - django
+      - payments
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   postgres_data:
