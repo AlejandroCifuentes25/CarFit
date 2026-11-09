@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ config.title }} | Administración CarFit{% endblock %}
+
+{% block content %}
+  <h1>{{ config.title }}</h1>
+  <div class="actions">
+    <a href="{{ url_for('admin_dashboard') }}">Volver</a>
+    {% if config.form_fields and config.allow_create %}
+      <a class="button" href="{{ url_for('admin_resource_form', resource=resource) }}">Crear</a>
+    {% endif %}
+  </div>
+  <table>
+    <thead>
+      <tr>
+        {% for column in config.columns %}<th>{{ column }}</th>{% endfor %}
+        {% if config.form_fields %}<th>Acciones</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          {% for column in config.columns %}
+            <td>{{ row|attr(column) }}</td>
+          {% endfor %}
+          {% if config.form_fields %}
+            <td class="actions">
+              <a href="{{ url_for('admin_resource_form', resource=resource, pk=row.pk) }}">Editar</a>
+              {% if config.allow_delete %}
+                <form method="post" action="{{ url_for('admin_resource_delete', resource=resource, pk=row.pk) }}">
+                  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                  <button type="submit">Eliminar</button>
+                </form>
+              {% endif %}
+            </td>
+          {% endif %}
+        </tr>
+      {% else %}
+        <tr><td colspan="{{ config.columns|length + (1 if config.form_fields else 0) }}">No hay registros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if rows|length == 200 %}<p>Mostrando los primeros 200 registros.</p>{% endif %}
+{% endblock %}

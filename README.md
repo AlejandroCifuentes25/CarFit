@@ -139,12 +139,28 @@ curl -u usuario:clave -X POST http://127.0.0.1:8000/api/pagos/ \
 Detalles de diseño, diagrama de secuencia y contrato completo en
 [docs/pagos.md](docs/pagos.md).
 
+## API Flask de cuentas y administración
+
+Nginx envía `/api/v2/` y `/admin/v2/` al servicio Flask de cuentas. La API
+incluye login, registro, cierre de sesión y consulta de la sesión actual.
+`GET /api/v2/vendedores/`, `/clientes/`, `/carros/`, `/usuarios/` y `/grupos/`
+exponen los registros administrativos; cada recurso admite operaciones CRUD.
+Los cambios requieren sesión autenticada como staff y token CSRF: primero
+consulta `GET /api/v2/csrf/`, o usa el `csrf_token` devuelto por login/registro,
+y envíalo como `X-CSRFToken`.
+
+El panel Flask está disponible en `/admin/v2/` e incluye las entidades
+administradas por CarFit. La bitácora de transacciones es de solo lectura;
+los pagos permiten editar los mismos campos que deja editables el admin
+actual, pero no crear pagos desde el panel.
+Las páginas web de inicio, registro y login siguen en Django; también se
+conserva la API Django bajo `/api/v1/` y el panel original `/admin/`. Flask
+comparte con Django la base de datos y las sesiones, por lo que la cookie
+autenticada funciona en ambas aplicaciones.
+
 
 ## Pruebas
 
 ```bash
 python manage.py test marketplace
 ```
-
-
-

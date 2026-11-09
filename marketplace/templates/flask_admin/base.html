@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Administración CarFit{% endblock %}</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; color: #202124; }
+      nav, .actions { display: flex; gap: 1rem; align-items: center; }
+      table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+      th, td { border-bottom: 1px solid #ddd; padding: .6rem; text-align: left; }
+      input, select, textarea { max-width: 100%; }
+      .errorlist { color: #a40000; }
+      .button { border: 0; border-radius: .25rem; padding: .5rem .75rem; background: #185abc; color: white; text-decoration: none; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">Administración</a>
+      <a href="/admin/">Administración Django</a>
+      <a href="/">Inicio</a>
+    </nav>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

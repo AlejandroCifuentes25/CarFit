@@ -57,11 +57,32 @@ services:
     volumes:
       - media_data:/app/media
 
+  accounts:
+    build:
+      context: .
+      dockerfile: Dockerfile.accounts
+    environment:
+      DJANGO_SETTINGS_MODULE: carfit.settings
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-docker-only}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DB_ENGINE: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-carfit}
+      POSTGRES_USER: ${POSTGRES_USER:-carfit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carfit}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+      django:
+        condition: service_started
+
   nginx:
     image: nginx:1.27-alpine
     depends_on:
       - django
       - payments
+      - accounts
     ports:
       - "80:80"
     volumes:
