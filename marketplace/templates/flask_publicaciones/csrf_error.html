@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block titulo %}Token CSRF inválido | CarFit{% endblock %}
+{% block contenido %}
+  <h1>Solicitud rechazada</h1>
+  <p class="errores">Token CSRF ausente o inválido. Recarga la página e inténtalo de nuevo.</p>
+  <p><a href="{{ prefix }}/mis-publicaciones/">Volver a mis publicaciones</a></p>
+{% endblock %}

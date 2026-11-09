@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Eliminar Artículo | CarFit{% endblock %}
+{% block contenido %}
+<h1>Eliminar {{ tipo|title }}</h1>
+<p class="ayuda">¿Estás seguro de que deseas eliminar <strong>{{ object }}</strong>? Esta acción no se puede deshacer.</p>
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+  <button type="submit" class="boton-secundario">Sí, eliminar</button>
+  <a href="{{ prefix }}/mis-publicaciones/" style="margin-left:10px;">Cancelar</a>
+</form>
+{% endblock %}

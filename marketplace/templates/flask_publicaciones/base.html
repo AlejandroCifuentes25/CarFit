@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}CarFit{% endblock %}</title>
+  <style>
+    :root { --tinta:#16212e; --tinta-suave:#5a6a7a; --borde:#d8dfe6; --acento:#0e6c9b; --error:#d14343; --fondo:#f1f5f8; }
+    body { font-family: system-ui, sans-serif; background: var(--fondo); color: var(--tinta); margin: 0; }
+    nav.principal { background: #fff; border-bottom: 1px solid var(--borde); padding: .75rem 1.5rem; display: flex; gap: 1.25rem; }
+    nav.principal a.marca { font-weight: 800; }
+    main { max-width: 720px; margin: 1.5rem auto; background: #fff; padding: 1.5rem 2rem; border-radius: 8px; }
+    a { color: var(--acento); }
+    .ayuda { color: var(--tinta-suave); }
+    .errores, ul.errorlist { color: var(--error); }
+    table.tabla { width: 100%; border-collapse: collapse; }
+    table.tabla th, table.tabla td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--borde); }
+    button, .boton { background: var(--acento); color: #fff; border: 0; padding: .6rem 1rem; border-radius: 4px; cursor: pointer; }
+    .boton-secundario { background: var(--error); }
+  </style>
+</head>
+<body>
+  <nav class="principal">
+    <a class="marca" href="/comprar/">CarFit</a>
+    <a href="/comprar/">Comprar</a>
+    <a href="{{ prefix }}/nuevo/">Publicar</a>
+    <a href="{{ prefix }}/mis-publicaciones/">Mis publicaciones</a>
+    <a href="/pagos/">Mis pagos</a>
+  </nav>
+  <main>{% block contenido %}{% endblock %}</main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titulo %}Editar Artículo | CarFit{% endblock %}
+{% block contenido %}
+<h1>Editar {{ tipo|title }}</h1>
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+  {% if form.non_field_errors() %}<div class="errores">{{ form.non_field_errors() }}</div>{% endif %}
+  {{ form.as_p() }}
+  <button type="submit">Guardar cambios</button>
+  <a href="{{ prefix }}/mis-publicaciones/" style="margin-left:10px;">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Publicar artículo | CarFit{% endblock %}
+{% block contenido %}
+  <h1>Publicar vehículo</h1>
+  <p class="ayuda">Completa los datos del vehículo y su documentación legal. Validamos que el SOAT y la tecnomecánica estén vigentes antes de publicar.</p>
+  <p class="ayuda">¿Deseas publicar un repuesto en lugar de un vehículo? <a href="{{ prefix }}/nuevo/repuesto/">Haz clic aquí</a>.</p>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    {% if form.non_field_errors() %}
+      <div class="errores"><strong>No pudimos publicar el artículo:</strong> {{ form.non_field_errors() }}</div>
+    {% endif %}
+    {{ form.as_p() }}
+    <button type="submit">Publicar artículo</button>
+  </form>
+{% endblock %}

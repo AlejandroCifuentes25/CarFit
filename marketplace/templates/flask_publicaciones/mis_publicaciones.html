@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Mis Publicaciones | CarFit{% endblock %}
+{% block contenido %}
+<h1>Mis Publicaciones</h1>
+<p class="ayuda">Aquí puedes ver, editar y eliminar los vehículos y repuestos que has publicado.</p>
+{% if error %}<p class="errores" role="alert">{{ error }}</p>{% endif %}
+<section>
+  <h2>Carros</h2>
+  {% if carros %}
+  <table class="tabla">
+    <thead><tr><th>Vehículo</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+      {% for carro in carros %}
+      <tr>
+        <td>{{ carro.marca }} {{ carro.modelo }} ({{ carro.placa }})</td>
+        <td>${{ carro.precio }}</td>
+        <td>{{ carro.get_estado_display() }}</td>
+        <td><a href="{{ prefix }}/editar/carro/{{ carro.pk }}/">Editar</a> | <a href="{{ prefix }}/eliminar/carro/{{ carro.pk }}/" style="color:var(--error);">Eliminar</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="ayuda">No tienes carros publicados.</p>{% endif %}
+</section>
+<section>
+  <h2>Repuestos</h2>
+  {% if repuestos %}
+  <table class="tabla">
+    <thead><tr><th>Repuesto</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+      {% for repuesto in repuestos %}
+      <tr>
+        <td>{{ repuesto.tipo }} - {{ repuesto.modelo_carro }}</td>
+        <td>${{ repuesto.precio }}</td>
+        <td>{{ repuesto.get_estado_display() }}</td>
+        <td><a href="{{ prefix }}/editar/repuesto/{{ repuesto.pk }}/">Editar</a> | <a href="{{ prefix }}/eliminar/repuesto/{{ repuesto.pk }}/" style="color:var(--error);">Eliminar</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="ayuda">No tienes repuestos publicados.</p>{% endif %}
+</section>
+{% endblock %}
