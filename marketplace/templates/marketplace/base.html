@@ -142,9 +142,9 @@
   <nav class="principal">
     <a class="marca" href="{% url 'marketplace:catalogo_compras' %}">CarFit</a>
     <a href="{% url 'marketplace:catalogo_compras' %}">Comprar</a>
-    <a href="{% url 'marketplace:crear_articulo' %}">Publicar</a>
+    <a href="/publicaciones/v2/nuevo/">Publicar</a>
     {% if user.vendedor %}
-    <a href="{% url 'marketplace:mis_publicaciones' %}">Mis publicaciones</a>
+    <a href="/publicaciones/v2/mis-publicaciones/">Mis publicaciones</a>
     {% endif %}
     <a href="{% url 'marketplace:historial_pagos' %}">Mis pagos</a>
     <a href="{% url 'marketplace:carrito' %}" class="carrito-resumen" aria-label="Carrito de compras">

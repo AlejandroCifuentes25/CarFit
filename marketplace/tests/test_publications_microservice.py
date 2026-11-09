@@ -138,3 +138,9 @@ class PublicacionesFlaskTest(TestCase):
         self.django.force_login(self.user)
         self.assertEqual(self.django.get("/articulos/nuevo/").status_code, 200)
         self.assertEqual(self.django.get("/mis-publicaciones/").status_code, 200)
+
+    def test_django_navigation_links_to_flask_publication_pages(self):
+        self.django.force_login(self.user)
+        content = self.django.get("/").content.decode()
+        self.assertIn('href="/publicaciones/v2/nuevo/"', content)
+        self.assertIn('href="/publicaciones/v2/mis-publicaciones/"', content)
