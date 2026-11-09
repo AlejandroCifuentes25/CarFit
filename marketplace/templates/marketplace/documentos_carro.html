@@ -6,16 +6,16 @@
 {% block ancho_nav %}760px{% endblock %}
 
 {% block contenido %}
-  <h1>{% trans "Documentación y papeles del vehículo" %}</h1>
+  <h1>{% trans "Consulta de vigencia documental del vehículo" %}</h1>
   <p class="ayuda">
     <strong>{{ carro.marca }} {{ carro.modelo }}</strong> · {% trans "Placa" %} {{ carro.placa }} · {% trans "Vendedor" %}: {{ carro.vendedor.nombre }}
   </p>
 
   <div class="resumen">
     <div class="fila">
-      <span>{% trans "Estado de cumplimiento legal" %}:</span>
+      <span>{% trans "Estado de cumplimiento legal (SOAT y Técnico-Mecánica)" %}:</span>
       {% if reporte.cumple %}
-        <span class="badge badge-APROBADO">{% trans "CUMPLE REQUISITOS" %}</span>
+        <span class="badge badge-APROBADO">{% trans "AL DÍA / CUMPLE REQUISITOS" %}</span>
       {% else %}
         <span class="badge badge-RECHAZADO">{% trans "INCUMPLE / DOCUMENTOS PENDIENTES" %}</span>
       {% endif %}
@@ -29,7 +29,10 @@
     {% endif %}
   </div>
 
-  <h2>{% trans "Papeles registrados" %}</h2>
+  <h2>{% trans "Información pública de vigencia (SOAT y Revisión Técnico-Mecánica)" %}</h2>
+  <p class="ayuda">
+    {% trans "Por privacidad y protección de datos del propietario, los compradores pueden verificar las fechas de vigencia pero los documentos originales permanecen reservados." %}
+  </p>
   {% if reporte.documentos %}
     <table class="tabla">
       <thead>
@@ -38,7 +41,7 @@
           <th>{% trans "Expedición" %}</th>
           <th>{% trans "Vencimiento" %}</th>
           <th>{% trans "Vigencia" %}</th>
-          <th>{% trans "Soporte" %}</th>
+          <th>{% trans "Soporte documental" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -56,9 +59,13 @@
             </td>
             <td>
               {% if doc.archivo_url %}
-                <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo" %}</a>
+                {% if puede_ver_archivos %}
+                  <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo original (Privado)" %}</a>
+                {% else %}
+                  <span class="ayuda">🔒 {% trans "Soporte cargado (Privado del propietario)" %}</span>
+                {% endif %}
               {% else %}
-                <span class="ayuda">{% trans "Sin archivo adjunto" %}</span>
+                <span class="ayuda">{% trans "Verificado por fecha" %}</span>
               {% endif %}
             </td>
           </tr>
@@ -71,8 +78,8 @@
 
   {% if es_dueno and form %}
     <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
-    <h2>{% trans "Agregar o actualizar documento" %}</h2>
-    <p class="ayuda">{% trans "Registra o renueva el SOAT, la revisión tecnomecánica o la tarjeta de propiedad." %}</p>
+    <h2>{% trans "Gestión privada del propietario: Agregar o actualizar documento" %}</h2>
+    <p class="ayuda">{% trans "Solo tú como propietario puedes subir o reemplazar los soportes originales del vehículo." %}</p>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       {% if form.non_field_errors %}

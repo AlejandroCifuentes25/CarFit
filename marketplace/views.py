@@ -526,6 +526,7 @@ class DocumentosCarroView(LoginRequiredMixin, View):
             hasattr(request.user, "vendedor")
             and request.user.vendedor.id == carro.vendedor_id
         )
+        puede_ver_archivos = es_dueno or request.user.is_staff
         form = DocumentoCarroForm() if es_dueno else None
         return render(
             request,
@@ -534,6 +535,7 @@ class DocumentosCarroView(LoginRequiredMixin, View):
                 "carro": carro,
                 "reporte": reporte,
                 "es_dueno": es_dueno,
+                "puede_ver_archivos": puede_ver_archivos,
                 "form": form,
             },
         )
@@ -567,6 +569,7 @@ class DocumentosCarroView(LoginRequiredMixin, View):
                 "carro": carro,
                 "reporte": reporte,
                 "es_dueno": es_dueno,
+                "puede_ver_archivos": es_dueno or request.user.is_staff,
                 "form": form,
             },
         )

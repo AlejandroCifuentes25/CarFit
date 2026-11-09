@@ -393,6 +393,11 @@ class DocumentosCarroAPIView(APIView):
             return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
 
         reporte = self.service_factory().verificar_cumplimiento(carro)
+        es_dueno = (
+            hasattr(request.user, "vendedor")
+            and request.user.vendedor.id == carro.vendedor_id
+        )
+        puede_ver_archivos = es_dueno or request.user.is_staff
         documentos_data = [
             {
                 "id": item["id"],
@@ -400,7 +405,8 @@ class DocumentosCarroAPIView(APIView):
                 "tipo_etiqueta": item["tipo_etiqueta"],
                 "fecha_expedicion": item["fecha_expedicion"],
                 "fecha_vencimiento": item["fecha_vencimiento"],
-                "archivo_url": item["archivo_url"],
+                "tiene_soporte": bool(item["archivo_url"]),
+                "archivo_url": item["archivo_url"] if puede_ver_archivos else None,
                 "vigente": item["vigente"],
             }
             for item in reporte["documentos"]

@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -82,6 +83,32 @@ class DocumentoCarroServiceTests(TestCase):
                     "fecha_vencimiento": self.hoy + timedelta(days=30),
                 },
             )
+
+    def test_comprador_ve_vigencia_pero_no_archivo_original_del_propietario(self):
+        archivo = SimpleUploadedFile("soat_privado.pdf", b"%PDF-1.4 contenido", content_type="application/pdf")
+        DocumentoCarroService().guardar_documento(
+            self.vendedor,
+            self.carro,
+            {
+                "tipo_documento": DocumentoCarro.Tipo.SOAT,
+                "fecha_expedicion": self.hoy - timedelta(days=10),
+                "fecha_vencimiento": self.hoy + timedelta(days=355),
+                "archivo": archivo,
+            },
+        )
+        comprador = User.objects.create_user(username="comprador_doc", password="123")
+        self.client.force_login(comprador)
+
+        resp_api = self.client.get(reverse("marketplace_api:carro_documentos", args=[self.carro.pk]))
+        self.assertEqual(resp_api.status_code, 200)
+        doc_json = resp_api.json()["documentos"][0]
+        self.assertTrue(doc_json["tiene_soporte"])
+        self.assertIsNone(doc_json["archivo_url"])
+
+        # El vendedor dueño sí puede ver la ruta del archivo original
+        self.client.force_login(self.user_vendedor)
+        resp_dueno = self.client.get(reverse("marketplace_api:carro_documentos", args=[self.carro.pk]))
+        self.assertIsNotNone(resp_dueno.json()["documentos"][0]["archivo_url"])
 
 
 class ResenaServiceAndViewsTests(TestCase):
