@@ -7,6 +7,7 @@ viven en `marketplace/domain/builders.py`.
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Vendedor(models.Model):
@@ -122,9 +123,20 @@ class Resena(models.Model):
     contenido = models.TextField()
     autor = models.CharField(max_length=120)
     tipo = models.CharField(max_length=40)
+    calificacion = models.PositiveSmallIntegerField(default=5)
+    vendedor = models.ForeignKey(
+        Vendedor, on_delete=models.CASCADE, related_name="resenas", null=True, blank=True
+    )
+    cliente = models.ForeignKey(
+        Cliente, on_delete=models.SET_NULL, related_name="resenas", null=True, blank=True
+    )
     carro = models.ForeignKey(
         Carro, on_delete=models.CASCADE, related_name="resenas", null=True, blank=True
     )
+    creado_en = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-creado_en", "-pk"]
 
     def __str__(self):
         return f"Reseña de {self.autor}"
