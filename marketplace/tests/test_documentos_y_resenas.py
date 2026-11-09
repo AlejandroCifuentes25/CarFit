@@ -110,6 +110,44 @@ class DocumentoCarroServiceTests(TestCase):
         resp_dueno = self.client.get(reverse("marketplace_api:carro_documentos", args=[self.carro.pk]))
         self.assertIsNotNone(resp_dueno.json()["documentos"][0]["archivo_url"])
 
+    def test_flujo_solicitar_y_aprobar_acceso_a_archivos_del_vehiculo(self):
+        archivo = SimpleUploadedFile("soat_privado.pdf", b"%PDF-1.4 contenido", content_type="application/pdf")
+        servicio = DocumentoCarroService()
+        servicio.guardar_documento(
+            self.vendedor,
+            self.carro,
+            {
+                "tipo_documento": DocumentoCarro.Tipo.SOAT,
+                "fecha_expedicion": self.hoy - timedelta(days=10),
+                "fecha_vencimiento": self.hoy + timedelta(days=355),
+                "archivo": archivo,
+            },
+        )
+        user_comprador = User.objects.create_user(username="comprador_sol", password="123")
+        cliente_comprador = Cliente.objects.create(
+            usuario=user_comprador,
+            nombre="Carlos Interesado",
+            correo="carlos@carfit.co",
+            direccion="Calle 10",
+            numero_tel="3005556677",
+        )
+
+        # 1. Inicialmente no tiene acceso
+        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
+
+        # 2. El comprador solicita acceso (queda PENDIENTE, aún sin acceso)
+        solicitud = servicio.solicitar_acceso(cliente_comprador, self.carro)
+        self.assertEqual(solicitud.estado, "PENDIENTE")
+        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
+
+        # 3. El vendedor aprueba la solicitud -> ahora el comprador sí tiene acceso
+        servicio.resolver_solicitud(self.vendedor, solicitud.pk, aprobar=True)
+        self.assertTrue(servicio.tiene_acceso_archivos(user_comprador, self.carro))
+
+        # 4. El vendedor revoca el acceso -> vuelve a perder acceso
+        servicio.resolver_solicitud(self.vendedor, solicitud.pk, aprobar=False)
+        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
+
 
 class ResenaServiceAndViewsTests(TestCase):
     def setUp(self):

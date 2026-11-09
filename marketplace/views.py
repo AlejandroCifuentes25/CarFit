@@ -512,33 +512,44 @@ class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
 # ----------------------------------------------------------------------
 
 
-class DocumentosCarroView(LoginRequiredMixin, View):
+class DocumentosCarroView(LoginRequiredMixin, ClienteRequeridoMixin, View):
     """Muestra la documentación de un carro, su verificación de cumplimiento
-    y permite al vendedor dueño actualizar o adjuntar documentos."""
+    y permite al vendedor dueño actualizar documentos o gestionar solicitudes
+    de acceso de compradores."""
 
     template_name = "marketplace/documentos_carro.html"
     service_factory = DocumentoCarroService
 
-    def get(self, request, pk):
-        carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
-        reporte = self.service_factory().verificar_cumplimiento(carro)
+    def _contexto(self, request, carro, servicio, form=None):
+        reporte = servicio.verificar_cumplimiento(carro)
         es_dueno = (
             hasattr(request.user, "vendedor")
             and request.user.vendedor.id == carro.vendedor_id
         )
-        puede_ver_archivos = es_dueno or request.user.is_staff
-        form = DocumentoCarroForm() if es_dueno else None
-        return render(
-            request,
-            self.template_name,
-            {
-                "carro": carro,
-                "reporte": reporte,
-                "es_dueno": es_dueno,
-                "puede_ver_archivos": puede_ver_archivos,
-                "form": form,
-            },
+        puede_ver_archivos = servicio.tiene_acceso_archivos(request.user, carro)
+        cliente = getattr(request.user, "cliente", None)
+        solicitud_cliente = (
+            None if es_dueno else servicio.obtener_solicitud_cliente(cliente, carro)
         )
+        solicitudes_vendedor = (
+            servicio.listar_solicitudes_carro(request.user.vendedor, carro)
+            if es_dueno
+            else []
+        )
+        return {
+            "carro": carro,
+            "reporte": reporte,
+            "es_dueno": es_dueno,
+            "puede_ver_archivos": puede_ver_archivos,
+            "solicitud_cliente": solicitud_cliente,
+            "solicitudes_vendedor": solicitudes_vendedor,
+            "form": form if form is not None else (DocumentoCarroForm() if es_dueno else None),
+        }
+
+    def get(self, request, pk):
+        carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
+        servicio = self.service_factory()
+        return render(request, self.template_name, self._contexto(request, carro, servicio))
 
     def post(self, request, pk):
         carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
@@ -561,18 +572,48 @@ class DocumentosCarroView(LoginRequiredMixin, View):
             except ErrorDeDominio as error:
                 form.add_error(None, str(error))
 
-        reporte = servicio.verificar_cumplimiento(carro)
-        return render(
-            request,
-            self.template_name,
-            {
-                "carro": carro,
-                "reporte": reporte,
-                "es_dueno": es_dueno,
-                "puede_ver_archivos": es_dueno or request.user.is_staff,
-                "form": form,
-            },
-        )
+        return render(request, self.template_name, self._contexto(request, carro, servicio, form=form))
+
+
+class SolicitarAccesoDocumentoView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Permite a un comprador solicitar permiso al vendedor para ver los soportes originales."""
+
+    service_factory = DocumentoCarroService
+
+    def post(self, request, pk):
+        carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
+        try:
+            self.service_factory().solicitar_acceso(request.user.cliente, carro)
+            messages.success(
+                request,
+                "Enviamos tu solicitud al vendedor para consultar los archivos originales.",
+            )
+        except ErrorDeDominio as error:
+            messages.error(request, str(error))
+        return redirect("marketplace:documentos_carro", pk=carro.pk)
+
+
+class ResolverAccesoDocumentoView(LoginRequiredMixin, VendedorRequeridoMixin, View):
+    """Permite al vendedor dueño aprobar o rechazar una solicitud de acceso a documentos."""
+
+    service_factory = DocumentoCarroService
+
+    def post(self, request, solicitud_id):
+        decision = request.POST.get("decision", "").upper()
+        aprobar = decision == "APROBAR"
+        try:
+            solicitud = self.service_factory().resolver_solicitud(
+                request.user.vendedor, solicitud_id, aprobar=aprobar
+            )
+            estado_txt = "aprobado" if aprobar else "rechazado / revocado"
+            messages.success(
+                request,
+                f"Acceso {estado_txt} para el comprador {solicitud.cliente.nombre}.",
+            )
+            return redirect("marketplace:documentos_carro", pk=solicitud.carro_id)
+        except ErrorDeDominio as error:
+            messages.error(request, str(error))
+            return redirect("marketplace:mis_publicaciones")
 
 
 class ResenasVendedorView(LoginRequiredMixin, ClienteRequeridoMixin, View):

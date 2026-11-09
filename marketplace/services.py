@@ -45,7 +45,7 @@ from .infra.factories import (
     PasarelaPagoFactory,
     ValidadorDocumentalFactory,
 )
-from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, Resena, TransaccionPago, Vendedor
+from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, Resena, SolicitudAccesoDocumento, TransaccionPago, Vendedor
 
 
 @dataclass(frozen=True)
@@ -849,6 +849,74 @@ class DocumentoCarroService:
             doc.save(update_fields=["archivo"])
 
         return doc
+
+    def tiene_acceso_archivos(self, usuario, carro) -> bool:
+        if not getattr(usuario, "is_authenticated", False):
+            return False
+        if getattr(usuario, "is_staff", False):
+            return True
+        vendedor = getattr(usuario, "vendedor", None)
+        if vendedor is not None and vendedor.id == carro.vendedor_id:
+            return True
+        cliente = getattr(usuario, "cliente", None)
+        if cliente is not None:
+            return SolicitudAccesoDocumento.objects.filter(
+                carro=carro,
+                cliente=cliente,
+                estado=SolicitudAccesoDocumento.Estado.APROBADA,
+            ).exists()
+        return False
+
+    def obtener_solicitud_cliente(self, cliente, carro):
+        if cliente is None:
+            return None
+        return SolicitudAccesoDocumento.objects.filter(
+            carro=carro, cliente=cliente
+        ).first()
+
+    def listar_solicitudes_carro(self, vendedor, carro):
+        if carro.vendedor_id != vendedor.id:
+            raise ErrorDeDominio("Solo el vendedor dueño puede ver las solicitudes de acceso.")
+        return list(carro.solicitudes_acceso.select_related("cliente").all())
+
+    @transaction.atomic
+    def solicitar_acceso(self, cliente, carro) -> SolicitudAccesoDocumento:
+        if cliente is None:
+            raise ErrorDeDominio("Se requiere un perfil de cliente para solicitar acceso.")
+        if carro.vendedor.usuario_id == cliente.usuario_id:
+            raise ErrorDeDominio("Ya eres el propietario de este vehículo.")
+
+        solicitud, creada = SolicitudAccesoDocumento.objects.get_or_create(
+            carro=carro,
+            cliente=cliente,
+            defaults={"estado": SolicitudAccesoDocumento.Estado.PENDIENTE},
+        )
+        if not creada and solicitud.estado == SolicitudAccesoDocumento.Estado.RECHAZADA:
+            solicitud.estado = SolicitudAccesoDocumento.Estado.PENDIENTE
+            solicitud.save(update_fields=["estado"])
+        return solicitud
+
+    @transaction.atomic
+    def resolver_solicitud(self, vendedor, solicitud_id, aprobar: bool) -> SolicitudAccesoDocumento:
+        solicitud = (
+            SolicitudAccesoDocumento.objects.select_related("carro", "cliente")
+            .filter(pk=solicitud_id)
+            .first()
+        )
+        if solicitud is None:
+            raise RecursoNoEncontradoError("la solicitud de acceso", solicitud_id)
+        if solicitud.carro.vendedor_id != vendedor.id:
+            raise ErrorDeDominio(
+                "Solo el vendedor dueño del vehículo puede autorizar o rechazar el acceso."
+            )
+
+        solicitud.estado = (
+            SolicitudAccesoDocumento.Estado.APROBADA
+            if aprobar
+            else SolicitudAccesoDocumento.Estado.RECHAZADA
+        )
+        solicitud.save(update_fields=["estado"])
+        return solicitud
 
 
 class ResenaService:

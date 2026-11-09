@@ -31,8 +31,36 @@
 
   <h2>{% trans "Información pública de vigencia (SOAT y Revisión Técnico-Mecánica)" %}</h2>
   <p class="ayuda">
-    {% trans "Por privacidad y protección de datos del propietario, los compradores pueden verificar las fechas de vigencia pero los documentos originales permanecen reservados." %}
+    {% trans "Cualquier comprador puede verificar la vigencia de los documentos. Para consultar los archivos originales del propietario se requiere autorización del vendedor." %}
   </p>
+
+  {% if not es_dueno %}
+    <div class="resumen" style="background: #fff; border: 1px solid var(--borde);">
+      <div class="fila" style="align-items: center; gap: 1rem;">
+        <div>
+          <strong>{% trans "Acceso a soportes originales del propietario" %}:</strong><br>
+          {% if solicitud_cliente %}
+            {% if solicitud_cliente.estado == "APROBADA" %}
+              <span class="badge badge-APROBADO">{% trans "ACCESO AUTORIZADO POR EL VENDEDOR" %}</span>
+            {% elif solicitud_cliente.estado == "PENDIENTE" %}
+              <span class="badge badge-PENDIENTE">{% trans "SOLICITUD PENDIENTE DE APROBACIÓN" %}</span>
+            {% else %}
+              <span class="badge badge-RECHAZADO">{% trans "SOLICITUD RECHAZADA POR EL VENDEDOR" %}</span>
+            {% endif %}
+          {% else %}
+            <span class="ayuda">{% trans "Aún no has solicitado permiso para ver los archivos originales." %}</span>
+          {% endif %}
+        </div>
+        {% if not solicitud_cliente or solicitud_cliente.estado == "RECHAZADA" %}
+          <form method="post" action="{% url 'marketplace:solicitar_acceso_documento' carro.pk %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="boton secundario">{% trans "Solicitar acceso al vendedor" %}</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
   {% if reporte.documentos %}
     <table class="tabla">
       <thead>
@@ -60,9 +88,9 @@
             <td>
               {% if doc.archivo_url %}
                 {% if puede_ver_archivos %}
-                  <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo original (Privado)" %}</a>
+                  <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo original" %}</a>
                 {% else %}
-                  <span class="ayuda">🔒 {% trans "Soporte cargado (Privado del propietario)" %}</span>
+                  <span class="ayuda">🔒 {% trans "Reservado (Requiere autorización)" %}</span>
                 {% endif %}
               {% else %}
                 <span class="ayuda">{% trans "Verificado por fecha" %}</span>
@@ -76,28 +104,82 @@
     <p class="vacio">{% trans "Este vehículo aún no tiene documentos registrados." %}</p>
   {% endif %}
 
-  {% if es_dueno and form %}
+  {% if es_dueno %}
     <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
-    <h2>{% trans "Gestión privada del propietario: Agregar o actualizar documento" %}</h2>
-    <p class="ayuda">{% trans "Solo tú como propietario puedes subir o reemplazar los soportes originales del vehículo." %}</p>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="errores">{{ form.non_field_errors }}</div>
-      {% endif %}
-      {% for field in form %}
-        <p>
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}
-            <ul class="errorlist">
-              {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-            </ul>
-          {% endif %}
-        </p>
-      {% endfor %}
-      <button type="submit">{% trans "Guardar documento" %}</button>
-    </form>
+    <h2>{% trans "Solicitudes de compradores para ver archivos originales" %}</h2>
+    {% if solicitudes_vendedor %}
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>{% trans "Comprador" %}</th>
+            <th>{% trans "Correo" %}</th>
+            <th>{% trans "Estado" %}</th>
+            <th>{% trans "Decisión del propietario" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sol in solicitudes_vendedor %}
+            <tr>
+              <td><strong>{{ sol.cliente.nombre }}</strong></td>
+              <td>{{ sol.cliente.correo }}</td>
+              <td>
+                {% if sol.estado == "APROBADA" %}
+                  <span class="badge badge-APROBADO">{% trans "APROBADA" %}</span>
+                {% elif sol.estado == "PENDIENTE" %}
+                  <span class="badge badge-PENDIENTE">{% trans "PENDIENTE" %}</span>
+                {% else %}
+                  <span class="badge badge-RECHAZADO">{% trans "RECHAZADA" %}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; gap: .5rem;">
+                  {% if sol.estado != "APROBADA" %}
+                    <form method="post" action="{% url 'marketplace:resolver_acceso_documento' sol.pk %}" style="margin: 0;">
+                      {% csrf_token %}
+                      <input type="hidden" name="decision" value="APROBAR">
+                      <button type="submit" style="padding: .35rem .75rem; font-size: .8rem;">{% trans "Otorgar acceso" %}</button>
+                    </form>
+                  {% endif %}
+                  {% if sol.estado != "RECHAZADA" %}
+                    <form method="post" action="{% url 'marketplace:resolver_acceso_documento' sol.pk %}" style="margin: 0;">
+                      {% csrf_token %}
+                      <input type="hidden" name="decision" value="RECHAZAR">
+                      <button type="submit" class="secundario" style="padding: .35rem .75rem; font-size: .8rem; color: var(--error); border-color: var(--error);">{% trans "Rechazar / Revocar" %}</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="ayuda">{% trans "Ningún comprador ha solicitado acceso a los archivos originales de este vehículo todavía." %}</p>
+    {% endif %}
+
+    {% if form %}
+      <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
+      <h2>{% trans "Gestión privada del propietario: Agregar o actualizar documento" %}</h2>
+      <p class="ayuda">{% trans "Solo tú como propietario puedes subir o reemplazar los soportes originales del vehículo." %}</p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="errores">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          <p>
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <ul class="errorlist">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </p>
+        {% endfor %}
+        <button type="submit">{% trans "Guardar documento" %}</button>
+      </form>
+    {% endif %}
   {% endif %}
 
   <p style="margin-top: 1.5rem;">

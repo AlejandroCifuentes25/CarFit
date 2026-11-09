@@ -392,12 +392,9 @@ class DocumentosCarroAPIView(APIView):
         if carro is None:
             return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
 
-        reporte = self.service_factory().verificar_cumplimiento(carro)
-        es_dueno = (
-            hasattr(request.user, "vendedor")
-            and request.user.vendedor.id == carro.vendedor_id
-        )
-        puede_ver_archivos = es_dueno or request.user.is_staff
+        servicio = self.service_factory()
+        reporte = servicio.verificar_cumplimiento(carro)
+        puede_ver_archivos = servicio.tiene_acceso_archivos(request.user, carro)
         documentos_data = [
             {
                 "id": item["id"],

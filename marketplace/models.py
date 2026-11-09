@@ -108,6 +108,31 @@ class DocumentoCarro(models.Model):
         return f"{self.tipo_documento} de {self.carro.placa}"
 
 
+class SolicitudAccesoDocumento(models.Model):
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        APROBADA = "APROBADA", "Aprobada"
+        RECHAZADA = "RECHAZADA", "Rechazada"
+
+    carro = models.ForeignKey(
+        Carro, on_delete=models.CASCADE, related_name="solicitudes_acceso"
+    )
+    cliente = models.ForeignKey(
+        Cliente, on_delete=models.CASCADE, related_name="solicitudes_documentos"
+    )
+    estado = models.CharField(
+        max_length=15, choices=Estado.choices, default=Estado.PENDIENTE
+    )
+    creado_en = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ("carro", "cliente")
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"Solicitud de {self.cliente.nombre} para {self.carro.placa} ({self.estado})"
+
+
 class Inventario(models.Model):
     vendedor = models.OneToOneField(
         Vendedor, on_delete=models.CASCADE, related_name="inventario"
