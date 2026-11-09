@@ -50,4 +50,14 @@ urlpatterns = [
     path("carrito/vaciar/", api_views.VaciarCarritoView.as_view(), name="vaciar_carrito"),
     path("carrito/total/", api_views.CalcularTotalCarritoView.as_view(), name="calcular_total_carrito"),
     path("carrito/confirmar/", api_views.ConfirmarCompraCarritoView.as_view(), name="confirmar_compra_carrito"),
+    path(
+        "carros/<int:pk>/documentos/",
+        views.DocumentosCarroView.as_view(),
+        name="documentos_carro",
+    ),
+    path(
+        "vendedores/<int:vendedor_id>/resenas/",
+        views.ResenasVendedorView.as_view(),
+        name="resenas_vendedor",
+    ),
 ]

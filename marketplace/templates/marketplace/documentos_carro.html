@@ -1,0 +1,102 @@
+{% extends "marketplace/base.html" %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Documentación del vehículo" %} | CarFit{% endblock %}
+{% block ancho %}760px{% endblock %}
+{% block ancho_nav %}760px{% endblock %}
+
+{% block contenido %}
+  <h1>{% trans "Documentación y papeles del vehículo" %}</h1>
+  <p class="ayuda">
+    <strong>{{ carro.marca }} {{ carro.modelo }}</strong> · {% trans "Placa" %} {{ carro.placa }} · {% trans "Vendedor" %}: {{ carro.vendedor.nombre }}
+  </p>
+
+  <div class="resumen">
+    <div class="fila">
+      <span>{% trans "Estado de cumplimiento legal" %}:</span>
+      {% if reporte.cumple %}
+        <span class="badge badge-APROBADO">{% trans "CUMPLE REQUISITOS" %}</span>
+      {% else %}
+        <span class="badge badge-RECHAZADO">{% trans "INCUMPLE / DOCUMENTOS PENDIENTES" %}</span>
+      {% endif %}
+    </div>
+    {% if reporte.motivos %}
+      <ul class="errorlist" style="margin-top: .75rem; margin-bottom: 0;">
+        {% for motivo in reporte.motivos %}
+          <li>{{ motivo }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <h2>{% trans "Papeles registrados" %}</h2>
+  {% if reporte.documentos %}
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>{% trans "Documento" %}</th>
+          <th>{% trans "Expedición" %}</th>
+          <th>{% trans "Vencimiento" %}</th>
+          <th>{% trans "Vigencia" %}</th>
+          <th>{% trans "Soporte" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in reporte.documentos %}
+          <tr>
+            <td><strong>{{ doc.tipo_etiqueta }}</strong></td>
+            <td>{{ doc.fecha_expedicion|date:"Y-m-d" }}</td>
+            <td>{{ doc.fecha_vencimiento|date:"Y-m-d" }}</td>
+            <td>
+              {% if doc.vigente %}
+                <span class="badge badge-APROBADO">{% trans "VIGENTE" %}</span>
+              {% else %}
+                <span class="badge badge-RECHAZADO">{% trans "VENCIDO" %}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if doc.archivo_url %}
+                <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo" %}</a>
+              {% else %}
+                <span class="ayuda">{% trans "Sin archivo adjunto" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="vacio">{% trans "Este vehículo aún no tiene documentos registrados." %}</p>
+  {% endif %}
+
+  {% if es_dueno and form %}
+    <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
+    <h2>{% trans "Agregar o actualizar documento" %}</h2>
+    <p class="ayuda">{% trans "Registra o renueva el SOAT, la revisión tecnomecánica o la tarjeta de propiedad." %}</p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errores">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <ul class="errorlist">
+              {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </p>
+      {% endfor %}
+      <button type="submit">{% trans "Guardar documento" %}</button>
+    </form>
+  {% endif %}
+
+  <p style="margin-top: 1.5rem;">
+    <a href="{% url 'marketplace:catalogo_compras' %}" class="boton secundario">{% trans "Volver al catálogo" %}</a>
+    {% if es_dueno %}
+      <a href="{% url 'marketplace:mis_publicaciones' %}" class="boton secundario">{% trans "Ir a mis publicaciones" %}</a>
+    {% endif %}
+  </p>
+{% endblock %}

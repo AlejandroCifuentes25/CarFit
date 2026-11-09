@@ -16,6 +16,11 @@
           <span class="etiqueta">{{ carro.get_estado_display }}</span>
           <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
           <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
+          <span class="ayuda">
+            Vendedor: <strong>{{ carro.vendedor.nombre }}</strong> (★ {{ carro.vendedor.resena }}/5) ·
+            <a href="{% url 'marketplace:resenas_vendedor' carro.vendedor.pk %}">Reseñas</a> ·
+            <a href="{% url 'marketplace:documentos_carro' carro.pk %}">Papeles</a>
+          </span>
           <span class="precio">${{ carro.precio|floatformat:0 }} COP</span>
           <div class="acciones-carrito">
             {% if carro.pk in carrito_carros_ids %}
@@ -39,6 +44,10 @@
           <span class="etiqueta">{{ repuesto.get_estado_display }}</span>
           <strong>{{ repuesto.tipo }}</strong>
           <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
+          <span class="ayuda">
+            Vendedor: <strong>{{ repuesto.vendedor.nombre }}</strong> (★ {{ repuesto.vendedor.resena }}/5) ·
+            <a href="{% url 'marketplace:resenas_vendedor' repuesto.vendedor.pk %}">Reseñas</a>
+          </span>
           <span class="precio">${{ repuesto.precio|floatformat:0 }} COP</span>
           <div class="acciones-carrito">
             {% if repuesto.pk in carrito_repuestos_ids %}

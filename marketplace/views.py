@@ -25,18 +25,20 @@ from .api.serializers import (
     RespuestaMovimientoCarritoSerializer,
 )
 from .domain.exceptions import ErrorDeDominio
-from .forms import CrearArticuloForm, PagoForm, RegistroForm
-from .models import Carro, CarritoCompra, Repuesto
+from .forms import CrearArticuloForm, DocumentoCarroForm, PagoForm, RegistroForm, ResenaForm
+from .models import Carro, CarritoCompra, Repuesto, Vendedor
 from .services import (
     CatalogoComprasService,
     ConfirmarPagoService,
     ConsultarPagoService,
+    DocumentoCarroService,
     FacturaService,
     ProcesarPagoService,
     PublicacionArticuloService,
     CarritoComprasService,
     PagarCarritoService,
     RegistroUsuarioService,
+    ResenaService,
 )
 
 
@@ -503,3 +505,125 @@ class ConfirmarCompraCarritoView(BaseCarritoOperacionView):
             "estado": resultado["estado"],
             "carrito": servicio.obtener_resumen(usuario)["carrito"],
         }
+
+
+# ----------------------------------------------------------------------
+# Documentación del vehículo y Reseñas a Vendedores
+# ----------------------------------------------------------------------
+
+
+class DocumentosCarroView(LoginRequiredMixin, View):
+    """Muestra la documentación de un carro, su verificación de cumplimiento
+    y permite al vendedor dueño actualizar o adjuntar documentos."""
+
+    template_name = "marketplace/documentos_carro.html"
+    service_factory = DocumentoCarroService
+
+    def get(self, request, pk):
+        carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
+        reporte = self.service_factory().verificar_cumplimiento(carro)
+        es_dueno = (
+            hasattr(request.user, "vendedor")
+            and request.user.vendedor.id == carro.vendedor_id
+        )
+        form = DocumentoCarroForm() if es_dueno else None
+        return render(
+            request,
+            self.template_name,
+            {
+                "carro": carro,
+                "reporte": reporte,
+                "es_dueno": es_dueno,
+                "form": form,
+            },
+        )
+
+    def post(self, request, pk):
+        carro = get_object_or_404(Carro.objects.select_related("vendedor"), pk=pk)
+        es_dueno = (
+            hasattr(request.user, "vendedor")
+            and request.user.vendedor.id == carro.vendedor_id
+        )
+        if not es_dueno:
+            return render(request, "marketplace/sin_perfil_vendedor.html", status=403)
+
+        form = DocumentoCarroForm(request.POST, request.FILES)
+        servicio = self.service_factory()
+        if form.is_valid():
+            try:
+                servicio.guardar_documento(
+                    request.user.vendedor, carro, form.cleaned_data
+                )
+                messages.success(request, "Documento actualizado correctamente.")
+                return redirect("marketplace:documentos_carro", pk=carro.pk)
+            except ErrorDeDominio as error:
+                form.add_error(None, str(error))
+
+        reporte = servicio.verificar_cumplimiento(carro)
+        return render(
+            request,
+            self.template_name,
+            {
+                "carro": carro,
+                "reporte": reporte,
+                "es_dueno": es_dueno,
+                "form": form,
+            },
+        )
+
+
+class ResenasVendedorView(LoginRequiredMixin, ClienteRequeridoMixin, View):
+    """Lista las reseñas de un vendedor y permite publicar una nueva."""
+
+    template_name = "marketplace/resenas_vendedor.html"
+    service_factory = ResenaService
+
+    def get(self, request, vendedor_id):
+        servicio = self.service_factory()
+        try:
+            datos = servicio.listar_por_vendedor(vendedor_id)
+        except ErrorDeDominio as error:
+            raise Http404(str(error)) from error
+
+        es_mismo_vendedor = (
+            hasattr(request.user, "vendedor")
+            and request.user.vendedor.id == datos["vendedor"].id
+        )
+        form = None if es_mismo_vendedor else ResenaForm()
+        return render(
+            request,
+            self.template_name,
+            {
+                **datos,
+                "es_mismo_vendedor": es_mismo_vendedor,
+                "form": form,
+            },
+        )
+
+    def post(self, request, vendedor_id):
+        servicio = self.service_factory()
+        try:
+            datos = servicio.listar_por_vendedor(vendedor_id)
+        except ErrorDeDominio as error:
+            raise Http404(str(error)) from error
+
+        form = ResenaForm(request.POST)
+        if form.is_valid():
+            try:
+                servicio.crear_resena(
+                    request.user.cliente, vendedor_id, form.cleaned_data
+                )
+                messages.success(request, "Tu reseña ha sido publicada.")
+                return redirect("marketplace:resenas_vendedor", vendedor_id=vendedor_id)
+            except ErrorDeDominio as error:
+                form.add_error(None, str(error))
+
+        return render(
+            request,
+            self.template_name,
+            {
+                **datos,
+                "es_mismo_vendedor": False,
+                "form": form,
+            },
+        )

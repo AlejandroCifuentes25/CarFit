@@ -1,0 +1,63 @@
+{% extends "marketplace/base.html" %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Reseñas del vendedor" %} | CarFit{% endblock %}
+{% block ancho %}760px{% endblock %}
+{% block ancho_nav %}760px{% endblock %}
+
+{% block contenido %}
+  <h1>{% trans "Reseñas de" %} {{ vendedor.nombre }}</h1>
+  <p class="ayuda">{{ vendedor.correo }} · {{ vendedor.direccion }}</p>
+
+  <div class="resumen">
+    <div class="fila total" style="margin-top: 0; padding-top: 0; border-top: 0;">
+      <span>{% trans "Calificación promedio" %}:</span>
+      <span>★ {{ promedio }} / 5 ({{ total_resenas }} {% trans "reseñas" %})</span>
+    </div>
+  </div>
+
+  <h2>{% trans "Opiniones de compradores" %}</h2>
+  {% if resenas %}
+    <div class="rejilla" style="grid-template-columns: 1fr;">
+      {% for resena in resenas %}
+        <div class="tarjeta-articulo">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>{{ resena.autor }}</strong>
+            <span class="badge badge-APROBADO">★ {{ resena.calificacion }} / 5 · {{ resena.tipo }}</span>
+          </div>
+          <p style="margin: .35rem 0;">{{ resena.contenido }}</p>
+          <span class="ayuda" style="font-size: .8rem;">{{ resena.creado_en|date:"Y-m-d H:i" }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="vacio">{% trans "Este vendedor aún no tiene reseñas. ¡Sé el primero en calificarlo!" %}</p>
+  {% endif %}
+
+  {% if not es_mismo_vendedor and form %}
+    <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
+    <h2>{% trans "Escribir una reseña" %}</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errores">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <ul class="errorlist">
+              {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </p>
+      {% endfor %}
+      <button type="submit">{% trans "Publicar reseña" %}</button>
+    </form>
+  {% endif %}
+
+  <p style="margin-top: 1.5rem;">
+    <a href="{% url 'marketplace:catalogo_compras' %}" class="boton secundario">{% trans "Volver al catálogo" %}</a>
+  </p>
+{% endblock %}
