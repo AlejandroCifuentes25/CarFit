@@ -2,23 +2,71 @@
 {% load i18n %}
 
 {% block titulo %}{% trans "Documentación del vehículo" %} | CarFit{% endblock %}
-{% block ancho %}760px{% endblock %}
-{% block ancho_nav %}760px{% endblock %}
+{% block ancho %}820px{% endblock %}
+{% block ancho_nav %}820px{% endblock %}
+
+{% block estilos %}
+  .ficha-vehiculo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: .85rem;
+    background: #f8fafc;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    margin: .75rem 0 1.25rem;
+  }
+  .ficha-vehiculo .campo { display: flex; flex-direction: column; gap: .15rem; }
+  .ficha-vehiculo .etiqueta-campo { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tinta-suave); }
+  .ficha-vehiculo .valor-campo { font-weight: 700; font-size: .98rem; color: var(--tinta); }
+
+  .badge-VIGENTE { background: var(--exito-suave); color: var(--exito); }
+  .badge-VENCIDO, .badge-INVALIDO { background: #fbe9e9; color: var(--error); }
+  .badge-PENDIENTE { background: var(--pendiente-suave); color: var(--pendiente); }
+
+  .contenedor-tabla { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 640px) {
+    table.tabla-documentos thead { display: none; }
+    table.tabla-documentos, table.tabla-documentos tbody, table.tabla-documentos tr, table.tabla-documentos td {
+      display: block; width: 100%;
+    }
+    table.tabla-documentos tr {
+      border: 1px solid var(--borde); border-radius: 8px; padding: .6rem .75rem; margin-bottom: .75rem; background: #fff;
+    }
+    table.tabla-documentos td {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .35rem 0; border-bottom: 1px dashed var(--borde); text-align: right;
+    }
+    table.tabla-documentos td:last-child { border-bottom: 0; }
+    table.tabla-documentos td::before {
+      content: attr(data-label);
+      font-weight: 600; color: var(--tinta-suave); font-size: .78rem; text-transform: uppercase; text-align: left;
+    }
+  }
+{% endblock %}
 
 {% block contenido %}
-  <h1>{% trans "Consulta de vigencia documental del vehículo" %}</h1>
-  <p class="ayuda">
-    <strong>{{ carro.marca }} {{ carro.modelo }}</strong> · {% trans "Placa" %} {{ carro.placa }} · {% trans "Vendedor" %}: {{ carro.vendedor.nombre }}
-  </p>
+  <h1>{% trans "Documentación del vehículo" %}</h1>
+
+  <div class="ficha-vehiculo">
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Vehículo" %}</span>
+      <span class="valor-campo">{{ carro.marca }} {{ carro.modelo }}</span>
+    </div>
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Placa" %}</span>
+      <span class="valor-campo">{{ carro.placa }}</span>
+    </div>
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Vendedor" %}</span>
+      <span class="valor-campo">{{ carro.vendedor.nombre }}</span>
+    </div>
+  </div>
 
   <div class="resumen">
-    <div class="fila">
-      <span>{% trans "Estado de cumplimiento legal (SOAT y Técnico-Mecánica)" %}:</span>
-      {% if reporte.cumple %}
-        <span class="badge badge-APROBADO">{% trans "AL DÍA / CUMPLE REQUISITOS" %}</span>
-      {% else %}
-        <span class="badge badge-RECHAZADO">{% trans "INCUMPLE / DOCUMENTOS PENDIENTES" %}</span>
-      {% endif %}
+    <div class="fila" style="align-items: center; flex-wrap: wrap; gap: .5rem;">
+      <span><strong>{% trans "Estado de vigencia documental" %}:</strong></span>
+      <span class="badge badge-{{ reporte.estado_general_codigo }}">{{ reporte.estado_general }}</span>
     </div>
     {% if reporte.motivos %}
       <ul class="errorlist" style="margin-top: .75rem; margin-bottom: 0;">
@@ -26,43 +74,20 @@
           <li>{{ motivo }}</li>
         {% endfor %}
       </ul>
+    {% else %}
+      <p style="margin: .5rem 0 0; font-size: .9rem; color: var(--tinta);">
+        {{ reporte.mensaje_general }}
+      </p>
     {% endif %}
   </div>
 
-  <h2>{% trans "Información pública de vigencia (SOAT y Revisión Técnico-Mecánica)" %}</h2>
+  <h2>{% trans "SOAT y Revisión técnico-mecánica" %}</h2>
   <p class="ayuda">
-    {% trans "Cualquier comprador puede verificar la vigencia de los documentos. Para consultar los archivos originales del propietario se requiere autorización del vendedor." %}
+    {% trans "La información documental es proporcionada por el vendedor. CarFit calcula la vigencia según las fechas registradas, sin realizar verificaciones con entidades oficiales. Los documentos originales son privados." %}
   </p>
 
-  {% if not es_dueno %}
-    <div class="resumen" style="background: #fff; border: 1px solid var(--borde);">
-      <div class="fila" style="align-items: center; gap: 1rem;">
-        <div>
-          <strong>{% trans "Acceso a soportes originales del propietario" %}:</strong><br>
-          {% if solicitud_cliente %}
-            {% if solicitud_cliente.estado == "APROBADA" %}
-              <span class="badge badge-APROBADO">{% trans "ACCESO AUTORIZADO POR EL VENDEDOR" %}</span>
-            {% elif solicitud_cliente.estado == "PENDIENTE" %}
-              <span class="badge badge-PENDIENTE">{% trans "SOLICITUD PENDIENTE DE APROBACIÓN" %}</span>
-            {% else %}
-              <span class="badge badge-RECHAZADO">{% trans "SOLICITUD RECHAZADA POR EL VENDEDOR" %}</span>
-            {% endif %}
-          {% else %}
-            <span class="ayuda">{% trans "Aún no has solicitado permiso para ver los archivos originales." %}</span>
-          {% endif %}
-        </div>
-        {% if not solicitud_cliente or solicitud_cliente.estado == "RECHAZADA" %}
-          <form method="post" action="{% url 'marketplace:solicitar_acceso_documento' carro.pk %}" style="margin: 0;">
-            {% csrf_token %}
-            <button type="submit" class="boton secundario">{% trans "Solicitar acceso al vendedor" %}</button>
-          </form>
-        {% endif %}
-      </div>
-    </div>
-  {% endif %}
-
-  {% if reporte.documentos %}
-    <table class="tabla">
+  <div class="contenedor-tabla">
+    <table class="tabla tabla-documentos">
       <thead>
         <tr>
           <th>{% trans "Documento" %}</th>
@@ -75,111 +100,59 @@
       <tbody>
         {% for doc in reporte.documentos %}
           <tr>
-            <td><strong>{{ doc.tipo_etiqueta }}</strong></td>
-            <td>{{ doc.fecha_expedicion|date:"Y-m-d" }}</td>
-            <td>{{ doc.fecha_vencimiento|date:"Y-m-d" }}</td>
-            <td>
-              {% if doc.vigente %}
-                <span class="badge badge-APROBADO">{% trans "VIGENTE" %}</span>
+            <td data-label="{% trans 'Documento' %}"><strong>{{ doc.tipo_etiqueta }}</strong></td>
+            <td data-label="{% trans 'Expedición' %}">
+              {% if doc.fecha_expedicion %}
+                {{ doc.fecha_expedicion|date:"d/m/Y" }}
               {% else %}
-                <span class="badge badge-RECHAZADO">{% trans "VENCIDO" %}</span>
+                <span class="ayuda">—</span>
               {% endif %}
             </td>
-            <td>
-              {% if doc.archivo_url %}
-                {% if puede_ver_archivos %}
-                  <a href="{{ doc.archivo_url }}" target="_blank" rel="noopener">{% trans "Ver archivo original" %}</a>
-                {% else %}
-                  <span class="ayuda">🔒 {% trans "Reservado (Requiere autorización)" %}</span>
-                {% endif %}
+            <td data-label="{% trans 'Vencimiento' %}">
+              {% if doc.fecha_vencimiento %}
+                {{ doc.fecha_vencimiento|date:"d/m/Y" }}
               {% else %}
-                <span class="ayuda">{% trans "Verificado por fecha" %}</span>
+                <span class="ayuda">—</span>
+              {% endif %}
+            </td>
+            <td data-label="{% trans 'Vigencia' %}">
+              <span class="badge badge-{{ doc.estado }}">{{ doc.estado_etiqueta }}</span>
+            </td>
+            <td data-label="{% trans 'Soporte documental' %}">
+              {% if doc.tiene_archivo and puede_ver_archivos %}
+                <a href="{% url 'marketplace:descargar_documento_carro' doc.id %}" target="_blank" rel="noopener">{% trans "Ver archivo original" %}</a>
+              {% else %}
+                <span class="ayuda">{% trans "Documento privado" %}</span>
               {% endif %}
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
-  {% else %}
-    <p class="vacio">{% trans "Este vehículo aún no tiene documentos registrados." %}</p>
-  {% endif %}
+  </div>
 
-  {% if es_dueno %}
+  {% if es_dueno and form %}
     <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
-    <h2>{% trans "Solicitudes de compradores para ver archivos originales" %}</h2>
-    {% if solicitudes_vendedor %}
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>{% trans "Comprador" %}</th>
-            <th>{% trans "Correo" %}</th>
-            <th>{% trans "Estado" %}</th>
-            <th>{% trans "Decisión del propietario" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for sol in solicitudes_vendedor %}
-            <tr>
-              <td><strong>{{ sol.cliente.nombre }}</strong></td>
-              <td>{{ sol.cliente.correo }}</td>
-              <td>
-                {% if sol.estado == "APROBADA" %}
-                  <span class="badge badge-APROBADO">{% trans "APROBADA" %}</span>
-                {% elif sol.estado == "PENDIENTE" %}
-                  <span class="badge badge-PENDIENTE">{% trans "PENDIENTE" %}</span>
-                {% else %}
-                  <span class="badge badge-RECHAZADO">{% trans "RECHAZADA" %}</span>
-                {% endif %}
-              </td>
-              <td>
-                <div style="display: flex; gap: .5rem;">
-                  {% if sol.estado != "APROBADA" %}
-                    <form method="post" action="{% url 'marketplace:resolver_acceso_documento' sol.pk %}" style="margin: 0;">
-                      {% csrf_token %}
-                      <input type="hidden" name="decision" value="APROBAR">
-                      <button type="submit" style="padding: .35rem .75rem; font-size: .8rem;">{% trans "Otorgar acceso" %}</button>
-                    </form>
-                  {% endif %}
-                  {% if sol.estado != "RECHAZADA" %}
-                    <form method="post" action="{% url 'marketplace:resolver_acceso_documento' sol.pk %}" style="margin: 0;">
-                      {% csrf_token %}
-                      <input type="hidden" name="decision" value="RECHAZAR">
-                      <button type="submit" class="secundario" style="padding: .35rem .75rem; font-size: .8rem; color: var(--error); border-color: var(--error);">{% trans "Rechazar / Revocar" %}</button>
-                    </form>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="ayuda">{% trans "Ningún comprador ha solicitado acceso a los archivos originales de este vehículo todavía." %}</p>
-    {% endif %}
-
-    {% if form %}
-      <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
-      <h2>{% trans "Gestión privada del propietario: Agregar o actualizar documento" %}</h2>
-      <p class="ayuda">{% trans "Solo tú como propietario puedes subir o reemplazar los soportes originales del vehículo." %}</p>
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-          <div class="errores">{{ form.non_field_errors }}</div>
-        {% endif %}
-        {% for field in form %}
-          <p>
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-              <ul class="errorlist">
-                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
-              </ul>
-            {% endif %}
-          </p>
-        {% endfor %}
-        <button type="submit">{% trans "Guardar documento" %}</button>
-      </form>
-    {% endif %}
+    <h2>{% trans "Actualizar fechas o archivo soporte" %}</h2>
+    <p class="ayuda">{% trans "Al actualizar las fechas de expedición y vencimiento, el estado de vigencia se recalcula automáticamente." %}</p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errores">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <ul class="errorlist">
+              {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </p>
+      {% endfor %}
+      <button type="submit">{% trans "Guardar documento" %}</button>
+    </form>
   {% endif %}
 
   <p style="margin-top: 1.5rem;">

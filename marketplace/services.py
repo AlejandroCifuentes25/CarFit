@@ -45,7 +45,7 @@ from .infra.factories import (
     PasarelaPagoFactory,
     ValidadorDocumentalFactory,
 )
-from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, Resena, SolicitudAccesoDocumento, TransaccionPago, Vendedor
+from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, Resena, TransaccionPago, Vendedor
 
 
 @dataclass(frozen=True)
@@ -758,64 +758,147 @@ class PagarCarritoService:
 
 
 class DocumentoCarroService:
-    """Gestiona la documentación legal de un carro y verifica su cumplimiento.
+    """Gestiona la documentación de un carro y calcula su vigencia documental.
 
-    Corresponde a `DocumentoCarro.Verificar_Cumplimiento()` del diagrama de
-    clases. Reutiliza el puerto `ValidadorDocumental` (Patrón Adapter /
-    Factory) y además evalúa la vigencia por fechas para el reporte en la
-    interfaz.
+    Calcula automáticamente el estado de cada documento (`VIGENTE`, `VENCIDO`,
+    `PENDIENTE`, `INVALIDO`) y el estado general (`Documentación vigente`,
+    `Documentación vencida`, `Documentación pendiente`, `Información inválida`)
+    usando la fecha actual.
     """
 
-    def __init__(self, validador=None):
+    ESTADO_VIGENTE = "VIGENTE"
+    ESTADO_VENCIDO = "VENCIDO"
+    ESTADO_PENDIENTE = "PENDIENTE"
+    ESTADO_INVALIDO = "INVALIDO"
+
+    DOCUMENTOS_EVALUADOS = (
+        (DocumentoCarro.Tipo.SOAT, "SOAT"),
+        (DocumentoCarro.Tipo.TECNOMECANICA, "Revisión técnico-mecánica"),
+    )
+
+    def __init__(self, validador=None, hoy=None):
+        from datetime import date
+
         self._validador = validador or ValidadorDocumentalFactory.crear()
+        self._hoy = hoy or date.today
+
+    def _evaluar_documento(self, doc, hoy):
+        if doc is None or not doc.fecha_expedicion or not doc.fecha_vencimiento:
+            return (
+                self.ESTADO_PENDIENTE,
+                "PENDIENTE",
+                "El vendedor todavía no ha registrado las fechas requeridas.",
+            )
+        if doc.fecha_expedicion > hoy:
+            return (
+                self.ESTADO_INVALIDO,
+                "INVÁLIDO",
+                "La fecha de expedición no puede ser futura.",
+            )
+        if doc.fecha_vencimiento <= doc.fecha_expedicion:
+            return (
+                self.ESTADO_INVALIDO,
+                "INVÁLIDO",
+                "La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+            )
+        if doc.fecha_vencimiento < hoy:
+            return (
+                self.ESTADO_VENCIDO,
+                "VENCIDO",
+                f"El documento venció el {doc.fecha_vencimiento:%d/%m/%Y}.",
+            )
+        return (
+            self.ESTADO_VIGENTE,
+            "VIGENTE",
+            f"Vigente hasta el {doc.fecha_vencimiento:%d/%m/%Y}.",
+        )
 
     def verificar_cumplimiento(self, carro):
-        from datetime import date
-        from .domain.builders import DOCUMENTOS_OBLIGATORIOS
-
-        hoy = date.today()
-        documentos = list(carro.documentos.all().order_by("tipo_documento"))
-        tipos_presentes = {doc.tipo_documento for doc in documentos}
-        faltantes = sorted(DOCUMENTOS_OBLIGATORIOS - tipos_presentes)
+        hoy = self._hoy()
+        existentes = {
+            doc.tipo_documento: doc
+            for doc in carro.documentos.all().order_by("tipo_documento")
+        }
 
         detalle_documentos = []
-        vencidos = []
-        for doc in documentos:
-            vigente = doc.fecha_expedicion <= hoy <= doc.fecha_vencimiento
-            if not vigente:
-                vencidos.append(doc.get_tipo_documento_display())
+        estados_obligatorios = []
+        motivos = []
+        faltantes = []
+
+        tipos_mostrados = list(self.DOCUMENTOS_EVALUADOS)
+        if DocumentoCarro.Tipo.TARJETA_PROPIEDAD in existentes:
+            tipos_mostrados.append(
+                (DocumentoCarro.Tipo.TARJETA_PROPIEDAD, "Tarjeta de propiedad")
+            )
+
+        for codigo_tipo, etiqueta_tipo in tipos_mostrados:
+            doc = existentes.get(codigo_tipo)
+            estado_cod, estado_etiqueta, mensaje_doc = self._evaluar_documento(doc, hoy)
+            es_obligatorio = codigo_tipo in {
+                DocumentoCarro.Tipo.SOAT,
+                DocumentoCarro.Tipo.TECNOMECANICA,
+            }
+            if es_obligatorio:
+                estados_obligatorios.append(estado_cod)
+                if estado_cod == self.ESTADO_PENDIENTE:
+                    faltantes.append(codigo_tipo)
+                if estado_cod != self.ESTADO_VIGENTE:
+                    motivos.append(f"{etiqueta_tipo}: {mensaje_doc}")
+
             detalle_documentos.append(
                 {
                     "documento": doc,
-                    "id": doc.pk,
-                    "tipo_documento": doc.tipo_documento,
-                    "tipo_etiqueta": doc.get_tipo_documento_display(),
-                    "fecha_expedicion": doc.fecha_expedicion,
-                    "fecha_vencimiento": doc.fecha_vencimiento,
-                    "archivo_url": doc.archivo.url if doc.archivo else None,
-                    "vigente": vigente,
+                    "id": doc.pk if doc else None,
+                    "tipo_documento": codigo_tipo,
+                    "tipo_etiqueta": etiqueta_tipo,
+                    "fecha_expedicion": doc.fecha_expedicion if doc else None,
+                    "fecha_vencimiento": doc.fecha_vencimiento if doc else None,
+                    "tiene_archivo": bool(doc and doc.archivo),
+                    "archivo_url": (
+                        f"/documentos/{doc.pk}/archivo/"
+                        if (doc and doc.archivo)
+                        else None
+                    ),
+                    "estado": estado_cod,
+                    "estado_etiqueta": estado_etiqueta,
+                    "vigente": estado_cod == self.ESTADO_VIGENTE,
+                    "mensaje": mensaje_doc,
                 }
             )
 
-        resultado_validador = self._validador.validar(carro.placa, documentos)
-        cumple = (
-            not faltantes
-            and not vencidos
-            and resultado_validador.es_valido
-        )
+        if self.ESTADO_INVALIDO in estados_obligatorios:
+            estado_general_codigo = self.ESTADO_INVALIDO
+            estado_general_etiqueta = "Información inválida"
+            mensaje_general = (
+                "Existen fechas inconsistentes en los documentos registrados."
+            )
+        elif self.ESTADO_VENCIDO in estados_obligatorios:
+            estado_general_codigo = self.ESTADO_VENCIDO
+            estado_general_etiqueta = "Documentación vencida"
+            mensaje_general = (
+                "Uno o ambos documentos obligatorios han superado su fecha de vencimiento."
+            )
+        elif self.ESTADO_PENDIENTE in estados_obligatorios:
+            estado_general_codigo = self.ESTADO_PENDIENTE
+            estado_general_etiqueta = "Documentación pendiente"
+            mensaje_general = (
+                "El vendedor todavía no ha registrado todas las fechas requeridas."
+            )
+        else:
+            estado_general_codigo = self.ESTADO_VIGENTE
+            estado_general_etiqueta = "Documentación vigente"
+            mensaje_general = (
+                "El SOAT y la revisión técnico-mecánica tienen fechas válidas y se encuentran vigentes."
+            )
 
-        motivos = []
-        if faltantes:
-            motivos.append(f"Faltan documentos obligatorios: {', '.join(faltantes)}.")
-        for doc_vencido in vencidos:
-            motivos.append(f"{doc_vencido} vencido o con fechas fuera de rango.")
-        for motivo in resultado_validador.motivos:
-            if motivo not in motivos:
-                motivos.append(motivo)
+        cumple = estado_general_codigo == self.ESTADO_VIGENTE
 
         return {
             "carro": carro,
             "cumple": cumple,
+            "estado_general_codigo": estado_general_codigo,
+            "estado_general": estado_general_etiqueta,
+            "mensaje_general": mensaje_general,
             "documentos": detalle_documentos,
             "faltantes": faltantes,
             "motivos": motivos,
@@ -824,13 +907,20 @@ class DocumentoCarroService:
     @transaction.atomic
     def guardar_documento(self, vendedor, carro, datos):
         if carro.vendedor_id != vendedor.id:
-            raise ErrorDeDominio("Solo el vendedor dueño del vehículo puede actualizar sus papeles.")
+            raise ErrorDeDominio(
+                "Solo el vendedor propietario del vehículo puede modificar sus fechas o archivos."
+            )
 
         fecha_exp = datos["fecha_expedicion"]
         fecha_ven = datos["fecha_vencimiento"]
-        if fecha_ven < fecha_exp:
+        hoy = self._hoy()
+        if fecha_exp > hoy:
             raise ErrorDeDominio(
-                "La fecha de vencimiento no puede ser anterior a la fecha de expedición."
+                "La fecha de expedición no puede ser futura."
+            )
+        if fecha_ven <= fecha_exp:
+            raise ErrorDeDominio(
+                "La fecha de vencimiento debe ser posterior a la fecha de expedición."
             )
 
         tipo = datos["tipo_documento"]
@@ -856,67 +946,7 @@ class DocumentoCarroService:
         if getattr(usuario, "is_staff", False):
             return True
         vendedor = getattr(usuario, "vendedor", None)
-        if vendedor is not None and vendedor.id == carro.vendedor_id:
-            return True
-        cliente = getattr(usuario, "cliente", None)
-        if cliente is not None:
-            return SolicitudAccesoDocumento.objects.filter(
-                carro=carro,
-                cliente=cliente,
-                estado=SolicitudAccesoDocumento.Estado.APROBADA,
-            ).exists()
-        return False
-
-    def obtener_solicitud_cliente(self, cliente, carro):
-        if cliente is None:
-            return None
-        return SolicitudAccesoDocumento.objects.filter(
-            carro=carro, cliente=cliente
-        ).first()
-
-    def listar_solicitudes_carro(self, vendedor, carro):
-        if carro.vendedor_id != vendedor.id:
-            raise ErrorDeDominio("Solo el vendedor dueño puede ver las solicitudes de acceso.")
-        return list(carro.solicitudes_acceso.select_related("cliente").all())
-
-    @transaction.atomic
-    def solicitar_acceso(self, cliente, carro) -> SolicitudAccesoDocumento:
-        if cliente is None:
-            raise ErrorDeDominio("Se requiere un perfil de cliente para solicitar acceso.")
-        if carro.vendedor.usuario_id == cliente.usuario_id:
-            raise ErrorDeDominio("Ya eres el propietario de este vehículo.")
-
-        solicitud, creada = SolicitudAccesoDocumento.objects.get_or_create(
-            carro=carro,
-            cliente=cliente,
-            defaults={"estado": SolicitudAccesoDocumento.Estado.PENDIENTE},
-        )
-        if not creada and solicitud.estado == SolicitudAccesoDocumento.Estado.RECHAZADA:
-            solicitud.estado = SolicitudAccesoDocumento.Estado.PENDIENTE
-            solicitud.save(update_fields=["estado"])
-        return solicitud
-
-    @transaction.atomic
-    def resolver_solicitud(self, vendedor, solicitud_id, aprobar: bool) -> SolicitudAccesoDocumento:
-        solicitud = (
-            SolicitudAccesoDocumento.objects.select_related("carro", "cliente")
-            .filter(pk=solicitud_id)
-            .first()
-        )
-        if solicitud is None:
-            raise RecursoNoEncontradoError("la solicitud de acceso", solicitud_id)
-        if solicitud.carro.vendedor_id != vendedor.id:
-            raise ErrorDeDominio(
-                "Solo el vendedor dueño del vehículo puede autorizar o rechazar el acceso."
-            )
-
-        solicitud.estado = (
-            SolicitudAccesoDocumento.Estado.APROBADA
-            if aprobar
-            else SolicitudAccesoDocumento.Estado.RECHAZADA
-        )
-        solicitud.save(update_fields=["estado"])
-        return solicitud
+        return vendedor is not None and vendedor.id == carro.vendedor_id
 
 
 class ResenaService:

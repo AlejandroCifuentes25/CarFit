@@ -163,11 +163,27 @@ class CarroBuilder:
         return []
 
     def _validar_documentos(self):
+        from datetime import date
+
+        hoy = date.today()
         tipos = {getattr(doc, "tipo_documento", None) for doc in self._documentos}
         faltantes = DOCUMENTOS_OBLIGATORIOS - tipos
         if faltantes:
             return [f"Faltan documentos obligatorios: {', '.join(sorted(faltantes))}."]
-        return []
+
+        errores = []
+        for doc in self._documentos:
+            etiqueta = getattr(doc, "get_tipo_documento_display", lambda: doc.tipo_documento)()
+            exp = getattr(doc, "fecha_expedicion", None)
+            ven = getattr(doc, "fecha_vencimiento", None)
+            if exp and ven:
+                if exp > hoy:
+                    errores.append(f"{etiqueta}: La fecha de expedición no puede ser futura.")
+                if ven <= exp:
+                    errores.append(
+                        f"{etiqueta}: La fecha de vencimiento debe ser posterior a la fecha de expedición."
+                    )
+        return errores
 
 
 #: Prefijo de las referencias de pago generadas por CarFit. Facilita

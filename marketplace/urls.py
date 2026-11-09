@@ -56,14 +56,9 @@ urlpatterns = [
         name="documentos_carro",
     ),
     path(
-        "carros/<int:pk>/documentos/solicitar-acceso/",
-        views.SolicitarAccesoDocumentoView.as_view(),
-        name="solicitar_acceso_documento",
-    ),
-    path(
-        "documentos/solicitudes/<int:solicitud_id>/resolver/",
-        views.ResolverAccesoDocumentoView.as_view(),
-        name="resolver_acceso_documento",
+        "documentos/<int:doc_id>/archivo/",
+        views.DescargarDocumentoCarroView.as_view(),
+        name="descargar_documento_carro",
     ),
     path(
         "vendedores/<int:vendedor_id>/resenas/",

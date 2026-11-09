@@ -402,9 +402,12 @@ class DocumentosCarroAPIView(APIView):
                 "tipo_etiqueta": item["tipo_etiqueta"],
                 "fecha_expedicion": item["fecha_expedicion"],
                 "fecha_vencimiento": item["fecha_vencimiento"],
-                "tiene_soporte": bool(item["archivo_url"]),
+                "tiene_soporte": item["tiene_archivo"],
                 "archivo_url": item["archivo_url"] if puede_ver_archivos else None,
+                "estado": item["estado"],
+                "estado_etiqueta": item["estado_etiqueta"],
                 "vigente": item["vigente"],
+                "mensaje": item["mensaje"],
             }
             for item in reporte["documentos"]
         ]
@@ -413,6 +416,9 @@ class DocumentosCarroAPIView(APIView):
                 "carro_id": carro.pk,
                 "placa": carro.placa,
                 "cumple": reporte["cumple"],
+                "estado_general_codigo": reporte["estado_general_codigo"],
+                "estado_general": reporte["estado_general"],
+                "mensaje_general": reporte["mensaje_general"],
                 "faltantes": reporte["faltantes"],
                 "motivos": reporte["motivos"],
                 "documentos": documentos_data,

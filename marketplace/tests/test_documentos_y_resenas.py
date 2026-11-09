@@ -35,6 +35,7 @@ class DocumentoCarroServiceTests(TestCase):
     def test_verificar_cumplimiento_detecta_documentos_faltantes(self):
         reporte = DocumentoCarroService().verificar_cumplimiento(self.carro)
         self.assertFalse(reporte["cumple"])
+        self.assertEqual(reporte["estado_general"], "Documentación pendiente")
         self.assertIn("SOAT", reporte["faltantes"])
         self.assertIn("TECNOMECANICA", reporte["faltantes"])
 
@@ -61,8 +62,44 @@ class DocumentoCarroServiceTests(TestCase):
 
         reporte = servicio.verificar_cumplimiento(self.carro)
         self.assertTrue(reporte["cumple"])
+        self.assertEqual(reporte["estado_general"], "Documentación vigente")
         self.assertEqual(reporte["faltantes"], [])
         self.assertEqual(len(reporte["documentos"]), 2)
+
+    def test_estados_separados_vencido_e_invalido_y_bloqueo_backend_archivo(self):
+        archivo = SimpleUploadedFile("soat_privado.pdf", b"%PDF-1.4 contenido", content_type="application/pdf")
+        doc_soat = DocumentoCarro.objects.create(
+            carro=self.carro,
+            tipo_documento=DocumentoCarro.Tipo.SOAT,
+            fecha_expedicion=self.hoy - timedelta(days=400),
+            fecha_vencimiento=self.hoy - timedelta(days=35),
+            archivo=archivo,
+        )
+        DocumentoCarro.objects.create(
+            carro=self.carro,
+            tipo_documento=DocumentoCarro.Tipo.TECNOMECANICA,
+            fecha_expedicion=self.hoy - timedelta(days=10),
+            fecha_vencimiento=self.hoy + timedelta(days=355),
+        )
+        reporte = DocumentoCarroService().verificar_cumplimiento(self.carro)
+        self.assertEqual(reporte["estado_general"], "Documentación vencida")
+
+        # Si hay una fecha inconsistente (vencimiento <= expedicion), gana Información inválida
+        doc_soat.fecha_expedicion = self.hoy
+        doc_soat.fecha_vencimiento = self.hoy
+        doc_soat.save()
+        reporte_inv = DocumentoCarroService().verificar_cumplimiento(self.carro)
+        self.assertEqual(reporte_inv["estado_general"], "Información inválida")
+        self.assertIn(
+            "SOAT: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+            reporte_inv["motivos"],
+        )
+
+        # Un comprador que intente abrir la URL directa recibe 403 Forbidden
+        comprador = User.objects.create_user(username="intruso_doc", password="123")
+        self.client.force_login(comprador)
+        resp_descarga = self.client.get(reverse("marketplace:descargar_documento_carro", args=[doc_soat.pk]))
+        self.assertEqual(resp_descarga.status_code, 403)
 
     def test_guardar_documento_impide_que_otro_vendedor_modifique_papeles(self):
         otro_user = User.objects.create_user(username="otro_vend", password="123")
@@ -109,44 +146,6 @@ class DocumentoCarroServiceTests(TestCase):
         self.client.force_login(self.user_vendedor)
         resp_dueno = self.client.get(reverse("marketplace_api:carro_documentos", args=[self.carro.pk]))
         self.assertIsNotNone(resp_dueno.json()["documentos"][0]["archivo_url"])
-
-    def test_flujo_solicitar_y_aprobar_acceso_a_archivos_del_vehiculo(self):
-        archivo = SimpleUploadedFile("soat_privado.pdf", b"%PDF-1.4 contenido", content_type="application/pdf")
-        servicio = DocumentoCarroService()
-        servicio.guardar_documento(
-            self.vendedor,
-            self.carro,
-            {
-                "tipo_documento": DocumentoCarro.Tipo.SOAT,
-                "fecha_expedicion": self.hoy - timedelta(days=10),
-                "fecha_vencimiento": self.hoy + timedelta(days=355),
-                "archivo": archivo,
-            },
-        )
-        user_comprador = User.objects.create_user(username="comprador_sol", password="123")
-        cliente_comprador = Cliente.objects.create(
-            usuario=user_comprador,
-            nombre="Carlos Interesado",
-            correo="carlos@carfit.co",
-            direccion="Calle 10",
-            numero_tel="3005556677",
-        )
-
-        # 1. Inicialmente no tiene acceso
-        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
-
-        # 2. El comprador solicita acceso (queda PENDIENTE, aún sin acceso)
-        solicitud = servicio.solicitar_acceso(cliente_comprador, self.carro)
-        self.assertEqual(solicitud.estado, "PENDIENTE")
-        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
-
-        # 3. El vendedor aprueba la solicitud -> ahora el comprador sí tiene acceso
-        servicio.resolver_solicitud(self.vendedor, solicitud.pk, aprobar=True)
-        self.assertTrue(servicio.tiene_acceso_archivos(user_comprador, self.carro))
-
-        # 4. El vendedor revoca el acceso -> vuelve a perder acceso
-        servicio.resolver_solicitud(self.vendedor, solicitud.pk, aprobar=False)
-        self.assertFalse(servicio.tiene_acceso_archivos(user_comprador, self.carro))
 
 
 class ResenaServiceAndViewsTests(TestCase):
