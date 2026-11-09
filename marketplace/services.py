@@ -45,7 +45,7 @@ from .infra.factories import (
     PasarelaPagoFactory,
     ValidadorDocumentalFactory,
 )
-from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, TransaccionPago, Vendedor
+from .models import Carro, CarritoCompra, Cliente, DocumentoCarro, Inventario, Pago, Repuesto, Resena, TransaccionPago, Vendedor
 
 
 @dataclass(frozen=True)
@@ -750,3 +750,192 @@ class PagarCarritoService:
 
         self._carrito_service.vaciar_carrito(cliente.usuario)
         return {"pagos": pagos, "carrito": carrito}
+
+
+# ----------------------------------------------------------------------
+# Documentación del vehículo (Verificar_Cumplimiento) y Reseñas
+# ----------------------------------------------------------------------
+
+
+class DocumentoCarroService:
+    """Gestiona la documentación legal de un carro y verifica su cumplimiento.
+
+    Corresponde a `DocumentoCarro.Verificar_Cumplimiento()` del diagrama de
+    clases. Reutiliza el puerto `ValidadorDocumental` (Patrón Adapter /
+    Factory) y además evalúa la vigencia por fechas para el reporte en la
+    interfaz.
+    """
+
+    def __init__(self, validador=None):
+        self._validador = validador or ValidadorDocumentalFactory.crear()
+
+    def verificar_cumplimiento(self, carro):
+        from datetime import date
+        from .domain.builders import DOCUMENTOS_OBLIGATORIOS
+
+        hoy = date.today()
+        documentos = list(carro.documentos.all().order_by("tipo_documento"))
+        tipos_presentes = {doc.tipo_documento for doc in documentos}
+        faltantes = sorted(DOCUMENTOS_OBLIGATORIOS - tipos_presentes)
+
+        detalle_documentos = []
+        vencidos = []
+        for doc in documentos:
+            vigente = doc.fecha_expedicion <= hoy <= doc.fecha_vencimiento
+            if not vigente:
+                vencidos.append(doc.get_tipo_documento_display())
+            detalle_documentos.append(
+                {
+                    "documento": doc,
+                    "id": doc.pk,
+                    "tipo_documento": doc.tipo_documento,
+                    "tipo_etiqueta": doc.get_tipo_documento_display(),
+                    "fecha_expedicion": doc.fecha_expedicion,
+                    "fecha_vencimiento": doc.fecha_vencimiento,
+                    "archivo_url": doc.archivo.url if doc.archivo else None,
+                    "vigente": vigente,
+                }
+            )
+
+        resultado_validador = self._validador.validar(carro.placa, documentos)
+        cumple = (
+            not faltantes
+            and not vencidos
+            and resultado_validador.es_valido
+        )
+
+        motivos = []
+        if faltantes:
+            motivos.append(f"Faltan documentos obligatorios: {', '.join(faltantes)}.")
+        for doc_vencido in vencidos:
+            motivos.append(f"{doc_vencido} vencido o con fechas fuera de rango.")
+        for motivo in resultado_validador.motivos:
+            if motivo not in motivos:
+                motivos.append(motivo)
+
+        return {
+            "carro": carro,
+            "cumple": cumple,
+            "documentos": detalle_documentos,
+            "faltantes": faltantes,
+            "motivos": motivos,
+        }
+
+    @transaction.atomic
+    def guardar_documento(self, vendedor, carro, datos):
+        if carro.vendedor_id != vendedor.id:
+            raise ErrorDeDominio("Solo el vendedor dueño del vehículo puede actualizar sus papeles.")
+
+        fecha_exp = datos["fecha_expedicion"]
+        fecha_ven = datos["fecha_vencimiento"]
+        if fecha_ven < fecha_exp:
+            raise ErrorDeDominio(
+                "La fecha de vencimiento no puede ser anterior a la fecha de expedición."
+            )
+
+        tipo = datos["tipo_documento"]
+        archivo = datos.get("archivo")
+
+        doc, creado = DocumentoCarro.objects.update_or_create(
+            carro=carro,
+            tipo_documento=tipo,
+            defaults={
+                "fecha_expedicion": fecha_exp,
+                "fecha_vencimiento": fecha_ven,
+            },
+        )
+        if archivo:
+            doc.archivo = archivo
+            doc.save(update_fields=["archivo"])
+
+        return doc
+
+
+class ResenaService:
+    """Gestiona las reseñas y calificaciones que los clientes hacen a los vendedores.
+
+    Corresponde a `Cliente.Escribir_Reseña()` y `Reseña` del diagrama de
+    clases. Recalcula automáticamente el puntaje promedio en `Vendedor.resena`
+    (y en `Carro.puntaje` cuando la reseña se asocia a un vehículo específico).
+    """
+
+    TIPOS_VALIDOS = ("COMPRA", "ATENCION", "VEHICULO", "GENERAL")
+
+    def listar_por_vendedor(self, vendedor_id):
+        vendedor = Vendedor.objects.filter(pk=vendedor_id).first()
+        if vendedor is None:
+            raise RecursoNoEncontradoError("el vendedor", vendedor_id)
+
+        resenas = list(vendedor.resenas.select_related("carro", "cliente").all())
+        promedio = (
+            round(sum(r.calificacion for r in resenas) / len(resenas), 1)
+            if resenas
+            else float(vendedor.resena)
+        )
+        return {
+            "vendedor": vendedor,
+            "resenas": resenas,
+            "total_resenas": len(resenas),
+            "promedio": promedio,
+        }
+
+    @transaction.atomic
+    def crear_resena(self, cliente, vendedor_id, datos) -> Resena:
+        vendedor = Vendedor.objects.filter(pk=vendedor_id).first()
+        if vendedor is None:
+            raise RecursoNoEncontradoError("el vendedor", vendedor_id)
+
+        if cliente is not None and vendedor.usuario_id == cliente.usuario_id:
+            raise ErrorDeDominio("No puedes escribir una reseña sobre tu propio perfil de vendedor.")
+
+        contenido = (datos.get("contenido") or "").strip()
+        if not contenido:
+            raise ErrorDeDominio("El contenido de la reseña no puede estar vacío.")
+
+        try:
+            calificacion = int(datos.get("calificacion", 5))
+        except (TypeError, ValueError):
+            raise ErrorDeDominio("La calificación debe ser un número entero entre 1 y 5.")
+
+        if not (1 <= calificacion <= 5):
+            raise ErrorDeDominio("La calificación debe estar entre 1 y 5 estrellas.")
+
+        tipo = (datos.get("tipo") or "GENERAL").strip().upper()
+        carro = None
+        carro_id = datos.get("carro_id") or datos.get("carro")
+        if carro_id:
+            carro = Carro.objects.filter(pk=carro_id, vendedor=vendedor).first()
+            if carro is None:
+                raise RecursoNoEncontradoError("el carro del vendedor", carro_id)
+
+        autor = cliente.nombre if cliente is not None else (datos.get("autor") or "Usuario")
+
+        resena = Resena.objects.create(
+            vendedor=vendedor,
+            cliente=cliente,
+            carro=carro,
+            autor=autor,
+            tipo=tipo,
+            calificacion=calificacion,
+            contenido=contenido,
+        )
+
+        self._actualizar_puntajes(vendedor, carro)
+        return resena
+
+    def _actualizar_puntajes(self, vendedor, carro=None):
+        resenas_vendedor = list(vendedor.resenas.all())
+        if resenas_vendedor:
+            promedio_vendedor = round(
+                sum(r.calificacion for r in resenas_vendedor) / len(resenas_vendedor)
+            )
+            vendedor.resena = promedio_vendedor
+            vendedor.save(update_fields=["resena"])
+
+        if carro is not None:
+            resenas_carro = list(carro.resenas.all())
+            if resenas_carro:
+                carro.puntaje = round(
+                    sum(r.calificacion for r in resenas_carro) / len(resenas_carro), 1
+                )
+                carro.save(update_fields=["puntaje"])
