@@ -13,7 +13,7 @@ programada, y ninguno de esos caminos pasa por un serializer.
 from rest_framework import serializers
 
 from ..domain.builders import KM_MAXIMO_NUEVO
-from ..models import Carro, Cliente, Pago, Vendedor, Repuesto
+from ..models import Carro, Cliente, DocumentoCarro, Pago, Vendedor, Repuesto, Resena
 
 TIPOS_ARTICULO = (("carro", "Carro"), ("repuesto", "Repuesto"))
 
@@ -82,6 +82,40 @@ class RepuestoSerializer(serializers.ModelSerializer):
         model = Repuesto
         fields = ["id", "vendedor", "tipo", "modelo_carro", "numero_serie", "estado", "precio"]
         read_only_fields = ["id", "vendedor"]
+
+
+class DocumentoCarroSerializer(serializers.ModelSerializer):
+    tipo_etiqueta = serializers.CharField(source="get_tipo_documento_display", read_only=True)
+
+    class Meta:
+        model = DocumentoCarro
+        fields = [
+            "id",
+            "carro",
+            "tipo_documento",
+            "tipo_etiqueta",
+            "fecha_expedicion",
+            "fecha_vencimiento",
+            "archivo",
+        ]
+        read_only_fields = ["id", "carro", "tipo_etiqueta"]
+
+
+class ResenaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resena
+        fields = [
+            "id",
+            "vendedor",
+            "cliente",
+            "carro",
+            "autor",
+            "tipo",
+            "calificacion",
+            "contenido",
+            "creado_en",
+        ]
+        read_only_fields = ["id", "vendedor", "cliente", "autor", "creado_en"]
 
 
 # ---------------------------------------------------------------------
