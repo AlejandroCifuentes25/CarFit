@@ -11,6 +11,11 @@
           <span class="estado">{{ carro.get_estado_display() }}</span>
           <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
           <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
+          <span class="ayuda">
+            Vendedor: <strong>{{ carro.vendedor.nombre }}</strong> (★ {{ carro.vendedor.resena }}/5) ·
+            <a href="/vendedores/{{ carro.vendedor.pk }}/resenas/">Reseñas</a> ·
+            <a href="/carros/{{ carro.pk }}/documentos/">Papeles</a>
+          </span>
           <span class="precio">${{ carro.precio|cop }} COP</span>
           {% if carro.pk in carrito_carros_ids %}
             <button type="button" class="secundario" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/quitar/carro/{{ carro.pk }}/', this)">Quitar del carrito</button>
@@ -31,6 +36,10 @@
           <span class="estado">{{ repuesto.get_estado_display() }}</span>
           <strong>{{ repuesto.tipo }}</strong>
           <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
+          <span class="ayuda">
+            Vendedor: <strong>{{ repuesto.vendedor.nombre }}</strong> (★ {{ repuesto.vendedor.resena }}/5) ·
+            <a href="/vendedores/{{ repuesto.vendedor.pk }}/resenas/">Reseñas</a>
+          </span>
           <span class="precio">${{ repuesto.precio|cop }} COP</span>
           {% if repuesto.pk in carrito_repuestos_ids %}
             <button type="button" class="secundario" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/quitar/repuesto/{{ repuesto.pk }}/', this)">Quitar del carrito</button>

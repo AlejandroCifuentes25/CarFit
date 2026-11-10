@@ -15,7 +15,7 @@
         <td>{{ carro.marca }} {{ carro.modelo }} ({{ carro.placa }})</td>
         <td>${{ carro.precio }}</td>
         <td>{{ carro.get_estado_display() }}</td>
-        <td><a href="{{ prefix }}/editar/carro/{{ carro.pk }}/">Editar</a> | <a href="{{ prefix }}/eliminar/carro/{{ carro.pk }}/" style="color:var(--error);">Eliminar</a></td>
+        <td><a href="/carros/{{ carro.pk }}/documentos/">Papeles</a> | <a href="{{ prefix }}/editar/carro/{{ carro.pk }}/">Editar</a> | <a href="{{ prefix }}/eliminar/carro/{{ carro.pk }}/" style="color:var(--error);">Eliminar</a></td>
       </tr>
       {% endfor %}
     </tbody>
