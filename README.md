@@ -200,6 +200,40 @@ conserva la API Django bajo `/api/v1/` y el panel original `/admin/`. Flask
 comparte con Django la base de datos y las sesiones, por lo que la cookie
 autenticada funciona en ambas aplicaciones.
 
+### Endpoint de información del sistema
+
+Para integraciones de otros equipos, hay un endpoint JSON público y de solo
+lectura con el estado del marketplace, conteos del catálogo disponible y las
+rutas principales de los servicios:
+
+```http
+GET /api/v2/sistema/
+```
+
+Ejemplo de respuesta:
+
+```json
+{
+  "servicio": "CarFit Marketplace",
+  "estado": "disponible",
+  "version_api": "v2",
+  "catalogo": {
+    "carros_disponibles": 12,
+    "repuestos_disponibles": 34
+  },
+  "rutas": {
+    "cuentas": "/api/v2/",
+    "pagos": "/api/v2/pagos/",
+    "publicaciones": "/publicaciones/v2/",
+    "compras": "/compras/v2/catalogo/"
+  }
+}
+```
+
+Los conteos reflejan artículos que el servicio de catálogo considera
+disponibles para compra; no incluyen artículos reservados por pagos pendientes
+o aprobados.
+
 
 ## Pruebas
 

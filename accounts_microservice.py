@@ -49,7 +49,7 @@ from marketplace.models import (
     TransaccionPago,
     Vendedor,
 )
-from marketplace.services import RegistroUsuarioService
+from marketplace.services import CatalogoComprasService, RegistroUsuarioService
 
 
 app = Flask(
@@ -327,6 +327,28 @@ def _require_staff(resource=None):
 @app.get("/health")
 def health():
     return jsonify({"servicio": "cuentas", "estado": "ok"})
+
+
+@app.get("/api/v2/sistema/")
+def system_info():
+    carros, repuestos = CatalogoComprasService().listar_disponibles(AnonymousUser())
+    return jsonify(
+        {
+            "servicio": "CarFit Marketplace",
+            "estado": "disponible",
+            "version_api": "v2",
+            "catalogo": {
+                "carros_disponibles": carros.count(),
+                "repuestos_disponibles": repuestos.count(),
+            },
+            "rutas": {
+                "cuentas": "/api/v2/",
+                "pagos": "/api/v2/pagos/",
+                "publicaciones": "/publicaciones/v2/",
+                "compras": "/compras/v2/catalogo/",
+            },
+        }
+    )
 
 
 @app.get("/api/v2/csrf/")

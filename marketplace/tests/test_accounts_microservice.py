@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 
+from marketplace.models import Carro, Repuesto, Vendedor
+
 from accounts_microservice import app
 
 
@@ -49,6 +51,48 @@ class AccountsMicroserviceTest(TestCase):
 
         self.assertEqual(login_page.status_code, 200)
         self.assertEqual(response.status_code, 302)
+
+    def test_public_system_info_returns_api_routes_and_available_catalog_counts(self):
+        seller_user = User.objects.create_user(
+            username="system-info-seller",
+            password="clave-correcta",
+        )
+        seller = Vendedor.objects.create(
+            usuario=seller_user,
+            nombre="Vendedor",
+            correo="seller@carfit.co",
+            direccion="Calle 1",
+            numero_tel="3000000000",
+        )
+        Carro.objects.create(
+            vendedor=seller,
+            placa="ABC123",
+            marca="Mazda",
+            modelo="CX-30",
+            estado="USADO",
+            color="Rojo",
+            kilometraje=10000,
+            precio=85000000,
+        )
+        Repuesto.objects.create(
+            vendedor=seller,
+            tipo="Filtro",
+            modelo_carro="CX-30",
+            numero_serie="REP-INFO-1",
+            estado="NUEVO",
+            precio=120000,
+        )
+
+        response = self.flask.get("/api/v2/sistema/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["servicio"], "CarFit Marketplace")
+        self.assertEqual(response.json["estado"], "disponible")
+        self.assertEqual(
+            response.json["catalogo"],
+            {"carros_disponibles": 1, "repuestos_disponibles": 1},
+        )
+        self.assertEqual(response.json["rutas"]["compras"], "/compras/v2/catalogo/")
 
     def test_flask_accepts_existing_django_session_and_admin_api(self):
         admin = User.objects.create_user(
