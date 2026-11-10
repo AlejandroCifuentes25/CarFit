@@ -354,7 +354,8 @@ class ConfirmacionPagoAPIView(VistaDePagos):
 
         return Response(PagoSerializer(pago).data, status=status.HTTP_200_OK)
 
-from .serializers import RepuestoSerializer
+from .serializers import RepuestoSerializer, DocumentoCarroSerializer, ResenaSerializer
+from ..services import DocumentoCarroService, ResenaService
 
 class PublicarRepuestoAPIView(APIView):
     """Expone el flujo de negocio de publicar un repuesto usando APIView."""
@@ -378,3 +379,117 @@ class PublicarRepuestoAPIView(APIView):
             
         serializer_salida = RepuestoSerializer(repuesto)
         return Response(serializer_salida.data, status=status.HTTP_201_CREATED)
+
+
+class DocumentosCarroAPIView(APIView):
+    """Consulta el cumplimiento documental de un carro o registra un documento."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    service_factory = DocumentoCarroService
+
+    def get(self, request, carro_id):
+        carro = Carro.objects.filter(pk=carro_id).first()
+        if carro is None:
+            return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
+
+        servicio = self.service_factory()
+        reporte = servicio.verificar_cumplimiento(carro)
+        puede_ver_archivos = servicio.tiene_acceso_archivos(request.user, carro)
+        documentos_data = [
+            {
+                "id": item["id"],
+                "tipo_documento": item["tipo_documento"],
+                "tipo_etiqueta": item["tipo_etiqueta"],
+                "fecha_expedicion": item["fecha_expedicion"],
+                "fecha_vencimiento": item["fecha_vencimiento"],
+                "tiene_soporte": item["tiene_archivo"],
+                "archivo_url": item["archivo_url"] if puede_ver_archivos else None,
+                "estado": item["estado"],
+                "estado_etiqueta": item["estado_etiqueta"],
+                "vigente": item["vigente"],
+                "mensaje": item["mensaje"],
+            }
+            for item in reporte["documentos"]
+        ]
+        return Response(
+            {
+                "carro_id": carro.pk,
+                "placa": carro.placa,
+                "cumple": reporte["cumple"],
+                "estado_general_codigo": reporte["estado_general_codigo"],
+                "estado_general": reporte["estado_general"],
+                "mensaje_general": reporte["mensaje_general"],
+                "faltantes": reporte["faltantes"],
+                "motivos": reporte["motivos"],
+                "documentos": documentos_data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request, carro_id):
+        if not hasattr(request.user, "vendedor"):
+            return Response(
+                {"detail": "Se requiere perfil de Vendedor."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        carro = Carro.objects.filter(pk=carro_id).first()
+        if carro is None:
+            return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
+
+        serializer = DocumentoCarroSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            doc = self.service_factory().guardar_documento(
+                request.user.vendedor, carro, serializer.validated_data
+            )
+        except ErrorDeDominio as error:
+            return respuesta_de_error(error)
+
+        return Response(
+            DocumentoCarroSerializer(doc).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ResenasVendedorAPIView(APIView):
+    """Lista y publica reseñas para un vendedor."""
+
+    permission_classes = [permissions.IsAuthenticated]
+    service_factory = ResenaService
+
+    def get(self, request, vendedor_id):
+        try:
+            datos = self.service_factory().listar_por_vendedor(vendedor_id)
+        except ErrorDeDominio as error:
+            return respuesta_de_error(error)
+
+        return Response(
+            {
+                "vendedor_id": datos["vendedor"].pk,
+                "vendedor_nombre": datos["vendedor"].nombre,
+                "promedio": datos["promedio"],
+                "total_resenas": datos["total_resenas"],
+                "resenas": ResenaSerializer(datos["resenas"], many=True).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request, vendedor_id):
+        serializer = ResenaSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        cliente = getattr(request.user, "cliente", None)
+        try:
+            resena = self.service_factory().crear_resena(
+                cliente, vendedor_id, serializer.validated_data
+            )
+        except ErrorDeDominio as error:
+            return respuesta_de_error(error)
+
+        return Response(
+            ResenaSerializer(resena).data,
+            status=status.HTTP_201_CREATED,
+        )

@@ -45,4 +45,14 @@ urlpatterns = [
         views.PublicarRepuestoAPIView.as_view(),
         name="api_publicar_repuesto",
     ),
+    path(
+        "carros/<int:carro_id>/documentos/",
+        views.DocumentosCarroAPIView.as_view(),
+        name="carro_documentos",
+    ),
+    path(
+        "vendedores/<int:vendedor_id>/resenas/",
+        views.ResenasVendedorAPIView.as_view(),
+        name="vendedor_resenas",
+    ),
 ]

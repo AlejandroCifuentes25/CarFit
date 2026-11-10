@@ -25,6 +25,7 @@
         <td>${{ carro.precio }}</td>
         <td>{{ carro.get_estado_display }}</td>
         <td>
+          <a href="{% url 'marketplace:documentos_carro' carro.pk %}">Papeles</a> |
           <a href="{% url 'marketplace:editar_articulo' 'carro' carro.pk %}">Editar</a> | 
           <a href="{% url 'marketplace:eliminar_articulo' 'carro' carro.pk %}" style="color: var(--error);">Eliminar</a>
         </td>

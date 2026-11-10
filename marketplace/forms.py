@@ -9,9 +9,10 @@ desde un comando de consola o una API, sin pasar por este formulario.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .domain.metodos_pago import metodos_disponibles
-from .models import Carro
+from .models import Carro, DocumentoCarro
 
 
 class CrearArticuloForm(forms.Form):
@@ -28,15 +29,62 @@ class CrearArticuloForm(forms.Form):
         label="Descripción",
     )
 
-    soat_expedicion = forms.DateField(label="SOAT: expedición")
-    soat_vencimiento = forms.DateField(label="SOAT: vencimiento")
+    soat_expedicion = forms.DateField(
+        label="SOAT: expedición",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    soat_vencimiento = forms.DateField(
+        label="SOAT: vencimiento",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
     soat_archivo = forms.FileField(required=False, label="SOAT: archivo")
 
-    tecnomecanica_expedicion = forms.DateField(label="Tecnomecánica: expedición")
-    tecnomecanica_vencimiento = forms.DateField(label="Tecnomecánica: vencimiento")
+    tecnomecanica_expedicion = forms.DateField(
+        label="Tecnomecánica: expedición",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    tecnomecanica_vencimiento = forms.DateField(
+        label="Tecnomecánica: vencimiento",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
     tecnomecanica_archivo = forms.FileField(
         required=False, label="Tecnomecánica: archivo"
     )
+
+    def clean(self):
+        from datetime import date
+
+        datos = super().clean()
+        hoy = date.today()
+
+        soat_exp = datos.get("soat_expedicion")
+        soat_ven = datos.get("soat_vencimiento")
+        if soat_exp and soat_ven:
+            if soat_exp > hoy:
+                self.add_error(
+                    "soat_expedicion",
+                    "SOAT: La fecha de expedición no puede ser futura.",
+                )
+            if soat_ven <= soat_exp:
+                self.add_error(
+                    "soat_vencimiento",
+                    "SOAT: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                )
+
+        tec_exp = datos.get("tecnomecanica_expedicion")
+        tec_ven = datos.get("tecnomecanica_vencimiento")
+        if tec_exp and tec_ven:
+            if tec_exp > hoy:
+                self.add_error(
+                    "tecnomecanica_expedicion",
+                    "Revisión técnico-mecánica: La fecha de expedición no puede ser futura.",
+                )
+            if tec_ven <= tec_exp:
+                self.add_error(
+                    "tecnomecanica_vencimiento",
+                    "Revisión técnico-mecánica: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                )
+        return datos
 
 
 class PagoForm(forms.Form):
@@ -102,3 +150,77 @@ class RegistroForm(forms.Form):
         if datos.get("password") and datos.get("password") != datos.get("password_confirmacion"):
             self.add_error("password_confirmacion", "Las contraseñas no coinciden.")
         return datos
+
+
+class DocumentoCarroForm(forms.Form):
+    tipo_documento = forms.ChoiceField(
+        choices=DocumentoCarro.Tipo.choices,
+        label=_("Tipo de documento"),
+    )
+    fecha_expedicion = forms.DateField(
+        label=_("Fecha de expedición"),
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    fecha_vencimiento = forms.DateField(
+        label=_("Fecha de vencimiento"),
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    archivo = forms.FileField(
+        required=False,
+        label=_("Archivo soporte (PDF o imagen)"),
+    )
+
+    def clean(self):
+        from datetime import date
+
+        datos = super().clean()
+        hoy = date.today()
+        exp = datos.get("fecha_expedicion")
+        ven = datos.get("fecha_vencimiento")
+        tipo = datos.get("tipo_documento")
+        etiqueta = dict(DocumentoCarro.Tipo.choices).get(tipo, "Documento")
+
+        if exp and ven:
+            if exp > hoy:
+                self.add_error(
+                    "fecha_expedicion",
+                    f"{etiqueta}: La fecha de expedición no puede ser futura.",
+                )
+            if ven <= exp:
+                self.add_error(
+                    "fecha_vencimiento",
+                    f"{etiqueta}: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                )
+        return datos
+
+
+class ResenaForm(forms.Form):
+    CALIFICACION_CHOICES = [
+        (5, _("5 estrellas — Excelente")),
+        (4, _("4 estrellas — Muy bueno")),
+        (3, _("3 estrellas — Regular")),
+        (2, _("2 estrellas — Malo")),
+        (1, _("1 estrella — Muy malo")),
+    ]
+    TIPO_CHOICES = [
+        ("COMPRA", _("Experiencia de compra")),
+        ("ATENCION", _("Atención del vendedor")),
+        ("VEHICULO", _("Estado del vehículo / repuesto")),
+        ("GENERAL", _("Comentario general")),
+    ]
+
+    calificacion = forms.TypedChoiceField(
+        choices=CALIFICACION_CHOICES,
+        coerce=int,
+        initial=5,
+        label=_("Calificación"),
+    )
+    tipo = forms.ChoiceField(
+        choices=TIPO_CHOICES,
+        initial="COMPRA",
+        label=_("Tipo de reseña"),
+    )
+    contenido = forms.CharField(
+        widget=forms.Textarea(attrs={"rows": 3}),
+        label=_("Tu reseña"),
+    )

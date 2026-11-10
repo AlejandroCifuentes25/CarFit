@@ -1,0 +1,164 @@
+{% extends "marketplace/base.html" %}
+{% load i18n %}
+
+{% block titulo %}{% trans "Documentación del vehículo" %} | CarFit{% endblock %}
+{% block ancho %}820px{% endblock %}
+{% block ancho_nav %}820px{% endblock %}
+
+{% block estilos %}
+  .ficha-vehiculo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: .85rem;
+    background: #f8fafc;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    margin: .75rem 0 1.25rem;
+  }
+  .ficha-vehiculo .campo { display: flex; flex-direction: column; gap: .15rem; }
+  .ficha-vehiculo .etiqueta-campo { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tinta-suave); }
+  .ficha-vehiculo .valor-campo { font-weight: 700; font-size: .98rem; color: var(--tinta); }
+
+  .badge-VIGENTE { background: var(--exito-suave); color: var(--exito); }
+  .badge-VENCIDO, .badge-INVALIDO { background: #fbe9e9; color: var(--error); }
+  .badge-PENDIENTE { background: var(--pendiente-suave); color: var(--pendiente); }
+
+  .contenedor-tabla { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 640px) {
+    table.tabla-documentos thead { display: none; }
+    table.tabla-documentos, table.tabla-documentos tbody, table.tabla-documentos tr, table.tabla-documentos td {
+      display: block; width: 100%;
+    }
+    table.tabla-documentos tr {
+      border: 1px solid var(--borde); border-radius: 8px; padding: .6rem .75rem; margin-bottom: .75rem; background: #fff;
+    }
+    table.tabla-documentos td {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .35rem 0; border-bottom: 1px dashed var(--borde); text-align: right;
+    }
+    table.tabla-documentos td:last-child { border-bottom: 0; }
+    table.tabla-documentos td::before {
+      content: attr(data-label);
+      font-weight: 600; color: var(--tinta-suave); font-size: .78rem; text-transform: uppercase; text-align: left;
+    }
+  }
+{% endblock %}
+
+{% block contenido %}
+  <h1>{% trans "Documentación del vehículo" %}</h1>
+
+  <div class="ficha-vehiculo">
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Vehículo" %}</span>
+      <span class="valor-campo">{{ carro.marca }} {{ carro.modelo }}</span>
+    </div>
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Placa" %}</span>
+      <span class="valor-campo">{{ carro.placa }}</span>
+    </div>
+    <div class="campo">
+      <span class="etiqueta-campo">{% trans "Vendedor" %}</span>
+      <span class="valor-campo">{{ carro.vendedor.nombre }}</span>
+    </div>
+  </div>
+
+  <div class="resumen">
+    <div class="fila" style="align-items: center; flex-wrap: wrap; gap: .5rem;">
+      <span><strong>{% trans "Estado de vigencia documental" %}:</strong></span>
+      <span class="badge badge-{{ reporte.estado_general_codigo }}">{{ reporte.estado_general }}</span>
+    </div>
+    {% if reporte.motivos %}
+      <ul class="errorlist" style="margin-top: .75rem; margin-bottom: 0;">
+        {% for motivo in reporte.motivos %}
+          <li>{{ motivo }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p style="margin: .5rem 0 0; font-size: .9rem; color: var(--tinta);">
+        {{ reporte.mensaje_general }}
+      </p>
+    {% endif %}
+  </div>
+
+  <h2>{% trans "SOAT y Revisión técnico-mecánica" %}</h2>
+  <p class="ayuda">
+    {% trans "La información documental es proporcionada por el vendedor. CarFit calcula la vigencia según las fechas registradas, sin realizar verificaciones con entidades oficiales. Los documentos originales son privados." %}
+  </p>
+
+  <div class="contenedor-tabla">
+    <table class="tabla tabla-documentos">
+      <thead>
+        <tr>
+          <th>{% trans "Documento" %}</th>
+          <th>{% trans "Expedición" %}</th>
+          <th>{% trans "Vencimiento" %}</th>
+          <th>{% trans "Vigencia" %}</th>
+          <th>{% trans "Soporte documental" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in reporte.documentos %}
+          <tr>
+            <td data-label="{% trans 'Documento' %}"><strong>{{ doc.tipo_etiqueta }}</strong></td>
+            <td data-label="{% trans 'Expedición' %}">
+              {% if doc.fecha_expedicion %}
+                {{ doc.fecha_expedicion|date:"d/m/Y" }}
+              {% else %}
+                <span class="ayuda">—</span>
+              {% endif %}
+            </td>
+            <td data-label="{% trans 'Vencimiento' %}">
+              {% if doc.fecha_vencimiento %}
+                {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+              {% else %}
+                <span class="ayuda">—</span>
+              {% endif %}
+            </td>
+            <td data-label="{% trans 'Vigencia' %}">
+              <span class="badge badge-{{ doc.estado }}">{{ doc.estado_etiqueta }}</span>
+            </td>
+            <td data-label="{% trans 'Soporte documental' %}">
+              {% if doc.tiene_archivo and puede_ver_archivos %}
+                <a href="{% url 'marketplace:descargar_documento_carro' doc.id %}" target="_blank" rel="noopener">{% trans "Ver archivo original" %}</a>
+              {% else %}
+                <span class="ayuda">{% trans "Documento privado" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if es_dueno and form %}
+    <hr style="border: 0; border-top: 1px solid var(--borde); margin: 1.75rem 0;">
+    <h2>{% trans "Actualizar fechas o archivo soporte" %}</h2>
+    <p class="ayuda">{% trans "Al actualizar las fechas de expedición y vencimiento, el estado de vigencia se recalcula automáticamente." %}</p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errores">{{ form.non_field_errors }}</div>
+      {% endif %}
+      {% for field in form %}
+        <p>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <ul class="errorlist">
+              {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </p>
+      {% endfor %}
+      <button type="submit">{% trans "Guardar documento" %}</button>
+    </form>
+  {% endif %}
+
+  <p style="margin-top: 1.5rem;">
+    <a href="{% url 'marketplace:catalogo_compras' %}" class="boton secundario">{% trans "Volver al catálogo" %}</a>
+    {% if es_dueno %}
+      <a href="{% url 'marketplace:mis_publicaciones' %}" class="boton secundario">{% trans "Ir a mis publicaciones" %}</a>
+    {% endif %}
+  </p>
+{% endblock %}
