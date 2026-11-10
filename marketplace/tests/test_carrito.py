@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Carro, Cliente, Pago, Repuesto, Vendedor
-from ..services import CarritoComprasService""
+from ..services import CarritoComprasService
 
 
 class CarritoFrontendTest(TestCase):
