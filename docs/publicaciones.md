@@ -5,6 +5,13 @@ servicio `publications` en `docker-compose.yml`). Patrón strangler: Nginx enví
 `/publicaciones/v2/` a Flask; las páginas Django originales siguen activas como
 legado/rollback.
 
+Para acceder a través de Nginx en `http://127.0.0.1:8000`, inicia el stack
+integrado con `docker compose up --build` y usa las rutas `/publicaciones/v2/`.
+El puerto 8000 del host publica Nginx (puerto 80 del contenedor); no uses
+`python manage.py runserver` en ese mismo puerto mientras el stack está activo.
+Las rutas Django antiguas siguen disponibles a través del mismo gateway y la
+navegación principal conserva esos enlaces.
+
 | Flask (nuevo) | Django (legado) |
 |---|---|
 | `/publicaciones/v2/nuevo/` | `/articulos/nuevo/` |
@@ -23,7 +30,7 @@ Comportamiento:
 - Reutiliza formularios y `PublicacionArticuloService` de Django, por lo que las reglas
   de negocio no se duplican. Edición y borrado se limitan a artículos del vendedor (404 si no).
 - Rollback: quitar el bloque `location /publicaciones/v2/` de `nginx/nginx.conf`.
-- Los enlaces de Django no se modificaron: el tráfico web sigue en las rutas legadas
-  hasta que se enlace explícitamente a `/publicaciones/v2/`.
+- El menú del sitio conserva los enlaces a Django (`/articulos/nuevo/` y
+  `/mis-publicaciones/`); para probar el slice Flask, navega a `/publicaciones/v2/`.
 
 Pruebas: `python manage.py test marketplace.tests.test_publications_microservice`.

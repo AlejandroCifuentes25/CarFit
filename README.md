@@ -74,6 +74,24 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+### Stack integrado con Nginx y Flask
+
+Para probar las rutas de Flask detrás del API Gateway, usa Docker Compose en
+lugar de ejecutar Django con `runserver` en el puerto 8000:
+
+```bash
+docker compose up --build
+```
+
+Nginx queda disponible en <http://127.0.0.1:8000/>. Las páginas Flask de
+publicación y compras están en `/publicaciones/v2/` y `/compras/v2/`; las rutas
+web antiguas de Django siguen disponibles, por ejemplo `/articulos/nuevo/`,
+`/mis-publicaciones/`, `/comprar/` y `/carrito/`.
+No ejecutes a la vez `runserver` y Compose usando el mismo puerto del host.
+El origen local de Nginx está permitido para las verificaciones CSRF de Django.
+Si cambias el dominio o puerto, actualiza `CSRF_TRUSTED_ORIGINS` con los
+orígenes completos, incluyendo el esquema (`http://` o `https://`).
+
 Después de aplicar las migraciones queda incluido el esquema de carrito y
 pagos. Para comprobar la instalación completa, ejecuta:
 
@@ -87,10 +105,10 @@ python manage.py test marketplace
 1. Abre <http://127.0.0.1:8000/registro/> para crear una cuenta de cliente o
    vendedor.
 2. Una cuenta de **vendedor** puede publicar en
-   <http://127.0.0.1:8000/articulos/nuevo/>.
-3. Una cuenta de **cliente** puede recorrer los artículos en
-   <http://127.0.0.1:8000/comprar/> y utilizar el carrito mediante sus
-   endpoints API.
+   <http://127.0.0.1:8000/publicaciones/v2/nuevo/>.
+3. Una cuenta de **cliente** puede recorrer el catálogo en
+   <http://127.0.0.1:8000/compras/v2/catalogo/> y usar el carrito en
+   <http://127.0.0.1:8000/compras/v2/carrito/>.
 4. Como alternativa, entra a <http://127.0.0.1:8000/admin/> con un
    superusuario para administrar clientes, vendedores y publicaciones.
 

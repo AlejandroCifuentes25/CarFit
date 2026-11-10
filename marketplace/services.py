@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
-from django.db.models import F
+from django.db.models import F, Q
 
 from .domain.builders import CarroBuilder, PagoBuilder
 from .domain.exceptions import (
@@ -295,6 +295,17 @@ class CatalogoComprasService:
         if vendedor_propio is not None:
             carros = carros.exclude(vendedor=vendedor_propio)
             repuestos = repuestos.exclude(vendedor=vendedor_propio)
+        cliente = getattr(usuario, "cliente", None)
+        if cliente is None:
+            carros = carros.filter(carrito_compra__isnull=True)
+            repuestos = repuestos.filter(carrito_compra__isnull=True)
+        else:
+            carros = carros.filter(
+                Q(carrito_compra__isnull=True) | Q(carrito_compra__cliente=cliente)
+            )
+            repuestos = repuestos.filter(
+                Q(carrito_compra__isnull=True) | Q(carrito_compra__cliente=cliente)
+            )
         return carros.distinct(), repuestos.distinct()
 
 
@@ -624,7 +635,7 @@ class CarritoComprasService:
         self._carro_model, self._repuesto_model = carro_model, repuesto_model
 
     def obtener_resumen(self, usuario):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         self._recalcular(carrito)
         return {
             "carrito": carrito,
@@ -632,15 +643,20 @@ class CarritoComprasService:
         }
 
     def agregar_articulo(self, usuario, tipo_articulo, articulo_id):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         articulo = self._obtener_articulo(tipo_articulo, articulo_id)
+        if (
+            articulo.carrito_compra_id is not None
+            and articulo.carrito_compra_id != carrito.pk
+        ):
+            raise ErrorDeDominio("El artículo ya está en otro carrito.")
         articulo.carrito_compra = carrito
         articulo.save(update_fields=["carrito_compra"])
         self._recalcular(carrito)
         return self._respuesta("agregado", tipo_articulo, articulo)
 
     def quitar_articulo(self, usuario, tipo_articulo, articulo_id):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         articulo = self._obtener_articulo(tipo_articulo, articulo_id)
         if articulo.carrito_compra_id != carrito.id:
             raise ErrorDeDominio("El artículo no está en el carrito.")
@@ -650,7 +666,7 @@ class CarritoComprasService:
         return self._respuesta("quitado", tipo_articulo, articulo)
 
     def vaciar_carrito(self, usuario):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         carrito.carros.update(carrito_compra=None)
         carrito.repuestos.update(carrito_compra=None)
         carrito.cantidad_producto, carrito.precio_total = 0, 0
@@ -658,19 +674,22 @@ class CarritoComprasService:
         return carrito
 
     def calcular_total(self, usuario):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         self._recalcular(carrito)
         return carrito.precio_total
 
     def confirmar_compra(self, usuario):
-        carrito = self._obtener_o_crear_carrito()
+        carrito = self._obtener_o_crear_carrito(usuario)
         self._recalcular(carrito)
         if not carrito.cantidad_producto:
             raise ErrorDeDominio("El carrito está vacío.")
         return {"carrito_id": carrito.pk, "cantidad_producto": carrito.cantidad_producto, "precio_total": carrito.precio_total, "estado": "PENDIENTE_PAGO"}
 
-    def _obtener_o_crear_carrito(self):
-        return CarritoCompra.objects.first() or CarritoCompra.objects.create()
+    def _obtener_o_crear_carrito(self, usuario):
+        cliente = getattr(usuario, "cliente", None)
+        if cliente is None:
+            raise ErrorDeDominio("El usuario no tiene un perfil de cliente.")
+        return CarritoCompra.objects.get_or_create(cliente=cliente)[0]
 
     def _obtener_articulo(self, tipo, articulo_id):
         modelo = {"carro": self._carro_model, "repuesto": self._repuesto_model}.get(tipo)

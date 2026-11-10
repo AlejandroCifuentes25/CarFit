@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from ..models import Carro, Cliente, Pago, Repuesto, Vendedor
+from ..services import CarritoComprasService
 
 
 class CarritoFrontendTest(TestCase):
@@ -123,3 +124,25 @@ class CarritoFrontendTest(TestCase):
 
         self.assertEqual(respuesta.status_code, 200)
         self.assertEqual(respuesta.json()["precio_total"], 85_000_000)
+
+    def test_cada_cliente_tiene_un_carrito_independiente(self):
+        otro_usuario = User.objects.create_user(
+            username="otro-comprador", password="clave-correcta"
+        )
+        Cliente.objects.create(
+            usuario=otro_usuario,
+            nombre="Otro comprador",
+            correo="otro@carfit.co",
+            direccion="Calle 2",
+            numero_tel="3000000001",
+        )
+        servicio = CarritoComprasService()
+
+        servicio.agregar_articulo(self.usuario_cliente, "carro", self.carro.pk)
+        servicio.agregar_articulo(otro_usuario, "repuesto", self.repuesto.pk)
+        carrito_cliente = servicio.obtener_resumen(self.usuario_cliente)
+        carrito_otro = servicio.obtener_resumen(otro_usuario)
+
+        self.assertNotEqual(carrito_cliente["carrito"].pk, carrito_otro["carrito"].pk)
+        self.assertEqual([x.tipo_articulo for x in carrito_cliente["articulos"]], ["carro"])
+        self.assertEqual([x.tipo_articulo for x in carrito_otro["articulos"]], ["repuesto"])

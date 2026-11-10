@@ -31,6 +31,25 @@ class AccountsMicroserviceTest(TestCase):
         django_response = self.django.get("/cuentas/password_change/")
         self.assertEqual(django_response.status_code, 200)
 
+    def test_django_login_accepts_local_nginx_origin_with_csrf_checks(self):
+        User.objects.create_user(username="local-login", password="ClaveSegura-2026")
+        client = Client(enforce_csrf_checks=True)
+        login_page = client.get("/cuentas/login/")
+        csrf_token = client.cookies["csrftoken"].value
+
+        response = client.post(
+            "/cuentas/login/",
+            {
+                "username": "local-login",
+                "password": "ClaveSegura-2026",
+                "csrfmiddlewaretoken": csrf_token,
+            },
+            HTTP_ORIGIN="http://127.0.0.1:8000",
+        )
+
+        self.assertEqual(login_page.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+
     def test_flask_accepts_existing_django_session_and_admin_api(self):
         admin = User.objects.create_user(
             username="admin-flask",

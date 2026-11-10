@@ -225,6 +225,13 @@ class TransaccionPago(models.Model):
 
 
 class CarritoCompra(models.Model):
+    cliente = models.OneToOneField(
+        Cliente,
+        on_delete=models.CASCADE,
+        related_name="carrito_compra",
+        null=True,
+        blank=True,
+    )
     cantidad_producto = models.PositiveIntegerField(default=0)
     precio_total = models.PositiveBigIntegerField(default=0)
 

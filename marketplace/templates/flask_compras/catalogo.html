@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titulo %}Comprar | CarFit{% endblock %}
+{% block contenido %}
+  <h1>Vehículos y repuestos disponibles</h1>
+  <p class="ayuda">Agrega artículos al carrito y continúa con el pago desde allí.</p>
+  <h2>Carros</h2>
+  {% if carros %}
+    <div class="rejilla">
+      {% for carro in carros %}
+        <article class="tarjeta">
+          <span class="estado">{{ carro.get_estado_display() }}</span>
+          <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
+          <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
+          <span class="precio">${{ carro.precio|cop }} COP</span>
+          {% if carro.pk in carrito_carros_ids %}
+            <button type="button" class="secundario" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/quitar/carro/{{ carro.pk }}/', this)">Quitar del carrito</button>
+          {% else %}
+            <button type="button" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/agregar/carro/{{ carro.pk }}/', this)">Agregar al carrito</button>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="ayuda">No hay carros disponibles en este momento.</p>
+  {% endif %}
+  <h2>Repuestos</h2>
+  {% if repuestos %}
+    <div class="rejilla">
+      {% for repuesto in repuestos %}
+        <article class="tarjeta">
+          <span class="estado">{{ repuesto.get_estado_display() }}</span>
+          <strong>{{ repuesto.tipo }}</strong>
+          <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
+          <span class="precio">${{ repuesto.precio|cop }} COP</span>
+          {% if repuesto.pk in carrito_repuestos_ids %}
+            <button type="button" class="secundario" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/quitar/repuesto/{{ repuesto.pk }}/', this)">Quitar del carrito</button>
+          {% else %}
+            <button type="button" onclick="CarFitShoppingCart.mover('{{ prefix }}/api/carrito/agregar/repuesto/{{ repuesto.pk }}/', this)">Agregar al carrito</button>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="ayuda">No hay repuestos disponibles en este momento.</p>
+  {% endif %}
+{% endblock %}

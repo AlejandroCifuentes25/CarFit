@@ -4,7 +4,7 @@ from .services import CarritoComprasService
 
 
 def carrito_compra(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not hasattr(request.user, "cliente"):
         return {
             "carrito_total": 0,
             "carrito_cantidad": 0,

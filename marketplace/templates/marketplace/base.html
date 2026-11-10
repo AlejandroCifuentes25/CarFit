@@ -140,14 +140,14 @@
 <body>
   {% if user.is_authenticated %}
   <nav class="principal">
-    <a class="marca" href="{% url 'marketplace:catalogo_compras' %}">CarFit</a>
-    <a href="{% url 'marketplace:catalogo_compras' %}">Comprar</a>
-    <a href="/publicaciones/v2/nuevo/">Publicar</a>
+    <a class="marca" href="/compras/v2/catalogo/">CarFit</a>
+    <a href="/compras/v2/catalogo/">Comprar</a>
+    <a href="{% url 'marketplace:crear_articulo' %}">Publicar</a>
     {% if user.vendedor %}
-    <a href="/publicaciones/v2/mis-publicaciones/">Mis publicaciones</a>
+    <a href="{% url 'marketplace:mis_publicaciones' %}">Mis publicaciones</a>
     {% endif %}
     <a href="{% url 'marketplace:historial_pagos' %}">Mis pagos</a>
-    <a href="{% url 'marketplace:carrito' %}" class="carrito-resumen" aria-label="Carrito de compras">
+    <a href="/compras/v2/carrito/" class="carrito-resumen" aria-label="Carrito de compras">
       <svg class="carrito-icono" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L20.5 8H6.1" />
         <circle cx="10" cy="20" r="1.3" />
