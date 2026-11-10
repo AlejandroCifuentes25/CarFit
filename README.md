@@ -76,18 +76,42 @@ python manage.py runserver
 
 ### Stack integrado con Nginx y Flask
 
-Para probar las rutas de Flask detrás del API Gateway, usa Docker Compose en
-lugar de ejecutar Django con `runserver` en el puerto 8000:
+Para construir y ejecutar toda la aplicación —PostgreSQL, Django, los servicios
+Flask y Nginx— necesitas tener Docker Desktop (o el daemon de Docker) iniciado.
+Desde la carpeta raíz del proyecto puedes construir las imágenes:
 
 ```bash
-docker compose up --build
+docker compose build
 ```
 
-Nginx queda disponible en <http://127.0.0.1:8000/>. Las páginas Flask de
-publicación y compras están en `/publicaciones/v2/` y `/compras/v2/`; las rutas
-web antiguas de Django siguen disponibles, por ejemplo `/articulos/nuevo/`,
-`/mis-publicaciones/`, `/comprar/` y `/carrito/`.
-No ejecutes a la vez `runserver` y Compose usando el mismo puerto del host.
+Luego inicia todos los contenedores:
+
+```bash
+docker compose up
+```
+
+La primera vez también puedes construir e iniciar en un solo paso con
+`docker compose up --build`. Para dejarlo ejecutándose en segundo plano, usa
+`docker compose up --build -d`; revisa el estado con `docker compose ps` y los
+mensajes con `docker compose logs -f`.
+
+El API Gateway Nginx queda disponible en <http://127.0.0.1:8000/>. Las páginas
+Flask de publicación y compras están en `/publicaciones/v2/` y `/compras/v2/`;
+las rutas web antiguas de Django siguen disponibles, por ejemplo
+`/articulos/nuevo/`, `/mis-publicaciones/`, `/comprar/` y `/carrito/`. Django
+aplica automáticamente las migraciones al iniciar su contenedor. No ejecutes
+a la vez `runserver` y Compose usando el mismo puerto del host.
+
+Para detener los contenedores sin borrar la base de datos ni los archivos
+subidos:
+
+```bash
+docker compose down
+```
+
+Los datos se conservan en volúmenes de Docker. **No uses `docker compose down
+-v` salvo que quieras eliminar también esos datos.**
+
 El origen local de Nginx está permitido para las verificaciones CSRF de Django.
 Si cambias el dominio o puerto, actualiza `CSRF_TRUSTED_ORIGINS` con los
 orígenes completos, incluyendo el esquema (`http://` o `https://`).
