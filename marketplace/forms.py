@@ -12,43 +12,43 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from .domain.metodos_pago import metodos_disponibles
-from .models import Carro, DocumentoCarro
+from .models import Carro, DocumentoCarro, Resena
 
 
 class CrearArticuloForm(forms.Form):
-    placa = forms.CharField(max_length=6, label="Placa")
-    marca = forms.CharField(max_length=60, label="Marca")
-    modelo = forms.CharField(max_length=60, label="Modelo")
-    color = forms.CharField(max_length=40, label="Color")
-    estado = forms.ChoiceField(choices=Carro.Estado.choices, label="Estado")
-    kilometraje = forms.IntegerField(min_value=0, label="Kilometraje")
-    precio = forms.IntegerField(min_value=1, label="Precio (COP)")
+    placa = forms.CharField(max_length=6, label=_('Placa'))
+    marca = forms.CharField(max_length=60, label=_('Marca'))
+    modelo = forms.CharField(max_length=60, label=_('Modelo'))
+    color = forms.CharField(max_length=40, label=_('Color'))
+    estado = forms.ChoiceField(choices=Carro.Estado.choices, label=_('Estado'))
+    kilometraje = forms.IntegerField(min_value=0, label=_('Kilometraje'))
+    precio = forms.IntegerField(min_value=1, label=_('Precio (COP)'))
     descripcion = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 3}),
         required=False,
-        label="Descripción",
+        label=_('Descripción'),
     )
 
     soat_expedicion = forms.DateField(
-        label="SOAT: expedición",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        label=_('SOAT: expedición'),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     soat_vencimiento = forms.DateField(
-        label="SOAT: vencimiento",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        label=_('SOAT: vencimiento'),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
-    soat_archivo = forms.FileField(required=False, label="SOAT: archivo")
+    soat_archivo = forms.FileField(required=False, label=_('SOAT: archivo'))
 
     tecnomecanica_expedicion = forms.DateField(
-        label="Tecnomecánica: expedición",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        label=_('Tecnomecánica: expedición'),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     tecnomecanica_vencimiento = forms.DateField(
-        label="Tecnomecánica: vencimiento",
-        widget=forms.DateInput(attrs={"type": "date"}),
+        label=_('Tecnomecánica: vencimiento'),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     tecnomecanica_archivo = forms.FileField(
-        required=False, label="Tecnomecánica: archivo"
+        required=False, label=_('Tecnomecánica: archivo')
     )
 
     def clean(self):
@@ -63,12 +63,12 @@ class CrearArticuloForm(forms.Form):
             if soat_exp > hoy:
                 self.add_error(
                     "soat_expedicion",
-                    "SOAT: La fecha de expedición no puede ser futura.",
+                    _('SOAT: La fecha de expedición no puede ser futura.'),
                 )
             if soat_ven <= soat_exp:
                 self.add_error(
                     "soat_vencimiento",
-                    "SOAT: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                    _('SOAT: La fecha de vencimiento debe ser posterior a la fecha de expedición.'),
                 )
 
         tec_exp = datos.get("tecnomecanica_expedicion")
@@ -77,12 +77,12 @@ class CrearArticuloForm(forms.Form):
             if tec_exp > hoy:
                 self.add_error(
                     "tecnomecanica_expedicion",
-                    "Revisión técnico-mecánica: La fecha de expedición no puede ser futura.",
+                    _('Revisión técnico-mecánica: La fecha de expedición no puede ser futura.'),
                 )
             if tec_ven <= tec_exp:
                 self.add_error(
                     "tecnomecanica_vencimiento",
-                    "Revisión técnico-mecánica: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                    _('Revisión técnico-mecánica: La fecha de vencimiento debe ser posterior a la fecha de expedición.'),
                 )
         return datos
 
@@ -101,30 +101,30 @@ class PagoForm(forms.Form):
     """
 
     metodo_pago = forms.ChoiceField(
-        label="Método de pago", widget=forms.RadioSelect
+        label=_('Método de pago'), widget=forms.RadioSelect
     )
     cuotas = forms.IntegerField(
-        min_value=1, required=False, initial=1, label="Cuotas"
+        min_value=1, required=False, initial=1, label=_('Cuotas')
     )
     referencia = forms.CharField(
-        max_length=60, required=False, label="Referencia (opcional)"
+        max_length=60, required=False, label=_('Referencia (opcional)')
     )
 
     # Datos propios de cada método. Cuáles son obligatorios lo decide la
     # especificación del método en el dominio, no este formulario.
     token_tarjeta = forms.CharField(
-        max_length=120, required=False, label="Número de tarjeta / token"
+        max_length=120, required=False, label=_('Número de tarjeta / token')
     )
-    banco = forms.CharField(max_length=60, required=False, label="Banco")
+    banco = forms.CharField(max_length=60, required=False, label=_('Banco'))
     tipo_persona = forms.ChoiceField(
-        choices=[("NATURAL", "Persona natural"), ("JURIDICA", "Persona jurídica")],
+        choices=[("NATURAL", _('Persona natural')), ("JURIDICA", _('Persona jurídica'))],
         required=False,
-        label="Tipo de persona",
+        label=_('Tipo de persona'),
     )
     documento_pagador = forms.CharField(
-        max_length=20, required=False, label="Documento del pagador"
+        max_length=20, required=False, label=_('Documento del pagador')
     )
-    telefono = forms.CharField(max_length=20, required=False, label="Teléfono")
+    telefono = forms.CharField(max_length=20, required=False, label=_('Teléfono'))
 
     def __init__(self, *args, monto=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -135,20 +135,20 @@ class PagoForm(forms.Form):
 
 
 class RegistroForm(forms.Form):
-    ROL_CHOICES = [("CLIENTE", "Cliente — quiero comprar"), ("VENDEDOR", "Vendedor — quiero publicar vehículos")]
-    rol = forms.ChoiceField(choices=ROL_CHOICES, label="Tipo de cuenta")
-    username = forms.CharField(max_length=150, label="Usuario")
-    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
-    password_confirmacion = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
-    nombre = forms.CharField(max_length=120, label="Nombre completo")
-    correo = forms.EmailField(label="Correo")
-    direccion = forms.CharField(max_length=200, label="Dirección")
-    numero_tel = forms.CharField(max_length=20, label="Teléfono")
+    ROL_CHOICES = [("CLIENTE", _('Cliente — quiero comprar')), ("VENDEDOR", _('Vendedor — quiero publicar vehículos'))]
+    rol = forms.ChoiceField(choices=ROL_CHOICES, label=_('Tipo de cuenta'))
+    username = forms.CharField(max_length=150, label=_('Usuario'))
+    password = forms.CharField(widget=forms.PasswordInput, label=_('Contraseña'))
+    password_confirmacion = forms.CharField(widget=forms.PasswordInput, label=_('Confirmar contraseña'))
+    nombre = forms.CharField(max_length=120, label=_('Nombre completo'))
+    correo = forms.EmailField(label=_('Correo'))
+    direccion = forms.CharField(max_length=200, label=_('Dirección'))
+    numero_tel = forms.CharField(max_length=20, label=_('Teléfono'))
 
     def clean(self):
         datos = super().clean()
         if datos.get("password") and datos.get("password") != datos.get("password_confirmacion"):
-            self.add_error("password_confirmacion", "Las contraseñas no coinciden.")
+            self.add_error("password_confirmacion", _('Las contraseñas no coinciden.'))
         return datos
 
 
@@ -159,11 +159,11 @@ class DocumentoCarroForm(forms.Form):
     )
     fecha_expedicion = forms.DateField(
         label=_("Fecha de expedición"),
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     fecha_vencimiento = forms.DateField(
         label=_("Fecha de vencimiento"),
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
     )
     archivo = forms.FileField(
         required=False,
@@ -184,12 +184,12 @@ class DocumentoCarroForm(forms.Form):
             if exp > hoy:
                 self.add_error(
                     "fecha_expedicion",
-                    f"{etiqueta}: La fecha de expedición no puede ser futura.",
+                    _('%(etiqueta)s: La fecha de expedición no puede ser futura.') % {'etiqueta': etiqueta},
                 )
             if ven <= exp:
                 self.add_error(
                     "fecha_vencimiento",
-                    f"{etiqueta}: La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                    _('%(etiqueta)s: La fecha de vencimiento debe ser posterior a la fecha de expedición.') % {'etiqueta': etiqueta},
                 )
         return datos
 
@@ -202,12 +202,6 @@ class ResenaForm(forms.Form):
         (2, _("2 estrellas — Malo")),
         (1, _("1 estrella — Muy malo")),
     ]
-    TIPO_CHOICES = [
-        ("COMPRA", _("Experiencia de compra")),
-        ("ATENCION", _("Atención del vendedor")),
-        ("VEHICULO", _("Estado del vehículo / repuesto")),
-        ("GENERAL", _("Comentario general")),
-    ]
 
     calificacion = forms.TypedChoiceField(
         choices=CALIFICACION_CHOICES,
@@ -216,7 +210,7 @@ class ResenaForm(forms.Form):
         label=_("Calificación"),
     )
     tipo = forms.ChoiceField(
-        choices=TIPO_CHOICES,
+        choices=Resena.Tipo.choices,
         initial="COMPRA",
         label=_("Tipo de reseña"),
     )

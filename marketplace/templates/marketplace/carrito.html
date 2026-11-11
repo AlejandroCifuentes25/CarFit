@@ -1,27 +1,27 @@
-{% extends "marketplace/base.html" %}
-{% block titulo %}Mi carrito | CarFit{% endblock %}
+{% extends "marketplace/base.html" %}{% load i18n %}
+{% block titulo %}{% translate "Mi carrito | CarFit" %}{% endblock %}
 {% block contenido %}
-<div data-checkout-page><div class="checkout-steps"><span>01 Tu carrito</span> → <span>02 Forma de pago</span> → 03 Comprobante</div><div class="page-heading"><div><h1>Carrito de compras</h1><p class="ayuda">Revisa tu selección y continúa con tu método de pago preferido.</p></div><a class="boton secundario" href="/comprar/">← Seguir explorando</a></div>
+<div data-checkout-page><div class="checkout-steps"><span>{% translate "01 Tu carrito" %}</span> → <span>{% translate "02 Forma de pago" %}</span> {% translate "→ 03 Comprobante" %}</div><div class="page-heading"><div><h1>{% translate "Carrito de compras" %}</h1><p class="ayuda">{% translate "Revisa tu selección y continúa con tu método de pago preferido." %}</p></div><a class="boton secundario" href="/comprar/">{% translate "← Seguir explorando" %}</a></div>
 {% if articulos %}
-<section class="cart-list" aria-label="Artículos en tu carrito">
+<section class="cart-list" aria-label="{% translate 'Artículos en tu carrito' %}">
 {% for articulo in articulos %}<article class="cart-item" data-item-price="{{ articulo.precio|stringformat:"d" }}">
-  <div class="cart-item-icon" aria-hidden="true">{% if articulo.tipo_articulo == 'carro' %}◇{% else %}⚙{% endif %}</div><div class="cart-item-name"><span class="etiqueta">{{ articulo.tipo_articulo }}</span><strong>{{ articulo.titulo }}</strong><span class="ayuda">{{ articulo.vendedor_nombre }}</span></div>
-  <strong>${{ articulo.precio|floatformat:0 }} <small>COP</small></strong><button class="secundario" type="button" data-cart-action data-url="{{ articulo.quitar_url }}" aria-label="Quitar {{ articulo.titulo }} del carrito">Quitar</button>
+  <div class="cart-item-icon" aria-hidden="true">{% if articulo.tipo_articulo == 'carro' %}◇{% else %}⚙{% endif %}</div><div class="cart-item-name"><span class="etiqueta">{% if articulo.tipo_articulo == "carro" %}{% translate "Vehículo" %}{% else %}{% translate "Repuesto" %}{% endif %}</span><strong>{{ articulo.titulo }}</strong><span class="ayuda">{{ articulo.vendedor_nombre }}</span></div>
+  <strong>${{ articulo.precio|floatformat:0 }} <small>COP</small></strong><button class="secundario" type="button" data-cart-action data-url="{{ articulo.quitar_url }}" aria-label="{% translate 'Quitar' %} {{ articulo.titulo }} {% translate 'del carrito' %}">{% translate "Quitar" %}</button>
 </article>{% endfor %}
 </section>
-<p class="cart-clear"><button class="enlace" type="button" data-cart-action data-confirm="¿Quieres quitar todos los artículos del carrito?" data-url="/carrito/vaciar/" >Vaciar carrito</button></p>
+<p class="cart-clear"><button class="enlace" type="button" data-cart-action data-confirm="{% translate '¿Quieres quitar todos los artículos del carrito?' %}" data-url="/carrito/vaciar/" >{% translate "Vaciar carrito" %}</button></p>
 {% if form.metodos %}
 <form id="formulario-pago-carrito" method="post" data-checkout data-price="{{ carrito.precio_total|stringformat:"d" }}" class="checkout-layout" novalidate>
 {% csrf_token %}
 <div class="checkout-fields">
   {% if form.non_field_errors %}<div class="errores" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-  <fieldset class="payment-fieldset"><legend>Elige cómo pagar</legend><p class="ayuda">Selecciona un método para ver los datos que necesitas y su comisión.</p>{{ form.metodo_pago.errors }}
+  <fieldset class="payment-fieldset"><legend>{% translate "Elige cómo pagar" %}</legend><p class="ayuda">{% translate "Selecciona un método para ver los datos que necesitas y su comisión." %}</p>{{ form.metodo_pago.errors }}
   <div class="metodos">{% for metodo in form.metodos %}
     <div class="metodo"><input type="radio" name="metodo_pago" id="metodo_{{ metodo.codigo }}" value="{{ metodo.codigo }}" required
       data-comision-pct="{{ metodo.comision_porcentual|stringformat:"s" }}" data-comision-fija="{{ metodo.comision_fija|stringformat:"d" }}"
       data-campos="{{ metodo.campos_requeridos|join:"," }}" data-permite-cuotas="{% if metodo.permite_cuotas %}1{% else %}0{% endif %}" data-cuotas-max="{{ metodo.cuotas_maximas|stringformat:"d" }}"
       {% if form.metodo_pago.value == metodo.codigo or not form.metodo_pago.value and metodo_inicial == metodo.codigo %}checked{% endif %}>
-      <label class="tarjeta-metodo" for="metodo_{{ metodo.codigo }}">{{ metodo.etiqueta }}<span class="comision">{% if metodo.comision_porcentual %}{{ metodo.comision_porcentaje_legible|floatformat:2 }}%{% if metodo.comision_fija %} + {% endif %}{% endif %}{% if metodo.comision_fija %}${{ metodo.comision_fija|floatformat:0 }}{% endif %}{% if not metodo.comision_fija and not metodo.comision_porcentual %}Sin comisión{% endif %}{% if not metodo.confirmacion_inmediata %} · Confirmación posterior{% endif %}</span></label>
+      <label class="tarjeta-metodo" for="metodo_{{ metodo.codigo }}">{{ metodo.etiqueta }}<span class="comision">{% if metodo.comision_porcentual %}{{ metodo.comision_porcentaje_legible|floatformat:2 }}%{% if metodo.comision_fija %} + {% endif %}{% endif %}{% if metodo.comision_fija %}${{ metodo.comision_fija|floatformat:0 }}{% endif %}{% if not metodo.comision_fija and not metodo.comision_porcentual %}{% translate "Sin comisión" %}{% endif %}{% if not metodo.confirmacion_inmediata %} {% translate "· Confirmación posterior" %}{% endif %}</span></label>
     </div>{% endfor %}
   </div></fieldset>
   <div class="form-grid payment-data"><div data-campo="token_tarjeta"><label for="{{ form.token_tarjeta.id_for_label }}">{{ form.token_tarjeta.label }}</label>{{ form.token_tarjeta }}{{ form.token_tarjeta.errors }}</div>
@@ -31,10 +31,10 @@
 <div data-campo="telefono"><label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>{{ form.telefono }}{{ form.telefono.errors }}</div>
 <div data-campo="cuotas"><label for="{{ form.cuotas.id_for_label }}">{{ form.cuotas.label }}</label>{{ form.cuotas }}{{ form.cuotas.errors }}</div>
 </div>
-  {% if articulos|length == 1 %}<details class="payment-extra" {% if form.referencia.errors %}open{% endif %}><summary>Agregar referencia (opcional)</summary><div data-campo="referencia"><label for="id_referencia">Referencia</label>{{ form.referencia }}{{ form.referencia.errors }}</div><p class="ayuda">Si la dejas vacía, CarFit genera una referencia automáticamente.</p></details>{% endif %}
+  {% if articulos|length == 1 %}<details class="payment-extra" {% if form.referencia.errors %}open{% endif %}><summary>{% translate "Agregar referencia (opcional)" %}</summary><div data-campo="referencia"><label for="id_referencia">{% translate "Referencia" %}</label>{{ form.referencia }}{{ form.referencia.errors }}</div><p class="ayuda">{% translate "Si la dejas vacía, CarFit genera una referencia automáticamente." %}</p></details>{% endif %}
 </div>
-<aside class="checkout-summary"><span class="eyebrow">RESUMEN DE PAGO</span><div class="fila"><span>Subtotal</span><strong>${{ carrito.precio_total|floatformat:0 }}</strong></div><div class="fila"><span>Comisión estimada</span><strong data-resumen-comision>—</strong></div><div class="fila total"><span>Total estimado</span><span data-resumen-total>—</span></div><p class="ayuda">Precios en pesos colombianos (COP).</p><button type="submit" class="full-width">Confirmar compra del carrito <span aria-hidden="true">→</span></button><noscript><p class="ayuda">Activa JavaScript para ver el total estimado antes de confirmar.</p></noscript></aside>
+<aside class="checkout-summary"><span class="eyebrow">{% translate "RESUMEN DE PAGO" %}</span><div class="fila"><span>{% translate "Subtotal" %}</span><strong>${{ carrito.precio_total|floatformat:0 }}</strong></div><div class="fila"><span>{% translate "Comisión estimada" %}</span><strong data-resumen-comision>—</strong></div><div class="fila total"><span>{% translate "Total estimado" %}</span><span data-resumen-total>—</span></div><p class="ayuda">{% translate "Precios en pesos colombianos (COP)." %}</p><button type="submit" class="full-width">{% translate "Confirmar compra del carrito" %} <span aria-hidden="true">→</span></button><noscript><p class="ayuda">{% translate "Activa JavaScript para ver el total estimado antes de confirmar." %}</p></noscript></aside>
 </form>
-{% else %}<div class="empty-state"><h2>No hay métodos para este monto</h2><p>Revisa tu selección o vuelve al catálogo para elegir otro artículo.</p><a class="boton secundario" href="/comprar/">Volver al catálogo</a></div>{% endif %}
-{% else %}<section class="empty-state"><span class="empty-icon" aria-hidden="true">◇</span><h2>Tu carrito está vacío.</h2><p>Explora el catálogo y agrega lo que te gustaría comprar.</p><a class="boton" href="/comprar/">Explorar catálogo →</a></section>{% endif %}
+{% else %}<div class="empty-state"><h2>{% translate "No hay métodos para este monto" %}</h2><p>{% translate "Revisa tu selección o vuelve al catálogo para elegir otro artículo." %}</p><a class="boton secundario" href="/comprar/">{% translate "Volver al catálogo" %}</a></div>{% endif %}
+{% else %}<section class="empty-state"><span class="empty-icon" aria-hidden="true">◇</span><h2>{% translate "Tu carrito está vacío." %}</h2><p>{% translate "Explora el catálogo y agrega lo que te gustaría comprar." %}</p><a class="boton" href="/comprar/">{% translate "Explorar catálogo →" %}</a></section>{% endif %}
 </div>{% endblock %}

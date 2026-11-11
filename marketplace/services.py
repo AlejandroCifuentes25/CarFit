@@ -17,12 +17,16 @@ Reglas que se respetan aquí:
   asíncrona sin cambiar nada.
 """
 
+from django.utils.translation import gettext as _
+
+from contextlib import nullcontext
 from dataclasses import dataclass
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.db.models import F, Q
+from django.utils import formats
 
 from .domain.builders import CarroBuilder, PagoBuilder
 from .domain.exceptions import (
@@ -39,9 +43,8 @@ from .domain.exceptions import (
 from .domain.facturas import Factura, generar_factura
 from .domain.metodos_pago import metodos_disponibles, obtener_especificacion
 from .domain.ports import ResultadoTransaccion, SolicitudPago
+from .infra.eventos import NotificadorPagoAsincrono, notificador_pago, notificador_publicacion
 from .infra.factories import (
-    NotificadorFactory,
-    NotificadorPagosFactory,
     PasarelaPagoFactory,
     ValidadorDocumentalFactory,
 )
@@ -67,7 +70,7 @@ class PublicacionArticuloService:
         # Inyección de dependencias: si no se inyecta nada, las Factories
         # deciden la implementación según las variables de entorno.
         self._validador = validador or ValidadorDocumentalFactory.crear()
-        self._notificador = notificador or NotificadorFactory.crear()
+        self._notificador = notificador or notificador_publicacion()
 
     @transaction.atomic
     def crear_articulo(self, vendedor, datos):
@@ -99,7 +102,7 @@ class PublicacionArticuloService:
         try:
             carro.save()
         except IntegrityError:
-            raise ErrorDeDominio("Ya existe un vehículo registrado con esta placa.")
+            raise ErrorDeDominio(_('Ya existe un vehículo registrado con esta placa.'))
 
         self._persistir_documentos(carro, documentos)
         self._actualizar_inventario(vendedor)
@@ -124,7 +127,7 @@ class PublicacionArticuloService:
         try:
             repuesto.save()
         except IntegrityError:
-            raise ErrorDeDominio("Ya existe un repuesto publicado con este número de serie.")
+            raise ErrorDeDominio(_('Ya existe un repuesto publicado con este número de serie.'))
 
         self._actualizar_inventario(vendedor)
         self._notificador.notificar_publicacion(repuesto)
@@ -145,12 +148,12 @@ class PublicacionArticuloService:
         carro.descripcion = datos.get("descripcion", carro.descripcion)
         
         if carro.estado == "NUEVO" and carro.kilometraje > KM_MAXIMO_NUEVO:
-            raise ErrorDeDominio(f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km.")
+            raise ErrorDeDominio(_('Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km.') % {'KM_MAXIMO_NUEVO': KM_MAXIMO_NUEVO})
             
         try:
             carro.save()
         except IntegrityError:
-            raise ErrorDeDominio("Ya existe un vehículo registrado con esta placa.")
+            raise ErrorDeDominio(_('Ya existe un vehículo registrado con esta placa.'))
             
         return carro
 
@@ -165,14 +168,14 @@ class PublicacionArticuloService:
         try:
             repuesto.save()
         except IntegrityError:
-            raise ErrorDeDominio("Ya existe un repuesto publicado con este número de serie.")
+            raise ErrorDeDominio(_('Ya existe un repuesto publicado con este número de serie.'))
             
         return repuesto
 
     @transaction.atomic
     def eliminar_articulo(self, articulo):
         if articulo.pagos.filter(estado__in=ESTADOS_QUE_COMPROMETEN_ARTICULO).exists():
-            raise ErrorDeDominio("No puedes eliminar un artículo que está en proceso de pago.")
+            raise ErrorDeDominio(_('No puedes eliminar un artículo que está en proceso de pago.'))
         
         vendedor = articulo.vendedor
         articulo.delete()
@@ -330,7 +333,7 @@ class ProcesarPagoService:
         # Inyección de dependencias: sin argumentos, las Factories deciden
         # según el entorno; en las pruebas se inyectan dobles.
         self._pasarela_factory = pasarela_factory or PasarelaPagoFactory
-        self._notificador = notificador or NotificadorPagosFactory.crear()
+        self._notificador = notificador or notificador_pago()
         self._bitacora = bitacora or BitacoraPagos()
 
     def procesar(self, cliente, datos) -> Pago:
@@ -369,10 +372,11 @@ class ProcesarPagoService:
             self._armar_solicitud(pago, articulo, builder.datos_metodo())
         )
 
-        self._registrar_desenlace(
-            pago, pasarela, resultado, TransaccionPago.Operacion.PROCESAR
-        )
-        self._notificador.notificar_resultado(pago)
+        with _transaccion_notificacion(self._notificador):
+            self._registrar_desenlace(
+                pago, pasarela, resultado, TransaccionPago.Operacion.PROCESAR
+            )
+            self._notificador.notificar_resultado(pago)
 
         return pago
 
@@ -387,22 +391,22 @@ class ProcesarPagoService:
 
         if carro_id and repuesto_id:
             raise PagoInvalidoError(
-                ["Un pago cubre un solo artículo: o un carro o un repuesto."]
+                [_('Un pago cubre un solo artículo: o un carro o un repuesto.')]
             )
         if not carro_id and not repuesto_id:
             raise PagoInvalidoError(
-                ["Hay que indicar el carro o el repuesto que se está pagando."]
+                [_('Hay que indicar el carro o el repuesto que se está pagando.')]
             )
 
         if carro_id:
             articulo = Carro.objects.filter(pk=carro_id).first()
             if articulo is None:
-                raise RecursoNoEncontradoError("el carro", carro_id)
+                raise RecursoNoEncontradoError(_('el carro'), carro_id)
             return articulo
 
         articulo = Repuesto.objects.filter(pk=repuesto_id).first()
         if articulo is None:
-            raise RecursoNoEncontradoError("el repuesto", repuesto_id)
+            raise RecursoNoEncontradoError(_('el repuesto'), repuesto_id)
         return articulo
 
     def _verificar_disponibilidad(self, articulo):
@@ -419,7 +423,7 @@ class ProcesarPagoService:
         if comprometido:
             raise ArticuloNoDisponibleError(
                 articulo,
-                f"El artículo '{articulo}' ya tiene un pago aprobado o en curso.",
+                _("El artículo '%(articulo)s' ya tiene un pago aprobado o en curso.") % {'articulo': articulo},
             )
 
     def _verificar_referencia_libre(self, referencia):
@@ -511,7 +515,7 @@ class ConsultarPagoService:
 
         pago = Pago.objects.filter(**filtro).first()
         if pago is None:
-            raise RecursoNoEncontradoError("el pago", referencia)
+            raise RecursoNoEncontradoError(_('el pago'), referencia)
         return pago
 
     def listar(self, cliente):
@@ -542,6 +546,11 @@ class FacturaService:
         return generar_factura(pago)
 
 
+def _transaccion_notificacion(notificador):
+    # El evento asíncrono se confirma junto con el pago. El envío local queda fuera.
+    return transaction.atomic() if isinstance(notificador, NotificadorPagoAsincrono) else nullcontext()
+
+
 class ConfirmarPagoService:
     """Resuelve un pago que quedó pendiente.
 
@@ -552,7 +561,7 @@ class ConfirmarPagoService:
 
     def __init__(self, pasarela_factory=None, notificador=None, bitacora=None):
         self._pasarela_factory = pasarela_factory or PasarelaPagoFactory
-        self._notificador = notificador or NotificadorPagosFactory.crear()
+        self._notificador = notificador or notificador_pago()
         self._bitacora = bitacora or BitacoraPagos()
         self._consulta = ConsultarPagoService()
 
@@ -575,12 +584,10 @@ class ConfirmarPagoService:
         resultado = pasarela.consultar(pago.referencia_pasarela or pago.referencia)
 
         estado_anterior = pago.estado
-        self._actualizar(pago, pasarela, resultado)
-
-        # Solo se molesta al cliente cuando de verdad cambió algo: un pago
-        # que sigue pendiente no amerita otro correo.
-        if pago.estado != estado_anterior:
-            self._notificador.notificar_resultado(pago)
+        with _transaccion_notificacion(self._notificador):
+            self._actualizar(pago, pasarela, resultado)
+            if pago.estado != estado_anterior:
+                self._notificador.notificar_resultado(pago)
 
         return pago
 
@@ -649,7 +656,7 @@ class CarritoComprasService:
             articulo.carrito_compra_id is not None
             and articulo.carrito_compra_id != carrito.pk
         ):
-            raise ErrorDeDominio("El artículo ya está en otro carrito.")
+            raise ErrorDeDominio(_('El artículo ya está en otro carrito.'))
         articulo.carrito_compra = carrito
         articulo.save(update_fields=["carrito_compra"])
         self._recalcular(carrito)
@@ -659,7 +666,7 @@ class CarritoComprasService:
         carrito = self._obtener_o_crear_carrito(usuario)
         articulo = self._obtener_articulo(tipo_articulo, articulo_id)
         if articulo.carrito_compra_id != carrito.id:
-            raise ErrorDeDominio("El artículo no está en el carrito.")
+            raise ErrorDeDominio(_('El artículo no está en el carrito.'))
         articulo.carrito_compra = None
         articulo.save(update_fields=["carrito_compra"])
         self._recalcular(carrito)
@@ -682,23 +689,23 @@ class CarritoComprasService:
         carrito = self._obtener_o_crear_carrito(usuario)
         self._recalcular(carrito)
         if not carrito.cantidad_producto:
-            raise ErrorDeDominio("El carrito está vacío.")
+            raise ErrorDeDominio(_('El carrito está vacío.'))
         return {"carrito_id": carrito.pk, "cantidad_producto": carrito.cantidad_producto, "precio_total": carrito.precio_total, "estado": "PENDIENTE_PAGO"}
 
     def _obtener_o_crear_carrito(self, usuario):
         cliente = getattr(usuario, "cliente", None)
         if cliente is None:
-            raise ErrorDeDominio("El usuario no tiene un perfil de cliente.")
+            raise ErrorDeDominio(_('El usuario no tiene un perfil de cliente.'))
         return CarritoCompra.objects.get_or_create(cliente=cliente)[0]
 
     def _obtener_articulo(self, tipo, articulo_id):
         modelo = {"carro": self._carro_model, "repuesto": self._repuesto_model}.get(tipo)
         if modelo is None:
-            raise ErrorDeDominio("Tipo de artículo no soportado.")
+            raise ErrorDeDominio(_('Tipo de artículo no soportado.'))
         try:
             return modelo.objects.select_related("vendedor").get(pk=articulo_id)
         except modelo.DoesNotExist as error:
-            raise ErrorDeDominio(f"No existe el {tipo} solicitado.") from error
+            raise ErrorDeDominio(_('No existe el %(tipo)s solicitado.') % {'tipo': tipo}) from error
 
     def _recalcular(self, carrito):
         carrito.cantidad_producto = carrito.carros.count() + carrito.repuestos.count()
@@ -759,7 +766,7 @@ class PagarCarritoService:
         carrito = resumen["carrito"]
 
         if not carrito.cantidad_producto:
-            raise ErrorDeDominio("El carrito está vacío.")
+            raise ErrorDeDominio(_('El carrito está vacío.'))
 
         pagos = []
         for articulo in resumen["articulos"]:
@@ -791,8 +798,8 @@ class DocumentoCarroService:
     ESTADO_INVALIDO = "INVALIDO"
 
     DOCUMENTOS_EVALUADOS = (
-        (DocumentoCarro.Tipo.SOAT, "SOAT"),
-        (DocumentoCarro.Tipo.TECNOMECANICA, "Revisión técnico-mecánica"),
+        (DocumentoCarro.Tipo.SOAT, DocumentoCarro.Tipo.SOAT.label),
+        (DocumentoCarro.Tipo.TECNOMECANICA, DocumentoCarro.Tipo.TECNOMECANICA.label),
     )
 
     def __init__(self, validador=None, hoy=None):
@@ -805,31 +812,31 @@ class DocumentoCarroService:
         if doc is None or not doc.fecha_expedicion or not doc.fecha_vencimiento:
             return (
                 self.ESTADO_PENDIENTE,
-                "PENDIENTE",
-                "El vendedor todavía no ha registrado las fechas requeridas.",
+                _("PENDIENTE"),
+                _("El vendedor todavía no ha registrado las fechas requeridas."),
             )
         if doc.fecha_expedicion > hoy:
             return (
                 self.ESTADO_INVALIDO,
-                "INVÁLIDO",
-                "La fecha de expedición no puede ser futura.",
+                _("INVÁLIDO"),
+                _("La fecha de expedición no puede ser futura."),
             )
         if doc.fecha_vencimiento <= doc.fecha_expedicion:
             return (
                 self.ESTADO_INVALIDO,
-                "INVÁLIDO",
-                "La fecha de vencimiento debe ser posterior a la fecha de expedición.",
+                _("INVÁLIDO"),
+                _("La fecha de vencimiento debe ser posterior a la fecha de expedición."),
             )
         if doc.fecha_vencimiento < hoy:
             return (
                 self.ESTADO_VENCIDO,
-                "VENCIDO",
-                f"El documento venció el {doc.fecha_vencimiento:%d/%m/%Y}.",
+                _("VENCIDO"),
+                _("El documento venció el %(fecha)s.") % {"fecha": formats.date_format(doc.fecha_vencimiento, "SHORT_DATE_FORMAT")},
             )
         return (
             self.ESTADO_VIGENTE,
-            "VIGENTE",
-            f"Vigente hasta el {doc.fecha_vencimiento:%d/%m/%Y}.",
+            _("VIGENTE"),
+            _("Vigente hasta el %(fecha)s.") % {"fecha": formats.date_format(doc.fecha_vencimiento, "SHORT_DATE_FORMAT")},
         )
 
     def verificar_cumplimiento(self, carro):
@@ -847,7 +854,7 @@ class DocumentoCarroService:
         tipos_mostrados = list(self.DOCUMENTOS_EVALUADOS)
         if DocumentoCarro.Tipo.TARJETA_PROPIEDAD in existentes:
             tipos_mostrados.append(
-                (DocumentoCarro.Tipo.TARJETA_PROPIEDAD, "Tarjeta de propiedad")
+                (DocumentoCarro.Tipo.TARJETA_PROPIEDAD, DocumentoCarro.Tipo.TARJETA_PROPIEDAD.label)
             )
 
         for codigo_tipo, etiqueta_tipo in tipos_mostrados:
@@ -887,27 +894,27 @@ class DocumentoCarroService:
 
         if self.ESTADO_INVALIDO in estados_obligatorios:
             estado_general_codigo = self.ESTADO_INVALIDO
-            estado_general_etiqueta = "Información inválida"
+            estado_general_etiqueta = _("Información inválida")
             mensaje_general = (
-                "Existen fechas inconsistentes en los documentos registrados."
+                _("Existen fechas inconsistentes en los documentos registrados.")
             )
         elif self.ESTADO_VENCIDO in estados_obligatorios:
             estado_general_codigo = self.ESTADO_VENCIDO
-            estado_general_etiqueta = "Documentación vencida"
+            estado_general_etiqueta = _("Documentación vencida")
             mensaje_general = (
-                "Uno o ambos documentos obligatorios han superado su fecha de vencimiento."
+                _("Uno o ambos documentos obligatorios han superado su fecha de vencimiento.")
             )
         elif self.ESTADO_PENDIENTE in estados_obligatorios:
             estado_general_codigo = self.ESTADO_PENDIENTE
-            estado_general_etiqueta = "Documentación pendiente"
+            estado_general_etiqueta = _("Documentación pendiente")
             mensaje_general = (
-                "El vendedor todavía no ha registrado todas las fechas requeridas."
+                _("El vendedor todavía no ha registrado todas las fechas requeridas.")
             )
         else:
             estado_general_codigo = self.ESTADO_VIGENTE
-            estado_general_etiqueta = "Documentación vigente"
+            estado_general_etiqueta = _("Documentación vigente")
             mensaje_general = (
-                "El SOAT y la revisión técnico-mecánica tienen fechas válidas y se encuentran vigentes."
+                _("El SOAT y la revisión técnico-mecánica tienen fechas válidas y se encuentran vigentes.")
             )
 
         cumple = estado_general_codigo == self.ESTADO_VIGENTE
@@ -927,7 +934,7 @@ class DocumentoCarroService:
     def guardar_documento(self, vendedor, carro, datos):
         if carro.vendedor_id != vendedor.id:
             raise ErrorDeDominio(
-                "Solo el vendedor propietario del vehículo puede modificar sus fechas o archivos."
+                _('Solo el vendedor propietario del vehículo puede modificar sus fechas o archivos.')
             )
 
         fecha_exp = datos["fecha_expedicion"]
@@ -935,11 +942,11 @@ class DocumentoCarroService:
         hoy = self._hoy()
         if fecha_exp > hoy:
             raise ErrorDeDominio(
-                "La fecha de expedición no puede ser futura."
+                _('La fecha de expedición no puede ser futura.')
             )
         if fecha_ven <= fecha_exp:
             raise ErrorDeDominio(
-                "La fecha de vencimiento debe ser posterior a la fecha de expedición."
+                _('La fecha de vencimiento debe ser posterior a la fecha de expedición.')
             )
 
         tipo = datos["tipo_documento"]
@@ -981,7 +988,7 @@ class ResenaService:
     def listar_por_vendedor(self, vendedor_id):
         vendedor = Vendedor.objects.filter(pk=vendedor_id).first()
         if vendedor is None:
-            raise RecursoNoEncontradoError("el vendedor", vendedor_id)
+            raise RecursoNoEncontradoError(_('el vendedor'), vendedor_id)
 
         resenas = list(vendedor.resenas.select_related("carro", "cliente").all())
         promedio = (
@@ -1000,22 +1007,22 @@ class ResenaService:
     def crear_resena(self, cliente, vendedor_id, datos) -> Resena:
         vendedor = Vendedor.objects.filter(pk=vendedor_id).first()
         if vendedor is None:
-            raise RecursoNoEncontradoError("el vendedor", vendedor_id)
+            raise RecursoNoEncontradoError(_('el vendedor'), vendedor_id)
 
         if cliente is not None and vendedor.usuario_id == cliente.usuario_id:
-            raise ErrorDeDominio("No puedes escribir una reseña sobre tu propio perfil de vendedor.")
+            raise ErrorDeDominio(_('No puedes escribir una reseña sobre tu propio perfil de vendedor.'))
 
         contenido = (datos.get("contenido") or "").strip()
         if not contenido:
-            raise ErrorDeDominio("El contenido de la reseña no puede estar vacío.")
+            raise ErrorDeDominio(_('El contenido de la reseña no puede estar vacío.'))
 
         try:
             calificacion = int(datos.get("calificacion", 5))
         except (TypeError, ValueError):
-            raise ErrorDeDominio("La calificación debe ser un número entero entre 1 y 5.")
+            raise ErrorDeDominio(_('La calificación debe ser un número entero entre 1 y 5.'))
 
         if not (1 <= calificacion <= 5):
-            raise ErrorDeDominio("La calificación debe estar entre 1 y 5 estrellas.")
+            raise ErrorDeDominio(_('La calificación debe estar entre 1 y 5 estrellas.'))
 
         tipo = (datos.get("tipo") or "GENERAL").strip().upper()
         carro = None
@@ -1023,7 +1030,7 @@ class ResenaService:
         if carro_id:
             carro = Carro.objects.filter(pk=carro_id, vendedor=vendedor).first()
             if carro is None:
-                raise RecursoNoEncontradoError("el carro del vendedor", carro_id)
+                raise RecursoNoEncontradoError(_('el carro del vendedor'), carro_id)
 
         autor = cliente.nombre if cliente is not None else (datos.get("autor") or "Usuario")
 

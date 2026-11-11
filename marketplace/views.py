@@ -5,6 +5,8 @@ llama al servicio y convierte los errores de negocio en errores de
 formulario. No contiene ni una regla de negocio.
 """
 
+from django.utils.translation import gettext as _
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import FileResponse, Http404, HttpResponseForbidden
@@ -315,11 +317,11 @@ class CarritoComprasView(LoginRequiredMixin, ClienteRequeridoMixin, FormView):
         if pagos:
             messages.success(
                 self.request,
-                f"Procesamos {len(pagos)} pagos. Te llevamos al primer recibo.",
+                _('Procesamos %(valor1)s pagos. Te llevamos al primer recibo.') % {'valor1': len(pagos)},
             )
             return redirect("marketplace:detalle_pago", referencia=pagos[0].referencia)
 
-        messages.success(self.request, "Procesamos tu compra.")
+        messages.success(self.request, _('Procesamos tu compra.'))
         return super().form_valid(form)
 
     def _resumen_carrito(self):
@@ -364,7 +366,7 @@ class PagarArticuloView(LoginRequiredMixin, ClienteRequeridoMixin, View):
     def _articulo(self, tipo, pk):
         modelo = self.modelos.get(tipo)
         if modelo is None:
-            raise Http404("Tipo de artículo desconocido.")
+            raise Http404(_('Tipo de artículo desconocido.'))
         return get_object_or_404(modelo, pk=pk)
 
     def _contexto(self, articulo, tipo, formulario):
@@ -418,7 +420,7 @@ class ConfirmarPagoView(LoginRequiredMixin, ClienteRequeridoMixin, View):
         except ErrorDeDominio as error:
             messages.error(request, str(error))
         else:
-            messages.success(request, "Actualizamos el estado de tu pago.")
+            messages.success(request, _('Actualizamos el estado de tu pago.'))
         return redirect("marketplace:detalle_pago", referencia=referencia)
 
 
@@ -555,7 +557,7 @@ class DocumentosCarroView(LoginRequiredMixin, View):
                 servicio.guardar_documento(
                     request.user.vendedor, carro, form.cleaned_data
                 )
-                messages.success(request, "Documento actualizado correctamente.")
+                messages.success(request, _('Documento actualizado correctamente.'))
                 return redirect("marketplace:documentos_carro", pk=carro.pk)
             except ErrorDeDominio as error:
                 form.add_error(None, str(error))
@@ -574,11 +576,11 @@ class DescargarDocumentoCarroView(LoginRequiredMixin, View):
             pk=doc_id,
         )
         if not doc.archivo:
-            raise Http404("El documento no tiene archivo adjunto.")
+            raise Http404(_('El documento no tiene archivo adjunto.'))
 
         if not self.service_factory().tiene_acceso_archivos(request.user, doc.carro):
             return HttpResponseForbidden(
-                "No tienes permiso para acceder al documento original del propietario."
+                _("No tienes permiso para acceder al documento original del propietario.")
             )
 
         return FileResponse(doc.archivo.open("rb"), as_attachment=False)
@@ -625,7 +627,7 @@ class ResenasVendedorView(LoginRequiredMixin, ClienteRequeridoMixin, View):
                 servicio.crear_resena(
                     request.user.cliente, vendedor_id, form.cleaned_data
                 )
-                messages.success(request, "Tu reseña ha sido publicada.")
+                messages.success(request, _('Tu reseña ha sido publicada.'))
                 return redirect("marketplace:resenas_vendedor", vendedor_id=vendedor_id)
             except ErrorDeDominio as error:
                 form.add_error(None, str(error))

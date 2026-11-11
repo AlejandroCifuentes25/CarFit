@@ -10,6 +10,9 @@ tiempos de espera y la jerga de estados de cada uno ("APPROVED", "DECLINED",
 para que un cambio de proveedor no se filtre al negocio.
 """
 
+from django.utils import formats
+from django.utils.translation import gettext as _, gettext_noop
+
 import json
 import logging
 import os
@@ -59,7 +62,7 @@ class PasarelaSimulada(PasarelaPago):
         if self._pidieron_rechazo(solicitud):
             logger.info("[MOCK] Pago %s rechazado por dato de prueba.", solicitud.referencia)
             return ResultadoPago.rechazado(
-                mensaje="Transacción rechazada por el emisor (simulación).",
+                mensaje=gettext_noop('Transacción rechazada por el emisor (simulación).'),
                 referencia_pasarela=referencia_pasarela,
             )
 
@@ -67,7 +70,7 @@ class PasarelaSimulada(PasarelaPago):
             logger.info("[MOCK] Pago %s queda pendiente.", solicitud.referencia)
             return ResultadoPago.pendiente(
                 referencia_pasarela=referencia_pasarela,
-                mensaje="A la espera de la confirmación del banco (simulación).",
+                mensaje=gettext_noop('A la espera de la confirmación del banco (simulación).'),
             )
 
         logger.info(
@@ -79,7 +82,7 @@ class PasarelaSimulada(PasarelaPago):
         return ResultadoPago.aprobado(
             referencia_pasarela=referencia_pasarela,
             codigo_autorizacion=self._codigo(solicitud.referencia),
-            mensaje="Transacción aprobada (simulación).",
+            mensaje=gettext_noop('Transacción aprobada (simulación).'),
         )
 
     def consultar(self, referencia) -> ResultadoPago:
@@ -88,7 +91,7 @@ class PasarelaSimulada(PasarelaPago):
         return ResultadoPago.aprobado(
             referencia_pasarela=self._referencia_pasarela(referencia),
             codigo_autorizacion=self._codigo(referencia),
-            mensaje="Confirmada por el banco (simulación).",
+            mensaje=gettext_noop('Confirmada por el banco (simulación).'),
         )
 
     def _pidieron_rechazo(self, solicitud):
@@ -163,7 +166,7 @@ class PasarelaAgregador(PasarelaPago):
     def _peticion(self, metodo_http, ruta, cuerpo=None):
         if not self._url_base:
             raise PasarelaNoDisponibleError(
-                self.nombre, "falta configurar la variable PASARELA_URL."
+                self.nombre, _('falta configurar la variable PASARELA_URL.')
             )
 
         peticion = request.Request(
@@ -181,15 +184,15 @@ class PasarelaAgregador(PasarelaPago):
                 return json.loads(respuesta.read().decode("utf-8"))
         except error.HTTPError as fallo:
             raise PasarelaNoDisponibleError(
-                self.nombre, f"respondió HTTP {fallo.code}."
+                self.nombre, _('respondió HTTP %(valor1)s.') % {'valor1': fallo.code}
             ) from fallo
         except error.URLError as fallo:
             raise PasarelaNoDisponibleError(
-                self.nombre, f"no hubo conexión ({fallo.reason})."
+                self.nombre, _('no hubo conexión (%(valor1)s).') % {'valor1': fallo.reason}
             ) from fallo
         except (json.JSONDecodeError, UnicodeDecodeError) as fallo:
             raise PasarelaNoDisponibleError(
-                self.nombre, "devolvió una respuesta ilegible."
+                self.nombre, _('devolvió una respuesta ilegible.')
             ) from fallo
 
     def _interpretar(self, datos) -> ResultadoPago:
@@ -211,14 +214,14 @@ class PasarelaAgregador(PasarelaPago):
             )
         if estado in self.ESTADOS_RECHAZADOS:
             return ResultadoPago.rechazado(
-                mensaje=mensaje or "Transacción rechazada por el emisor.",
+                mensaje=mensaje or gettext_noop("Transacción rechazada por el emisor."),
                 referencia_pasarela=referencia_pasarela,
             )
 
         # Un estado que no se reconoce no se asume aprobado ni rechazado:
         # dar por bueno lo desconocido es como se entregan carros sin cobrar.
         raise PasarelaNoDisponibleError(
-            self.nombre, f"devolvió un estado desconocido: '{estado}'."
+            self.nombre, _("devolvió un estado desconocido: '%(estado)s'.") % {'estado': estado}
         )
 
 
@@ -248,10 +251,12 @@ class PasarelaCorresponsalEfectivo(PasarelaPago):
         )
         return ResultadoPago.pendiente(
             referencia_pasarela=codigo,
-            mensaje=(
-                f"Pague ${solicitud.monto:,} COP con el código {codigo} en cualquier "
-                f"corresponsal antes del {vence:%d/%m/%Y a las %I:%M %p}."
-            ).replace(",", "."),
+            mensaje=_(
+                "Pague $%(monto)s COP con el código %(codigo)s en cualquier corresponsal antes del %(fecha)s."
+            ) % {
+                "monto": formats.number_format(solicitud.monto, force_grouping=True),
+                "codigo": codigo, "fecha": formats.date_format(vence, "SHORT_DATETIME_FORMAT"),
+            },
         )
 
     def consultar(self, referencia) -> ResultadoPago:
@@ -262,5 +267,5 @@ class PasarelaCorresponsalEfectivo(PasarelaPago):
         """
         return ResultadoPago.pendiente(
             referencia_pasarela=str(referencia),
-            mensaje="El corresponsal aún no reporta el recaudo.",
+            mensaje=gettext_noop('El corresponsal aún no reporta el recaudo.'),
         )

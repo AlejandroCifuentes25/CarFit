@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -132,12 +133,25 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'es-co'
+LANGUAGES = [('es-co', 'Español'), ('en', 'English')]
 
 TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 
 USE_TZ = True
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', '')
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_TRANSPORT_OPTIONS = {'socket_connect_timeout': 2, 'socket_timeout': 2}
+CELERY_BEAT_SCHEDULE = {
+    'recuperar-notificaciones': {
+        'task': 'marketplace.tasks.recuperar_notificaciones',
+        'schedule': 30.0,
+    },
+}
+EMAIL_TIMEOUT = 10
 
 # Con es-co, formatea los enteros con puntos de miles al mostrarlos en las
 # plantillas ($95.000.000 en vez de $95000000).

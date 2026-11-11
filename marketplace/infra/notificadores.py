@@ -4,6 +4,8 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import formats
+from django.utils.translation import gettext as _, gettext_lazy
 
 from ..domain.ports import Notificador, NotificadorPagos
 from ..models import Pago
@@ -13,17 +15,17 @@ logger = logging.getLogger(__name__)
 #: Qué se le dice al cliente según cómo terminó su pago. Tenerlo en un mapa
 #: y no en un `if/elif` deja que un estado nuevo sea una línea más.
 MENSAJES_POR_ESTADO = {
-    Pago.Estado.APROBADO: "Tu pago fue aprobado. El vendedor ya fue notificado.",
-    Pago.Estado.PENDIENTE: "Tu pago quedó pendiente de confirmación.",
-    Pago.Estado.RECHAZADO: "Tu pago fue rechazado y no se te cobró nada.",
-    Pago.Estado.ANULADO: "Tu pago fue anulado.",
-    Pago.Estado.REEMBOLSADO: "Tu pago fue reembolsado.",
+    Pago.Estado.APROBADO: gettext_lazy("Tu pago fue aprobado."),
+    Pago.Estado.PENDIENTE: gettext_lazy("Tu pago quedó pendiente de confirmación."),
+    Pago.Estado.RECHAZADO: gettext_lazy("Tu pago fue rechazado y no se te cobró nada."),
+    Pago.Estado.ANULADO: gettext_lazy("Tu pago fue anulado."),
+    Pago.Estado.REEMBOLSADO: gettext_lazy("Tu pago fue reembolsado."),
 }
 
 
 def _formatear_pesos(valor):
     """Formato colombiano: separador de miles con punto."""
-    return f"{valor:,}".replace(",", ".")
+    return formats.number_format(valor, force_grouping=True)
 
 
 class NotificadorConsola(Notificador):
@@ -44,12 +46,11 @@ class NotificadorEmail(Notificador):
     def notificar_publicacion(self, articulo) -> None:
         precio = f"{articulo.precio:,}".replace(",", ".")
         send_mail(
-            subject=f"Tu {articulo.marca} {articulo.modelo} ya está en CarFit",
-            message=(
-                f"Hola {articulo.vendedor.nombre},\n\n"
-                f"Publicamos tu {articulo} por $ {precio} COP.\n"
-                f"Ya es visible para los compradores en CarFit.\n"
-            ),
+            subject=_("Tu publicación %(articulo)s ya está en CarFit") % {"articulo": articulo},
+            message=_(
+                "Hola %(nombre)s,\n\n"
+                "Tu publicación %(articulo)s está visible por $%(precio)s COP.\n"
+            ) % {"nombre": articulo.vendedor.nombre, "articulo": articulo, "precio": precio},
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[articulo.vendedor.correo],
             fail_silently=False,
@@ -78,17 +79,21 @@ class NotificadorPagoEmail(NotificadorPagos):
 
     def notificar_resultado(self, pago) -> None:
         send_mail(
-            subject=f"CarFit: pago {pago.referencia} {pago.get_estado_display()}",
-            message=(
-                f"Hola {pago.cliente.nombre},\n\n"
-                f"{MENSAJES_POR_ESTADO.get(pago.estado, '')}\n\n"
-                f"Referencia: {pago.referencia}\n"
-                f"Método: {pago.get_metodo_pago_display()}\n"
-                f"Artículo: ${_formatear_pesos(pago.precio)} {pago.moneda}\n"
-                f"Comisión: ${_formatear_pesos(pago.comision)} {pago.moneda}\n"
-                f"Total: ${_formatear_pesos(pago.total)} {pago.moneda}\n"
-                f"{pago.mensaje}\n"
-            ),
+            subject=_("CarFit: pago %(referencia)s %(estado)s") % {
+                "referencia": pago.referencia, "estado": pago.get_estado_display(),
+            },
+            message=_(
+                "Hola %(nombre)s,\n\n%(estado)s\n\n"
+                "Referencia: %(referencia)s\nMétodo: %(metodo)s\n"
+                "Artículo: $%(precio)s %(moneda)s\nComisión: $%(comision)s %(moneda)s\n"
+                "Total: $%(total)s %(moneda)s\n%(mensaje)s\n"
+            ) % {
+                "nombre": pago.cliente.nombre, "estado": MENSAJES_POR_ESTADO.get(pago.estado, ""),
+                "referencia": pago.referencia, "metodo": pago.get_metodo_pago_display(),
+                "precio": _formatear_pesos(pago.precio), "comision": _formatear_pesos(pago.comision),
+                "total": _formatear_pesos(pago.total), "moneda": pago.moneda,
+                "mensaje": pago.mensaje_localizado,
+            },
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[pago.cliente.correo],
             fail_silently=False,

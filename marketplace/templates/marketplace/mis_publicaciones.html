@@ -1,21 +1,21 @@
-{% extends "marketplace/base.html" %}
+{% extends "marketplace/base.html" %}{% load i18n %}
 
-{% block titulo %}Mis Publicaciones | CarFit{% endblock %}
+{% block titulo %}{% translate "Mis Publicaciones | CarFit" %}{% endblock %}
 
 {% block contenido %}
-<h1>Mis Publicaciones</h1>
-<p class="ayuda">Aquí puedes ver, editar y eliminar los vehículos que has publicado.</p>
+<h1>{% translate "Mis Publicaciones" %}</h1>
+<p class="ayuda">{% translate "Aquí puedes ver, editar y eliminar los vehículos que has publicado." %}</p>
 
 <section>
-  <h2>Carros</h2>
+  <h2>{% translate "Carros" %}</h2>
   {% if carros %}
   <table class="tabla">
     <thead>
       <tr>
-        <th>Vehículo</th>
-        <th>Precio</th>
-        <th>Estado</th>
-        <th>Acciones</th>
+        <th>{% translate "Vehículo" %}</th>
+        <th>{% translate "Precio" %}</th>
+        <th>{% translate "Estado" %}</th>
+        <th>{% translate "Acciones" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -25,29 +25,29 @@
         <td>${{ carro.precio }}</td>
         <td>{{ carro.get_estado_display }}</td>
         <td>
-          <a href="{% url 'marketplace:documentos_carro' carro.pk %}">Papeles</a> |
-          <a href="{% url 'marketplace:editar_articulo' 'carro' carro.pk %}">Editar</a> | 
-          <a href="{% url 'marketplace:eliminar_articulo' 'carro' carro.pk %}" style="color: var(--error);">Eliminar</a>
+          <a href="{% url 'marketplace:documentos_carro' carro.pk %}">{% translate "Papeles" %}</a> |
+          <a href="{% url 'marketplace:editar_articulo' 'carro' carro.pk %}">{% translate "Editar" %}</a> |
+          <a href="{% url 'marketplace:eliminar_articulo' 'carro' carro.pk %}" style="color: var(--error);">{% translate "Eliminar" %}</a>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <p class="ayuda">No tienes carros publicados.</p>
+  <p class="ayuda">{% translate "No tienes carros publicados." %}</p>
   {% endif %}
 </section>
 <br><br>
 <section>
-  <h2>Repuestos</h2>
+  <h2>{% translate "Repuestos" %}</h2>
   {% if repuestos %}
   <table class="tabla">
     <thead>
       <tr>
-        <th>Repuesto</th>
-        <th>Precio</th>
-        <th>Estado</th>
-        <th>Acciones</th>
+        <th>{% translate "Repuesto" %}</th>
+        <th>{% translate "Precio" %}</th>
+        <th>{% translate "Estado" %}</th>
+        <th>{% translate "Acciones" %}</th>
       </tr>
     </thead>
     <tbody>
@@ -57,15 +57,15 @@
         <td>${{ repuesto.precio }}</td>
         <td>{{ repuesto.get_estado_display }}</td>
         <td>
-          <a href="{% url 'marketplace:editar_articulo' 'repuesto' repuesto.pk %}">Editar</a> | 
-          <a href="{% url 'marketplace:eliminar_articulo' 'repuesto' repuesto.pk %}" style="color: var(--error);">Eliminar</a>
+          <a href="{% url 'marketplace:editar_articulo' 'repuesto' repuesto.pk %}">{% translate "Editar" %}</a> |
+          <a href="{% url 'marketplace:eliminar_articulo' 'repuesto' repuesto.pk %}" style="color: var(--error);">{% translate "Eliminar" %}</a>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <p class="ayuda">No tienes repuestos publicados.</p>
+  <p class="ayuda">{% translate "No tienes repuestos publicados." %}</p>
   {% endif %}
 </section>
 {% endblock %}

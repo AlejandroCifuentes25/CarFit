@@ -1,19 +1,18 @@
-{% extends "marketplace/base.html" %}
+{% extends "marketplace/base.html" %}{% load i18n %}
 
-{% block titulo %}Eliminar Artículo | CarFit{% endblock %}
+{% block titulo %}{% translate "Eliminar Artículo | CarFit" %}{% endblock %}
 {% block ancho %}600px{% endblock %}
 
 {% block contenido %}
-<h1>Eliminar {{ tipo|title }}</h1>
+<h1>{% translate "Eliminar" %} {% if tipo == "carro" %}{% translate "vehículo" %}{% else %}{% translate "repuesto" %}{% endif %}</h1>
 
 <p class="ayuda">
-  ¿Estás seguro de que deseas eliminar <strong>{{ object }}</strong>?
-  Esta acción no se puede deshacer.
+  {% translate "¿Estás seguro de que deseas eliminar" %} <strong>{{ object }}</strong>{% translate "? Esta acción no se puede deshacer." %}
 </p>
 
 <form method="post">
   {% csrf_token %}
-  <button type="submit" class="boton boton-secundario">Sí, eliminar</button>
-  <a href="{% url 'marketplace:mis_publicaciones' %}" class="enlace" style="margin-left: 10px;">Cancelar</a>
+  <button type="submit" class="boton boton-secundario">{% translate "Sí, eliminar" %}</button>
+  <a href="{% url 'marketplace:mis_publicaciones' %}" class="enlace" style="margin-left: 10px;">{% translate "Cancelar" %}</a>
 </form>
 {% endblock %}

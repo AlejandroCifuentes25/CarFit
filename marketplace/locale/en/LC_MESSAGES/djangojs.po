@@ -1,0 +1,101 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CarFit\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: marketplace/static/marketplace/carfit.js:175
+msgid "Actualizando…"
+msgstr "Updating…"
+
+#: marketplace/static/marketplace/carfit.js:195
+msgid "Agregar al carrito +"
+msgstr "Add to cart +"
+
+#: marketplace/static/marketplace/carfit.js:182
+msgid "Artículo agregado al carrito."
+msgstr "Item added to your cart."
+
+#: marketplace/static/marketplace/carfit.js:182
+msgid "Carrito actualizado."
+msgstr "Cart updated."
+
+#: marketplace/static/marketplace/carfit.js:64
+msgid "Cerrar mensaje"
+msgstr "Close message"
+
+#: marketplace/static/marketplace/carfit.js:18
+msgid "Completa este campo."
+msgstr "Fill out this field."
+
+#: marketplace/static/marketplace/carfit.js:19
+msgid "Ingresa un correo válido."
+msgstr "Enter a valid email address."
+
+#: marketplace/static/marketplace/carfit.js:20
+msgid "Ingresa un valor mayor o igual a %s."
+msgstr "Enter a value greater than or equal to %s."
+
+#: marketplace/static/marketplace/carfit.js:21
+msgid "Ingresa un valor menor o igual a %s."
+msgstr "Enter a value less than or equal to %s."
+
+#: marketplace/static/marketplace/carfit.js:77
+#: marketplace/static/marketplace/carfit.js:82
+msgid "Mostrar"
+msgstr "Show"
+
+#: marketplace/static/marketplace/carfit.js:78
+#: marketplace/static/marketplace/carfit.js:83
+msgid "Mostrar contraseña"
+msgstr "Show password"
+
+#: marketplace/static/marketplace/carfit.js:201
+msgid "No hay conexión. Inténtalo de nuevo."
+msgstr "Connection lost. Try again."
+
+#: marketplace/static/marketplace/carfit.js:179
+msgid "No se pudo actualizar. Revisa tu sesión e inténtalo de nuevo."
+msgstr "Couldn't update the cart. Check that you're signed in and try again."
+
+#: marketplace/static/marketplace/carfit.js:221
+msgid "No se pudo cerrar la sesión. Inténtalo de nuevo."
+msgstr "Couldn't sign out. Try again."
+
+#: marketplace/static/marketplace/carfit.js:82
+msgid "Ocultar"
+msgstr "Hide"
+
+#: marketplace/static/marketplace/carfit.js:83
+msgid "Ocultar contraseña"
+msgstr "Hide password"
+
+#: marketplace/static/marketplace/carfit.js:281
+msgid "Procesando…"
+msgstr "Processing…"
+
+#: marketplace/static/marketplace/carfit.js:17
+msgid "Revisa el valor de este campo."
+msgstr "Check the value of this field."
+
+#: marketplace/static/marketplace/carfit.js:90
+msgid "Tabla desplazable"
+msgstr "Scrollable table"
+
+#: marketplace/static/marketplace/carfit.js:60
+msgid "Ver carrito →"
+msgstr "View cart →"
+
+#: marketplace/static/marketplace/carfit.js:195
+msgid "✓ En tu carrito · Quitar"
+msgstr "✓ In your cart · Remove"
+
+#: marketplace/static/marketplace/carfit.js
+msgid "%s artículo disponible"
+msgid_plural "%s artículos disponibles"
+msgstr[0] "%s item available"
+msgstr[1] "%s items available"

@@ -1,13 +1,11 @@
-{% extends "marketplace/base.html" %}
+{% extends "marketplace/base.html" %}{% load i18n %}
 
-{% block titulo %}Falta tu perfil de cliente | CarFit{% endblock %}
+{% block titulo %}{% translate "Falta tu perfil de cliente | CarFit" %}{% endblock %}
 
 {% block contenido %}
-  <h1>Todavía no tienes perfil de cliente</h1>
+  <h1>{% translate "Todavía no tienes perfil de cliente" %}</h1>
   <p class="ayuda">
-    Para comprar en CarFit necesitas un perfil de <strong>Cliente</strong> asociado a
-    tu usuario. Pídele a un administrador que lo cree desde
-    <a href="/admin/marketplace/cliente/add/">Marketplace → Clientes</a> en el panel
-    de administración.
+    {% translate "Para comprar en CarFit necesitas un perfil de" %} <strong>{% translate "Cliente" %}</strong> {% translate "asociado a tu usuario. Pídele a un administrador que lo cree desde" %}
+    <a href="/admin/marketplace/cliente/add/">{% translate "Marketplace → Clientes" %}</a> {% translate "en el panel de administración." %}
   </p>
 {% endblock %}

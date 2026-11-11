@@ -23,7 +23,7 @@
         <div class="tarjeta-articulo">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <strong>{{ resena.autor }}</strong>
-            <span class="badge badge-APROBADO">★ {{ resena.calificacion }} / 5 · {{ resena.tipo }}</span>
+            <span class="badge badge-APROBADO">★ {{ resena.calificacion }} / 5 · {{ resena.get_tipo_display }}</span>
           </div>
           <p style="margin: .35rem 0;">{{ resena.contenido }}</p>
           <span class="ayuda" style="font-size: .8rem;">{{ resena.creado_en|date:"Y-m-d H:i" }}</span>

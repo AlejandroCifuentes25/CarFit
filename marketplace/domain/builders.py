@@ -14,6 +14,8 @@ responsabilidad del Builder: devuelve un objeto en memoria y es el Service
 Layer quien decide cuándo llamar a `.save()`.
 """
 
+from django.utils.translation import gettext as _
+
 import re
 import uuid
 
@@ -124,22 +126,22 @@ class CarroBuilder:
         errores = []
 
         if self._vendedor is None:
-            errores.append("El artículo debe pertenecer a un vendedor.")
+            errores.append(_('El artículo debe pertenecer a un vendedor.'))
 
         if not PATRON_PLACA.match(self._placa):
             errores.append(
-                f"La placa '{self._placa}' no cumple el formato colombiano (ABC123)."
+                _("La placa '%(valor1)s' no cumple el formato colombiano (ABC123).") % {'valor1': self._placa}
             )
 
         if not self._marca:
-            errores.append("La marca es obligatoria.")
+            errores.append(_('La marca es obligatoria.'))
         if not self._modelo:
-            errores.append("El modelo es obligatorio.")
+            errores.append(_('El modelo es obligatorio.'))
         if not self._color:
-            errores.append("El color es obligatorio.")
+            errores.append(_('El color es obligatorio.'))
 
         if self._estado not in Carro.Estado.values:
-            errores.append(f"El estado '{self._estado}' no es válido (NUEVO o USADO).")
+            errores.append(_("El estado '%(valor1)s' no es válido (NUEVO o USADO).") % {'valor1': self._estado})
 
         errores.extend(self._validar_kilometraje())
         errores.extend(self._validar_precio())
@@ -149,17 +151,16 @@ class CarroBuilder:
 
     def _validar_kilometraje(self):
         if not isinstance(self._kilometraje, int) or self._kilometraje < 0:
-            return ["El kilometraje debe ser un entero mayor o igual a cero."]
+            return [_('El kilometraje debe ser un entero mayor o igual a cero.')]
         if self._estado == Carro.Estado.NUEVO and self._kilometraje > KM_MAXIMO_NUEVO:
             return [
-                f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km "
-                f"(recibido: {self._kilometraje} km)."
+                _('Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km (recibido: %(valor2)s km).') % {'KM_MAXIMO_NUEVO': KM_MAXIMO_NUEVO, 'valor2': self._kilometraje}
             ]
         return []
 
     def _validar_precio(self):
         if not isinstance(self._precio, int) or self._precio <= 0:
-            return ["El precio debe ser un entero positivo en pesos colombianos."]
+            return [_('El precio debe ser un entero positivo en pesos colombianos.')]
         return []
 
     def _validar_documentos(self):
@@ -169,7 +170,7 @@ class CarroBuilder:
         tipos = {getattr(doc, "tipo_documento", None) for doc in self._documentos}
         faltantes = DOCUMENTOS_OBLIGATORIOS - tipos
         if faltantes:
-            return [f"Faltan documentos obligatorios: {', '.join(sorted(faltantes))}."]
+            return [_('Faltan documentos obligatorios: %(valor1)s.') % {'valor1': ', '.join(sorted(faltantes))}]
 
         errores = []
         for doc in self._documentos:
@@ -178,10 +179,10 @@ class CarroBuilder:
             ven = getattr(doc, "fecha_vencimiento", None)
             if exp and ven:
                 if exp > hoy:
-                    errores.append(f"{etiqueta}: La fecha de expedición no puede ser futura.")
+                    errores.append(_('%(etiqueta)s: La fecha de expedición no puede ser futura.') % {'etiqueta': etiqueta})
                 if ven <= exp:
                     errores.append(
-                        f"{etiqueta}: La fecha de vencimiento debe ser posterior a la fecha de expedición."
+                        _('%(etiqueta)s: La fecha de vencimiento debe ser posterior a la fecha de expedición.') % {'etiqueta': etiqueta}
                     )
         return errores
 
@@ -330,7 +331,7 @@ class PagoBuilder:
         errores = []
 
         if self._cliente is None:
-            errores.append("El pago debe estar asociado a un cliente.")
+            errores.append(_('El pago debe estar asociado a un cliente.'))
 
         errores.extend(self._validar_articulo())
         errores.extend(self._validar_referencia())
@@ -340,7 +341,7 @@ class PagoBuilder:
             # Sin método válido no tiene sentido validar comisión ni cuotas:
             # se reporta lo que se sabe y se corta aquí.
             errores.append(
-                f"El método de pago '{self._metodo}' no está soportado."
+                _("El método de pago '%(valor1)s' no está soportado.") % {'valor1': self._metodo}
             )
             return errores
 
@@ -352,9 +353,9 @@ class PagoBuilder:
 
     def _validar_articulo(self):
         if self._carro is not None and self._repuesto is not None:
-            return ["Un pago cubre un solo artículo: o un carro o un repuesto."]
+            return [_('Un pago cubre un solo artículo: o un carro o un repuesto.')]
         if self._articulo() is None:
-            return ["El pago debe referirse a un carro o a un repuesto."]
+            return [_('El pago debe referirse a un carro o a un repuesto.')]
         return self._validar_no_es_venta_a_si_mismo()
 
     def _validar_no_es_venta_a_si_mismo(self):
@@ -363,44 +364,39 @@ class PagoBuilder:
         usuario_vendedor = getattr(vendedor, "usuario_id", None)
         usuario_comprador = getattr(self._cliente, "usuario_id", None)
         if usuario_vendedor is not None and usuario_vendedor == usuario_comprador:
-            return ["Un usuario no puede comprar su propio artículo."]
+            return [_('Un usuario no puede comprar su propio artículo.')]
         return []
 
     def _validar_referencia(self):
         if self._referencia and len(self._referencia) > 60:
-            return ["La referencia de pago no puede superar los 60 caracteres."]
+            return [_('La referencia de pago no puede superar los 60 caracteres.')]
         return []
 
     def _validar_monto(self, especificacion):
         monto = self._monto()
         if not isinstance(monto, int) or isinstance(monto, bool) or monto <= 0:
-            return ["El artículo no tiene un precio válido en pesos colombianos."]
+            return [_('El artículo no tiene un precio válido en pesos colombianos.')]
         if not especificacion.esta_dentro_de_limites(monto):
             return [
-                f"{especificacion.etiqueta} solo opera entre "
-                f"${especificacion.monto_minimo:,} y "
-                f"${especificacion.monto_maximo:,} COP "
-                f"(monto recibido: ${monto:,})."
+                _('%(valor1)s solo opera entre $%(valor2)s y $%(valor3)s COP (monto recibido: $%(monto)s).') % {'valor1': especificacion.etiqueta, 'valor2': format(especificacion.monto_minimo, ','), 'valor3': format(especificacion.monto_maximo, ','), 'monto': format(monto, ',')}
             ]
         return []
 
     def _validar_cuotas(self, especificacion):
         if not isinstance(self._cuotas, int) or isinstance(self._cuotas, bool):
-            return ["El número de cuotas debe ser un entero."]
+            return [_('El número de cuotas debe ser un entero.')]
         if especificacion.cuotas_validas(self._cuotas):
             return []
         if not especificacion.permite_cuotas:
-            return [f"{especificacion.etiqueta} no permite diferir el pago a cuotas."]
+            return [_('%(valor1)s no permite diferir el pago a cuotas.') % {'valor1': especificacion.etiqueta}]
         return [
-            f"{especificacion.etiqueta} admite entre 1 y "
-            f"{especificacion.cuotas_maximas} cuotas (recibido: {self._cuotas})."
+            _('%(valor1)s admite entre 1 y %(valor2)s cuotas (recibido: %(valor3)s).') % {'valor1': especificacion.etiqueta, 'valor2': especificacion.cuotas_maximas, 'valor3': self._cuotas}
         ]
 
     def _validar_datos_metodo(self, especificacion):
         faltantes = especificacion.campos_faltantes(self._datos_metodo)
         if faltantes:
             return [
-                f"{especificacion.etiqueta} exige estos datos: "
-                f"{', '.join(faltantes)}."
+                _('%(valor1)s exige estos datos: %(valor2)s.') % {'valor1': especificacion.etiqueta, 'valor2': ', '.join(faltantes)}
             ]
         return []

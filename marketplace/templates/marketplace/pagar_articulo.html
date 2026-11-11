@@ -1,18 +1,18 @@
-{% extends "marketplace/base.html" %}
-{% block titulo %}Pagar {{ articulo }} | CarFit{% endblock %}
-{% block contenido %}<div class="page-heading"><div><span class="eyebrow">COMPRA DIRECTA</span><h1>Pagar {{ articulo }}</h1><p class="ayuda">Revisa el importe y elige cómo quieres pagar este artículo.</p></div><a class="boton secundario" href="{% url 'marketplace:carrito' %}">← Volver al carrito</a></div>
+{% extends "marketplace/base.html" %}{% load i18n %}
+{% block titulo %}{% translate "Pagar" %} {{ articulo }} | CarFit{% endblock %}
+{% block contenido %}<div class="page-heading"><div><span class="eyebrow">{% translate "COMPRA DIRECTA" %}</span><h1>{% translate "Pagar" %} {{ articulo }}</h1><p class="ayuda">{% translate "Revisa el importe y elige cómo quieres pagar este artículo." %}</p></div><a class="boton secundario" href="{% url 'marketplace:carrito' %}">{% translate "← Volver al carrito" %}</a></div>
 {% if form.metodos %}
 <form id="formulario-pago" method="post" data-checkout data-price="{{ articulo.precio|stringformat:"d" }}" class="checkout-layout" novalidate>
 {% csrf_token %}
 <div class="checkout-fields">
   {% if form.non_field_errors %}<div class="errores" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-  <fieldset class="payment-fieldset"><legend>Elige cómo pagar</legend><p class="ayuda">Selecciona un método para ver los datos que necesitas y su comisión.</p>{{ form.metodo_pago.errors }}
+  <fieldset class="payment-fieldset"><legend>{% translate "Elige cómo pagar" %}</legend><p class="ayuda">{% translate "Selecciona un método para ver los datos que necesitas y su comisión." %}</p>{{ form.metodo_pago.errors }}
   <div class="metodos">{% for metodo in form.metodos %}
     <div class="metodo"><input type="radio" name="metodo_pago" id="metodo_{{ metodo.codigo }}" value="{{ metodo.codigo }}" required
       data-comision-pct="{{ metodo.comision_porcentual|stringformat:"s" }}" data-comision-fija="{{ metodo.comision_fija|stringformat:"d" }}"
       data-campos="{{ metodo.campos_requeridos|join:"," }}" data-permite-cuotas="{% if metodo.permite_cuotas %}1{% else %}0{% endif %}" data-cuotas-max="{{ metodo.cuotas_maximas|stringformat:"d" }}"
       {% if form.metodo_pago.value == metodo.codigo or not form.metodo_pago.value and metodo_inicial == metodo.codigo %}checked{% endif %}>
-      <label class="tarjeta-metodo" for="metodo_{{ metodo.codigo }}">{{ metodo.etiqueta }}<span class="comision">{% if metodo.comision_porcentual %}{{ metodo.comision_porcentaje_legible|floatformat:2 }}%{% if metodo.comision_fija %} + {% endif %}{% endif %}{% if metodo.comision_fija %}${{ metodo.comision_fija|floatformat:0 }}{% endif %}{% if not metodo.comision_fija and not metodo.comision_porcentual %}Sin comisión{% endif %}{% if not metodo.confirmacion_inmediata %} · Confirmación posterior{% endif %}</span></label>
+      <label class="tarjeta-metodo" for="metodo_{{ metodo.codigo }}">{{ metodo.etiqueta }}<span class="comision">{% if metodo.comision_porcentual %}{{ metodo.comision_porcentaje_legible|floatformat:2 }}%{% if metodo.comision_fija %} + {% endif %}{% endif %}{% if metodo.comision_fija %}${{ metodo.comision_fija|floatformat:0 }}{% endif %}{% if not metodo.comision_fija and not metodo.comision_porcentual %}{% translate "Sin comisión" %}{% endif %}{% if not metodo.confirmacion_inmediata %} {% translate "· Confirmación posterior" %}{% endif %}</span></label>
     </div>{% endfor %}
   </div></fieldset>
   <div class="form-grid payment-data"><div data-campo="token_tarjeta"><label for="{{ form.token_tarjeta.id_for_label }}">{{ form.token_tarjeta.label }}</label>{{ form.token_tarjeta }}{{ form.token_tarjeta.errors }}</div>
@@ -22,8 +22,8 @@
 <div data-campo="telefono"><label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>{{ form.telefono }}{{ form.telefono.errors }}</div>
 <div data-campo="cuotas"><label for="{{ form.cuotas.id_for_label }}">{{ form.cuotas.label }}</label>{{ form.cuotas }}{{ form.cuotas.errors }}</div>
 </div>
-  <details class="payment-extra" {% if form.referencia.errors %}open{% endif %}><summary>Agregar referencia (opcional)</summary><div data-campo="referencia"><label for="id_referencia">Referencia</label>{{ form.referencia }}{{ form.referencia.errors }}</div><p class="ayuda">Si la dejas vacía, CarFit genera una referencia automáticamente.</p></details>
+  <details class="payment-extra" {% if form.referencia.errors %}open{% endif %}><summary>{% translate "Agregar referencia (opcional)" %}</summary><div data-campo="referencia"><label for="id_referencia">{% translate "Referencia" %}</label>{{ form.referencia }}{{ form.referencia.errors }}</div><p class="ayuda">{% translate "Si la dejas vacía, CarFit genera una referencia automáticamente." %}</p></details>
 </div>
-<aside class="checkout-summary"><span class="eyebrow">RESUMEN DE PAGO</span><div class="fila"><span>Subtotal</span><strong>${{ articulo.precio|floatformat:0 }}</strong></div><div class="fila"><span>Comisión estimada</span><strong data-resumen-comision>—</strong></div><div class="fila total"><span>Total estimado</span><span data-resumen-total>—</span></div><p class="ayuda">Precios en pesos colombianos (COP).</p><button type="submit" class="full-width">Confirmar pago <span aria-hidden="true">→</span></button><noscript><p class="ayuda">Activa JavaScript para ver el total estimado antes de confirmar.</p></noscript></aside>
+<aside class="checkout-summary"><span class="eyebrow">{% translate "RESUMEN DE PAGO" %}</span><div class="fila"><span>{% translate "Subtotal" %}</span><strong>${{ articulo.precio|floatformat:0 }}</strong></div><div class="fila"><span>{% translate "Comisión estimada" %}</span><strong data-resumen-comision>—</strong></div><div class="fila total"><span>{% translate "Total estimado" %}</span><span data-resumen-total>—</span></div><p class="ayuda">{% translate "Precios en pesos colombianos (COP)." %}</p><button type="submit" class="full-width">{% translate "Confirmar pago" %} <span aria-hidden="true">→</span></button><noscript><p class="ayuda">{% translate "Activa JavaScript para ver el total estimado antes de confirmar." %}</p></noscript></aside>
 </form>
-{% else %}<div class="empty-state"><h2>No hay métodos para este monto</h2><p>Revisa tu selección o vuelve al catálogo para elegir otro artículo.</p><a class="boton secundario" href="/comprar/">Volver al catálogo</a></div>{% endif %}{% endblock %}
+{% else %}<div class="empty-state"><h2>{% translate "No hay métodos para este monto" %}</h2><p>{% translate "Revisa tu selección o vuelve al catálogo para elegir otro artículo." %}</p><a class="boton secundario" href="/comprar/">{% translate "Volver al catálogo" %}</a></div>{% endif %}{% endblock %}

@@ -10,6 +10,8 @@ ORM, forms and service layer, so business rules live in one place
 same session-bound token helpers as ``accounts_microservice``.
 """
 
+from django.utils.translation import gettext as _
+
 import os
 from functools import wraps
 from pathlib import Path
@@ -41,10 +43,14 @@ from marketplace.services import PublicacionArticuloService
 PREFIX = "/publicaciones/v2"
 LOGIN_URL = "/cuentas/login/"
 
+from marketplace.flask_i18n import instalar_i18n
+
 app = Flask(
     __name__,
     template_folder=str(Path(__file__).parent / "marketplace/templates/flask_publicaciones"),
 )
+
+instalar_i18n(app)
 
 TIPOS = {"carro": Carro, "repuesto": Repuesto}
 
@@ -227,4 +233,4 @@ def eliminar_articulo(dj_request, tipo, pk):
 
 @app.errorhandler(404)
 def not_found(_error):
-    return jsonify({"detail": "No encontrado."}), 404
+    return jsonify({"detail": _('No encontrado.')}), 404

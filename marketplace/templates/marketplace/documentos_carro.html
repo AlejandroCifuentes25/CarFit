@@ -103,14 +103,14 @@
             <td data-label="{% trans 'Documento' %}"><strong>{{ doc.tipo_etiqueta }}</strong></td>
             <td data-label="{% trans 'Expedición' %}">
               {% if doc.fecha_expedicion %}
-                {{ doc.fecha_expedicion|date:"d/m/Y" }}
+                {{ doc.fecha_expedicion|date:"SHORT_DATE_FORMAT" }}
               {% else %}
                 <span class="ayuda">—</span>
               {% endif %}
             </td>
             <td data-label="{% trans 'Vencimiento' %}">
               {% if doc.fecha_vencimiento %}
-                {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+                {{ doc.fecha_vencimiento|date:"SHORT_DATE_FORMAT" }}
               {% else %}
                 <span class="ayuda">—</span>
               {% endif %}

@@ -4,6 +4,8 @@ The service shares Django's database-backed sessions and ORM so that
 authentication established here is also valid in the remaining Django pages.
 """
 
+from django.utils.translation import gettext as _, gettext_lazy
+
 import hmac
 import os
 from importlib import import_module
@@ -52,10 +54,14 @@ from marketplace.models import (
 from marketplace.services import CatalogoComprasService, RegistroUsuarioService
 
 
+from marketplace.flask_i18n import instalar_i18n
+
 app = Flask(
     __name__,
     template_folder=str(Path(__file__).parent / "marketplace/templates/flask_admin"),
 )
+
+instalar_i18n(app)
 
 SESSION_STORE = import_module(settings.SESSION_ENGINE).SessionStore
 CSRF_SESSION_KEY = "_flask_csrf_token"
@@ -81,7 +87,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if self.instance is None and not attrs.get("password"):
-            raise serializers.ValidationError({"password": "Este campo es obligatorio al crear un usuario."})
+            raise serializers.ValidationError({"password": _("Este campo es obligatorio al crear un usuario.")})
         return attrs
 
     def validate_password(self, value):
@@ -147,19 +153,19 @@ API_RESOURCES = {
 
 ADMIN_RESOURCES = {
     "vendedores": {
-        "title": "Vendedores",
+        "title": gettext_lazy('Vendedores'),
         "model": Vendedor,
         "columns": ("nombre", "correo", "numero_tel", "resena"),
         "form_fields": ("usuario", "nombre", "correo", "direccion", "numero_tel", "resena"),
     },
     "clientes": {
-        "title": "Clientes",
+        "title": gettext_lazy('Clientes'),
         "model": Cliente,
         "columns": ("nombre", "correo", "numero_tel"),
         "form_fields": ("usuario", "nombre", "correo", "direccion", "numero_tel"),
     },
     "carros": {
-        "title": "Carros",
+        "title": gettext_lazy('Carros'),
         "model": Carro,
         "columns": ("placa", "marca", "modelo", "estado", "precio", "vendedor"),
         "form_fields": (
@@ -168,7 +174,7 @@ ADMIN_RESOURCES = {
         ),
     },
     "repuestos": {
-        "title": "Repuestos",
+        "title": gettext_lazy('Repuestos'),
         "model": Repuesto,
         "columns": ("tipo", "modelo_carro", "numero_serie", "estado", "precio"),
         "form_fields": (
@@ -176,7 +182,7 @@ ADMIN_RESOURCES = {
         ),
     },
     "documentos": {
-        "title": "Documentos de carros",
+        "title": gettext_lazy('Documentos de carros'),
         "model": DocumentoCarro,
         "columns": ("carro", "tipo_documento", "fecha_expedicion", "fecha_vencimiento"),
         "form_fields": (
@@ -184,19 +190,19 @@ ADMIN_RESOURCES = {
         ),
     },
     "inventarios": {
-        "title": "Inventarios",
+        "title": gettext_lazy('Inventarios'),
         "model": Inventario,
         "columns": ("vendedor", "cantidad_repuesto", "cantidad_carro"),
         "form_fields": ("vendedor", "cantidad_repuesto", "cantidad_carro"),
     },
     "resenas": {
-        "title": "Reseñas",
+        "title": gettext_lazy('Reseñas'),
         "model": Resena,
         "columns": ("autor", "tipo", "carro"),
         "form_fields": ("contenido", "autor", "tipo", "carro"),
     },
     "pagos": {
-        "title": "Pagos",
+        "title": gettext_lazy('Pagos'),
         "model": Pago,
         "columns": ("referencia", "cliente", "metodo_pago", "estado", "total", "fecha"),
         "form_fields": (
@@ -205,13 +211,13 @@ ADMIN_RESOURCES = {
         "allow_create": False,
     },
     "transacciones": {
-        "title": "Transacciones de pago (solo lectura)",
+        "title": gettext_lazy('Transacciones de pago (solo lectura)'),
         "model": TransaccionPago,
         "columns": ("pago", "operacion", "pasarela", "estado_resultante", "creado_en"),
         "form_fields": None,
     },
     "usuarios": {
-        "title": "Usuarios",
+        "title": gettext_lazy('Usuarios'),
         "model": User,
         "columns": ("username", "email", "is_staff", "is_active"),
         "form_fields": (
@@ -220,7 +226,7 @@ ADMIN_RESOURCES = {
         ),
     },
     "grupos": {
-        "title": "Grupos",
+        "title": gettext_lazy('Grupos'),
         "model": Group,
         "columns": ("name",),
         "form_fields": ("name", "permissions"),
@@ -311,16 +317,16 @@ def _json_response(data, status=200):
 
 
 def _csrf_failure():
-    return jsonify({"error": "Token CSRF ausente o inválido."}), 403
+    return jsonify({"error": _('Token CSRF ausente o inválido.')}), 403
 
 
 def _require_staff(resource=None):
     django_request = _session_request()
     user = django_request.user
     if not user.is_authenticated or not user.is_staff:
-        return None, (jsonify({"detail": "Se requieren credenciales de administrador."}), 403)
+        return None, (jsonify({"detail": _('Se requieren credenciales de administrador.')}), 403)
     if resource in {"usuarios", "grupos"} and not user.is_superuser:
-        return None, (jsonify({"detail": "Se requieren permisos de superusuario."}), 403)
+        return None, (jsonify({"detail": _('Se requieren permisos de superusuario.')}), 403)
     return django_request, None
 
 
@@ -363,7 +369,7 @@ def csrf_token():
 def login():
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
-        return jsonify({"error": "El cuerpo debe ser un objeto JSON."}), 400
+        return jsonify({"error": _('El cuerpo debe ser un objeto JSON.')}), 400
 
     serializer = LoginSerializer(data=payload)
     if not serializer.is_valid():
@@ -372,7 +378,7 @@ def login():
     django_request = _session_request()
     user = auth.authenticate(django_request, **serializer.validated_data)
     if user is None:
-        return jsonify({"error": "Usuario o contraseña incorrectos."}), 400
+        return jsonify({"error": _('Usuario o contraseña incorrectos.')}), 400
 
     auth.login(django_request, user)
     token = _rotate_csrf_token(django_request.session)
@@ -384,11 +390,11 @@ def login():
 def register():
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
-        return jsonify({"error": "El cuerpo debe ser un objeto JSON."}), 400
+        return jsonify({"error": _('El cuerpo debe ser un objeto JSON.')}), 400
 
     form = RegistroForm(data=payload)
     if not form.is_valid():
-        return jsonify({"error": "Datos inválidos.", "detalles": form.errors.get_json_data()}), 400
+        return jsonify({"error": _('Datos inválidos.'), "detalles": form.errors.get_json_data()}), 400
 
     django_request = _session_request()
     try:
@@ -398,11 +404,11 @@ def register():
             form.cleaned_data,
         )
     except ValidationError as error:
-        return jsonify({"error": "Datos inválidos.", "detalles": error.messages}), 400
+        return jsonify({"error": _('Datos inválidos.'), "detalles": error.messages}), 400
     except ErrorDeDominio as error:
         return jsonify({"error": str(error)}), 400
     except IntegrityError:
-        return jsonify({"error": "No se pudo crear la cuenta por una restricción de integridad."}), 400
+        return jsonify({"error": _('No se pudo crear la cuenta por una restricción de integridad.')}), 400
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
 
@@ -418,7 +424,7 @@ def logout():
     if not _csrf_is_valid(django_request.session):
         return _csrf_failure()
     auth.logout(django_request)
-    response = jsonify({"detail": "Sesión cerrada."})
+    response = jsonify({"detail": _('Sesión cerrada.')})
     response.delete_cookie(
         settings.SESSION_COOKIE_NAME,
         path=settings.SESSION_COOKIE_PATH,
@@ -435,7 +441,7 @@ def current_user():
     django_request = _session_request()
     user = django_request.user
     if not user.is_authenticated:
-        return jsonify({"detail": "Autenticación requerida."}), 401
+        return jsonify({"detail": _('Autenticación requerida.')}), 401
 
     result = _user_payload(user)
     cliente = getattr(user, "cliente", None)
@@ -460,27 +466,27 @@ def _admin_api_resource(resource, pk=None):
     if pk is None and request.method == "POST":
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
-            return jsonify({"error": "El cuerpo debe ser un objeto JSON."}), 400
+            return jsonify({"error": _('El cuerpo debe ser un objeto JSON.')}), 400
         serializer = serializer_class(data=payload)
         if not serializer.is_valid():
             return _json_response(serializer.errors, 400)
         try:
             serializer.save()
         except IntegrityError:
-            return jsonify({"error": "El registro viola una restricción de integridad."}), 400
+            return jsonify({"error": _('El registro viola una restricción de integridad.')}), 400
         return _json_response(serializer.data, 201)
 
     try:
         instance = model.objects.get(pk=pk)
     except model.DoesNotExist:
-        return jsonify({"detail": "No encontrado."}), 404
+        return jsonify({"detail": _('No encontrado.')}), 404
 
     if request.method == "GET":
         return _json_response(serializer_class(instance).data)
     if request.method in {"PUT", "PATCH"}:
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
-            return jsonify({"error": "El cuerpo debe ser un objeto JSON."}), 400
+            return jsonify({"error": _('El cuerpo debe ser un objeto JSON.')}), 400
         serializer = serializer_class(
             instance,
             data=payload,
@@ -491,15 +497,15 @@ def _admin_api_resource(resource, pk=None):
         try:
             serializer.save()
         except IntegrityError:
-            return jsonify({"error": "El registro viola una restricción de integridad."}), 400
+            return jsonify({"error": _('El registro viola una restricción de integridad.')}), 400
         return _json_response(serializer.data)
     if request.method == "DELETE":
         try:
             instance.delete()
         except ProtectedError:
-            return jsonify({"error": "El registro tiene dependencias que impiden eliminarlo."}), 409
+            return jsonify({"error": _('El registro tiene dependencias que impiden eliminarlo.')}), 409
         return "", 204
-    return jsonify({"detail": "Método no permitido."}), 405
+    return jsonify({"detail": _('Método no permitido.')}), 405
 
 
 def _register_api_resource(resource):
@@ -575,6 +581,7 @@ def admin_resource_list(resource):
             resource=resource,
             config=config,
             rows=rows,
+            columnas={nombre: config["model"]._meta.get_field(nombre).verbose_name for nombre in config["columns"]},
             csrf_token=token,
         )
     )
@@ -619,7 +626,7 @@ def admin_resource_form(resource, pk):
             try:
                 form.save()
             except IntegrityError:
-                form.add_error(None, "El registro viola una restricción de integridad.")
+                form.add_error(None, _('El registro viola una restricción de integridad.'))
             except ValidationError as error:
                 form.add_error(None, error)
             else:

@@ -1,10 +1,31 @@
 /* Progressive enhancement: forms remain usable without JavaScript. */
 (() => {
   'use strict';
+  const gettext = window.gettext || (message => message);
+  const ngettext = window.ngettext || ((one, many, count) => count === 1 ? one : many);
+  const interpolate = window.interpolate || ((message, values) => message.replace('%s', values[0]));
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-  const money = value => '$' + Math.round(Number(value || 0)).toLocaleString('es-CO');
+  const money = value => '$' + Math.round(Number(value || 0)).toLocaleString(document.documentElement.lang);
   document.documentElement.classList.add('js-enabled');
+
+  // Native validation bubbles otherwise use the browser language, not the site's.
+  document.addEventListener('invalid', event => {
+    const field = event.target;
+    const validity = field.validity;
+    if (!validity || validity.customError) return;
+    let message = gettext('Revisa el valor de este campo.');
+    if (validity.valueMissing) message = gettext('Completa este campo.');
+    else if (validity.typeMismatch && field.type === 'email') message = gettext('Ingresa un correo válido.');
+    else if (validity.rangeUnderflow) message = interpolate(gettext('Ingresa un valor mayor o igual a %s.'), [field.min]);
+    else if (validity.rangeOverflow) message = interpolate(gettext('Ingresa un valor menor o igual a %s.'), [field.max]);
+    field.setCustomValidity(message);
+  }, true);
+  ['input', 'change'].forEach(eventName => {
+    document.addEventListener(eventName, event => {
+      event.target.setCustomValidity?.('');
+    });
+  });
   const header = $('.site-header');
   $('.nav-toggle')?.addEventListener('click', event => {
     const expanded = header.classList.toggle('menu-open');
@@ -36,11 +57,11 @@
     if (cartLink) {
       const link = document.createElement('a');
       link.href = document.body.dataset.cartPage || '/carrito/';
-      link.textContent = 'Ver carrito →';
+      link.textContent = gettext('Ver carrito →');
       box.append(link);
     }
     const close = document.createElement('button');
-    close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', 'Cerrar mensaje');
+    close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', gettext('Cerrar mensaje'));
     close.addEventListener('click', () => region.replaceChildren());
     box.append(close); region.append(box);
     toastTimer = setTimeout(() => region.replaceChildren(), error ? 10000 : 6000);
@@ -53,17 +74,20 @@
     const wrap = document.createElement('div'); wrap.className = 'password-wrap';
     input.before(wrap); wrap.append(input);
     const toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'password-toggle';
-    toggle.textContent = 'Mostrar'; toggle.setAttribute('aria-label', 'Mostrar ' + ($(`label[for="${input.id}"]`)?.textContent || 'contraseña'));
+    toggle.textContent = gettext('Mostrar');
+    toggle.setAttribute('aria-label', gettext('Mostrar contraseña'));
     toggle.setAttribute('aria-pressed', 'false');
     toggle.addEventListener('click', () => {
       const show = input.type === 'password'; input.type = show ? 'text' : 'password';
-      toggle.textContent = show ? 'Ocultar' : 'Mostrar'; toggle.setAttribute('aria-pressed', String(show));
+      toggle.textContent = show ? gettext('Ocultar') : gettext('Mostrar');
+      toggle.setAttribute('aria-label', show ? gettext('Ocultar contraseña') : gettext('Mostrar contraseña'));
+      toggle.setAttribute('aria-pressed', String(show));
     });
     wrap.append(toggle);
   });
   $$('table.tabla').forEach(table => {
     const scroll = document.createElement('div'); scroll.className = 'table-scroll';
-    scroll.tabIndex = 0; scroll.setAttribute('role', 'region'); scroll.setAttribute('aria-label', 'Tabla desplazable');
+    scroll.tabIndex = 0; scroll.setAttribute('role', 'region'); scroll.setAttribute('aria-label', gettext('Tabla desplazable'));
     table.before(scroll); scroll.append(table);
   });
 
@@ -121,12 +145,15 @@
         items.forEach(card => grid.append(card));
         grid.closest('[data-catalog-section]').hidden = !items.some(card => !card.hidden);
       });
-      $('[data-result-count]').textContent = count + (count === 1 ? ' artículo disponible' : ' artículos disponibles');
+      $('[data-result-count]').textContent = interpolate(ngettext('%s artículo disponible', '%s artículos disponibles', count), [count]);
       $('[data-no-results]').hidden = count !== 0;
     }
     $$('#catalog-search,#catalog-type,#catalog-state,#catalog-sort').forEach(input => input.addEventListener('input', filter));
     $$('[data-filter-reset]').forEach(button => button.addEventListener('click', () => {
-      $('#catalog-search').value = ''; $('#catalog-type').value = ''; $('#catalog-state').value = ''; filter();
+      $('#catalog-search').value = ''; $('#catalog-type').value = ''; $('#catalog-state').value = '';
+      $('#catalog-sort').value = 'recent';
+      filter();
+      $('#catalog-search').focus();
     }));
     const category = new URLSearchParams(location.search).get('tipo');
     if (['carro','repuesto'].includes(category)) $('#catalog-type').value = category;
@@ -145,14 +172,14 @@
     if (cartBusy) return;
     cartBusy = true;
     const original = button?.textContent;
-    if (button) { button.disabled = true; button.textContent = 'Actualizando…'; button.setAttribute('aria-busy','true'); }
+    if (button) { button.disabled = true; button.textContent = gettext('Actualizando…'); button.setAttribute('aria-busy','true'); }
     try {
       const response = await fetch(url, {method:'POST', headers:{Accept:'application/json', 'X-CSRFToken':csrf()}});
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || response.redirected) throw new Error(data.detail || data.error || 'No se pudo actualizar. Revisa tu sesión e inténtalo de nuevo.');
+      if (!response.ok || response.redirected) throw new Error(data.detail || data.error || gettext('No se pudo actualizar. Revisa tu sesión e inténtalo de nuevo.'));
       const action = (data.articulo || data).accion;
       const added = action === 'agregado';
-      const message = added ? 'Artículo agregado al carrito.' : 'Carrito actualizado.';
+      const message = added ? gettext('Artículo agregado al carrito.') : gettext('Carrito actualizado.');
       if ($('[data-checkout-page]')) {
         sessionStorage.setItem('carfit-message', message); location.reload(); return;
       }
@@ -165,13 +192,13 @@
         }
         button.dataset.estado = added ? 'dentro' : 'fuera';
         button.dataset.url = added ? button.dataset.quitarUrl : button.dataset.agregarUrl;
-        button.textContent = added ? '✓ En tu carrito · Quitar' : 'Agregar al carrito +';
+        button.textContent = added ? gettext('✓ En tu carrito · Quitar') : gettext('Agregar al carrito +');
         button.setAttribute('aria-pressed', String(added));
       } else if (button) button.textContent = original;
       toast(message, false, added);
     } catch (error) {
       if (button) button.textContent = original;
-      toast(error.message || 'No hay conexión. Inténtalo de nuevo.', true);
+      toast(error.message || gettext('No hay conexión. Inténtalo de nuevo.'), true);
     } finally {
       cartBusy = false;
       if (button) { button.disabled = false; button.removeAttribute('aria-busy'); }
@@ -191,7 +218,7 @@
       const response = await fetch('/api/v2/logout/', {
         method:'POST', headers:{Accept:'application/json', 'X-CSRFToken':csrf()},
       });
-      if (!response.ok) throw new Error('No se pudo cerrar la sesión. Inténtalo de nuevo.');
+      if (!response.ok) throw new Error(gettext('No se pudo cerrar la sesión. Inténtalo de nuevo.'));
       location.assign('/');
     } catch (error) {
       toast(error.message, true); button.disabled = false;
@@ -214,7 +241,11 @@
         $$('input,select',wrap).forEach(input => {
           input.required = required.includes(name);
           input.disabled = !visible;
-          if (name === 'cuotas') { input.max = method.dataset.cuotasMax || '1'; if (!visible) input.value = '1'; }
+          if (name === 'cuotas') {
+            input.max = method.dataset.cuotasMax || '1';
+            input.setCustomValidity('');
+            if (!visible) input.value = '1';
+          }
         });
       });
       const quotaWrap = $('[data-cuotas-wrap]',checkout);
@@ -235,16 +266,23 @@
     updatePayment();
   }
   $$('form').forEach(form => form.addEventListener('submit', event => {
-    if (event.defaultPrevented) return;
+    if (event.defaultPrevented || form.classList.contains('language-switch')) return;
     // Keep server-side errors; add native feedback before sending incomplete fields.
     if (!form.checkValidity()) { event.preventDefault(); form.reportValidity(); return; }
-    const submit = $('button[type=submit]', form);
+    const submit = event.submitter || $('button[type=submit]', form);
     if (submit) {
       submit.dataset.originalLabel = submit.textContent;
-      submit.disabled = true; submit.textContent = 'Procesando…'; submit.setAttribute('aria-busy','true');
+      if (submit.name) {
+        const value = document.createElement('input');
+        value.type = 'hidden'; value.name = submit.name; value.value = submit.value;
+        value.dataset.submitValue = '';
+        form.append(value);
+      }
+      submit.disabled = true; submit.textContent = gettext('Procesando…'); submit.setAttribute('aria-busy','true');
     }
   }));
   window.addEventListener('pageshow', () => $$('button[type=submit][aria-busy]').forEach(button => {
+    button.form?.querySelector('[data-submit-value]')?.remove();
     button.disabled = false; button.removeAttribute('aria-busy'); button.textContent = button.dataset.originalLabel;
   }));
 })();

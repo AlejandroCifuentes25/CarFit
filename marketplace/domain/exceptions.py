@@ -4,6 +4,8 @@ Son independientes de Django y de HTTP: el dominio no sabe que existe una
 petición web. La vista las traduce a errores de formulario.
 """
 
+from django.utils.translation import gettext as _
+
 
 class ErrorDeDominio(Exception):
     """Raíz de todos los errores de negocio de CarFit."""
@@ -36,7 +38,7 @@ class RecursoNoEncontradoError(ErrorDeDominio):
         self.recurso = recurso
         self.identificador = identificador
         detalle = f" '{identificador}'" if identificador is not None else ""
-        super().__init__(f"No existe {recurso}{detalle}.")
+        super().__init__(_('No existe %(recurso)s%(detalle)s.') % {'recurso': recurso, 'detalle': detalle})
 
 
 # ----------------------------------------------------------------------
@@ -64,8 +66,8 @@ class MetodoPagoNoSoportadoError(PagoInvalidoError):
         self.soportados = list(soportados)
         super().__init__(
             [
-                f"El método de pago '{codigo}' no está soportado. "
-                f"Opciones: {', '.join(self.soportados)}."
+                _("El método de pago '%(codigo)s' no está soportado. Opciones: %(opciones)s.")
+                % {"codigo": codigo, "opciones": ", ".join(self.soportados)}
             ]
         )
 
@@ -79,7 +81,7 @@ class PagoDuplicadoError(ErrorDeDominio):
 
     def __init__(self, referencia):
         self.referencia = referencia
-        super().__init__(f"Ya se registró un pago con la referencia '{referencia}'.")
+        super().__init__(_("Ya se registró un pago con la referencia '%(referencia)s'.") % {'referencia': referencia})
 
 
 class ArticuloNoDisponibleError(ErrorDeDominio):
@@ -103,8 +105,7 @@ class TransicionPagoInvalidaError(ErrorDeDominio):
         self.estado_actual = estado_actual
         self.estado_pretendido = estado_pretendido
         super().__init__(
-            f"El pago '{referencia}' está en estado {estado_actual} y no puede "
-            f"pasar a {estado_pretendido}."
+            _("El pago '%(referencia)s' está en estado %(estado_actual)s y no puede pasar a %(estado_pretendido)s.") % {'referencia': referencia, 'estado_actual': estado_actual, 'estado_pretendido': estado_pretendido}
         )
 
 
@@ -119,8 +120,7 @@ class PagoNoFacturableError(ErrorDeDominio):
         self.referencia = referencia
         self.estado_actual = estado_actual
         super().__init__(
-            f"El pago '{referencia}' está en estado {estado_actual}: "
-            f"solo se factura un pago APROBADO."
+            _("El pago '%(referencia)s' está en estado %(estado_actual)s: solo se factura un pago APROBADO.") % {'referencia': referencia, 'estado_actual': estado_actual}
         )
 
 
@@ -134,15 +134,15 @@ class PasarelaNoDisponibleError(ErrorDeDominio):
     def __init__(self, pasarela, motivo):
         self.pasarela = pasarela
         self.motivo = motivo
-        super().__init__(f"La pasarela {pasarela} no está disponible: {motivo}")
+        super().__init__(_('La pasarela %(pasarela)s no está disponible: %(motivo)s') % {'pasarela': pasarela, 'motivo': motivo})
 
 
 class CredencialesInvalidasError(ErrorDeDominio):
     def __init__(self):
-        super().__init__("Usuario o contraseña incorrectos.")
+        super().__init__(_('Usuario o contraseña incorrectos.'))
 
 
 class NombreDeUsuarioEnUsoError(ErrorDeDominio):
     def __init__(self, username):
         self.username = username
-        super().__init__(f"El usuario '{username}' ya está en uso.")
+        super().__init__(_("El usuario '%(username)s' ya está en uso.") % {'username': username})
