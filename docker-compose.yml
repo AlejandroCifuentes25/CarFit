@@ -135,6 +135,7 @@ services:
       - "8000:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./marketplace/static/marketplace:/srv/carfit-assets:ro
 
 volumes:
   postgres_data:

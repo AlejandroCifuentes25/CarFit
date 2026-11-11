@@ -158,8 +158,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Autenticación
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'marketplace:crear_articulo'
+LOGIN_REDIRECT_URL = 'marketplace:index'
 LOGOUT_REDIRECT_URL = '/'
+CARFIT_FLASK_COMPRAS = os.getenv('CARFIT_FLASK_COMPRAS', 'True').lower() == 'true'
 
 
 # Django REST Framework: toda la API vive en marketplace/api/.

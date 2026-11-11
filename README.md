@@ -74,6 +74,11 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+Para usar el sitio solo con Django, sin Nginx ni Flask, configura
+`CARFIT_FLASK_COMPRAS=False` antes de iniciar `runserver`. En PowerShell:
+`$env:CARFIT_FLASK_COMPRAS = 'False'`. Así la navegación apunta a `/comprar/`
+y `/carrito/`.
+
 ### Stack integrado con Nginx y Flask
 
 Para construir y ejecutar toda la aplicación —PostgreSQL, Django, los servicios
@@ -240,3 +245,17 @@ o aprobados.
 ```bash
 python manage.py test marketplace
 ```
+
+## Interfaz web
+
+Django y los flujos Flask de compras y publicaciones comparten los estilos y las
+interacciones en `marketplace/static/marketplace/`. El catálogo permite buscar,
+filtrar y ordenar por precio dentro de cada categoría. El registro y la
+publicación de vehículos se dividen en pasos; en el carrito el resumen de pago
+se actualiza al cambiar el método seleccionado.
+
+La iluminación interactiva de la portada y los bordes de las tarjetas se
+inspiran en [Card Spotlight](https://21st.dev/aceternity/card-spotlight/default)
+y [Hover Border Gradient](https://ui.aceternity.com/components/hover-border-gradient)
+de Aceternity UI. Están implementados en CSS y JavaScript sin dependencias de React,
+y respetan la preferencia de movimiento reducido.
