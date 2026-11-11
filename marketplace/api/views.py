@@ -19,6 +19,8 @@ en vez de un archivo por familia: es la misma convención que ya usan
 proyecto.
 """
 
+from django.utils.translation import gettext as _
+
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -215,7 +217,7 @@ class VistaDePagos(APIView):
         cliente = getattr(self.request.user, "cliente", None)
         if cliente is None:
             raise RecursoNoEncontradoError(
-                "un perfil de cliente para el usuario autenticado"
+                _('un perfil de cliente para el usuario autenticado')
             )
         return cliente
 
@@ -235,7 +237,7 @@ class MetodosPagoAPIView(VistaDePagos):
         if monto is not None:
             if not monto.isdigit():
                 return Response(
-                    {"error": "El parámetro 'monto' debe ser un entero en pesos."},
+                    {"error": _("El parámetro 'monto' debe ser un entero en pesos.")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             monto = int(monto)
@@ -277,7 +279,7 @@ class PagosAPIView(VistaDePagos):
         entrada = CrearPagoSerializer(data=request.data)
         if not entrada.is_valid():
             return Response(
-                {"error": "Datos con formato inválido.", "detalles": entrada.errors},
+                {"error": _('Datos con formato inválido.'), "detalles": entrada.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -363,7 +365,7 @@ class PublicarRepuestoAPIView(APIView):
 
     def post(self, request):
         if not hasattr(request.user, "vendedor"):
-            return Response({"detail": "Se requiere perfil de Vendedor."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": _('Se requiere perfil de Vendedor.')}, status=status.HTTP_403_FORBIDDEN)
             
         serializer = RepuestoSerializer(data=request.data)
         if not serializer.is_valid():
@@ -390,7 +392,7 @@ class DocumentosCarroAPIView(APIView):
     def get(self, request, carro_id):
         carro = Carro.objects.filter(pk=carro_id).first()
         if carro is None:
-            return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
+            return respuesta_de_error(RecursoNoEncontradoError(_('el carro'), carro_id))
 
         servicio = self.service_factory()
         reporte = servicio.verificar_cumplimiento(carro)
@@ -429,12 +431,12 @@ class DocumentosCarroAPIView(APIView):
     def post(self, request, carro_id):
         if not hasattr(request.user, "vendedor"):
             return Response(
-                {"detail": "Se requiere perfil de Vendedor."},
+                {"detail": _('Se requiere perfil de Vendedor.')},
                 status=status.HTTP_403_FORBIDDEN,
             )
         carro = Carro.objects.filter(pk=carro_id).first()
         if carro is None:
-            return respuesta_de_error(RecursoNoEncontradoError("el carro", carro_id))
+            return respuesta_de_error(RecursoNoEncontradoError(_('el carro'), carro_id))
 
         serializer = DocumentoCarroSerializer(data=request.data)
         if not serializer.is_valid():

@@ -1,26 +1,32 @@
-{% extends "marketplace/base.html" %}
-
-{% block titulo %}CarFit — Compra y venta de vehículos{% endblock %}
-
+{% extends "marketplace/base.html" %}{% load i18n %}{% load static %}
+{% block titulo %}{% translate "CarFit · Tu próximo camino empieza aquí" %}{% endblock %}
+{% block main_class %}home-main{% endblock %}
 {% block contenido %}
-  <h1>CarFit</h1>
-  <p class="ayuda">Compra y venta de vehículos entre particulares.</p>
-
-  {% if user.is_authenticated %}
-    <p>Hola, <strong>{{ user.username }}</strong>.</p>
-    {% if user.vendedor %}
-    <p>
-      <a href="{% url 'marketplace:crear_articulo' %}"><button type="button">Publicar un vehículo</button></a>
-    </p>
-    {% endif %}
-    <form method="post" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit">Cerrar sesión</button>
-    </form>
-  {% else %}
-    <p>
-      <a href="{% url 'login' %}"><button type="button">Iniciar sesión</button></a>
-      <a href="{% url 'marketplace:registro' %}"><button type="button">Registrarse</button></a>
-    </p>
-  {% endif %}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">{% translate "ENCUENTRA. CONECTA. AVANZA." %}</span>
+    <h1>{% translate "Tu próximo" %}<br>{% translate "camino empieza" %} <em>{% translate "aquí." %}</em></h1>
+    <p>{% translate "El vehículo que buscas. El repuesto que necesitas. Conecta con vendedores y encuentra todo para seguir en movimiento." %}</p>
+    <div class="button-row"><a class="boton" href="{{ catalogo_web_url }}">{% translate "Explorar catálogo" %} <span class="arrow" aria-hidden="true">↗</span></a>
+    {% if user.vendedor %}<a class="boton secundario" href="{% url 'marketplace:crear_articulo' %}">{% translate "Publicar un vehículo" %}</a>{% elif not user.is_authenticated %}<a class="boton secundario" href="{% url 'marketplace:registro' %}?rol=VENDEDOR">{% translate "Quiero vender" %} <span aria-hidden="true">→</span></a>{% else %}<a class="boton secundario" href="{{ carrito_web_url }}">{% translate "Ver mi carrito" %} <span aria-hidden="true">→</span></a>{% endif %}
+    </div>
+    <div class="hero-note"><b aria-hidden="true">✓</b> {% translate "Consulta documentos, compara y elige a tu ritmo." %}</div>
+  </div>
+  <div class="hero-visual" role="img" aria-label="{% translate 'Imagen fotorrealista de un BMW M4 gris grafito en un estudio nocturno' %}">
+    <div class="visual-top"><span>{% translate "EL SIGUIENTE PASO ES TUYO" %}</span><span>BMW M4 / 01</span></div>
+    <img src="{% static 'marketplace/bmw-m4-studio.jpg' %}" alt="" width="1536" height="1024">
+    <div class="visual-bottom"><div><small>{% translate "MÁS QUE UN DESTINO" %}</small><strong>{% translate "Una nueva forma de avanzar." %}</strong></div><span class="visual-chip">{% translate "Imagen de referencia" %}</span></div>
+  </div>
+</section>
+<section aria-labelledby="explora-titulo">
+  <div class="section-top"><div><span class="eyebrow">{% translate "TODO EN UN MISMO LUGAR" %}</span><h2 id="explora-titulo">{% translate "¿Qué te mueve hoy?" %}</h2></div><p>{% translate "Explora las opciones y encuentra lo que encaja contigo." %}</p></div>
+  <div class="category-grid">
+    <a class="category-card reveal" href="{{ catalogo_web_url }}?tipo=carro"><span class="category-icon"><svg viewBox="0 0 64 48" aria-hidden="true"><path d="m7 30 4-10 9-3 6-10h20l8 12 5 4v13H7zM20 17h32M28 7l-3 10M9 27h8m29 0h10"/><circle cx="19" cy="36" r="6"/><circle cx="48" cy="36" r="6"/></svg></span><div><h3>{% translate "Vehículos" %}</h3><p>{% translate "Nuevos caminos, nuevas posibilidades." %}</p></div><span class="arrow" aria-hidden="true">↗</span></a>
+    <a class="category-card reveal" href="{{ catalogo_web_url }}?tipo=repuesto"><span class="category-icon"><svg viewBox="0 0 64 48" aria-hidden="true"><path d="M38 7a12 12 0 0 0-15 15L8 36a5 5 0 0 0 7 7l15-15A12 12 0 0 0 45 13l-8 8-7-7z"/><circle cx="12" cy="39" r="1"/></svg></span><div><h3>{% translate "Repuestos" %}</h3><p>{% translate "Lo que tu vehículo necesita para seguir." %}</p></div><span class="arrow" aria-hidden="true">↗</span></a>
+  </div>
+</section>
+<section class="how-section" id="como-funciona" aria-labelledby="como-titulo"><span class="eyebrow">{% translate "MENOS VUELTAS. MÁS CAMINO." %}</span><h2 id="como-titulo">{% translate "Así de fácil es empezar." %}</h2>
+  <div class="steps-grid"><article class="step-card"><span class="step-number">{% translate "01 / EXPLORA" %}</span><h3>{% translate "Encuentra tu próximo paso" %}</h3><p>{% translate "Filtra vehículos y repuestos. Revisa sus características, el precio y las reseñas del vendedor." %}</p></article><article class="step-card"><span class="step-number">{% translate "02 / ELIGE" %}</span><h3>{% translate "Todo bajo tu control" %}</h3><p>{% translate "Agrega tus favoritos al carrito y revisa tu selección antes de continuar." %}</p></article><article class="step-card"><span class="step-number">{% translate "03 / AVANZA" %}</span><h3>{% translate "Paga a tu manera" %}</h3><p>{% translate "Elige un método, consulta las comisiones y sigue el estado de tu compra desde Mis pagos." %}</p></article></div>
+</section>
+<section class="sell-banner"><div><span class="eyebrow">{% translate "DALE UN NUEVO DESTINO" %}</span><h2>{% translate "Lo que vendes, alguien lo está buscando." %}</h2><p>{% translate "Publica tu vehículo o repuesto y conecta con tu próximo comprador." %}</p></div><a class="boton dark" href="{% if user.vendedor %}{% url 'marketplace:crear_articulo' %}{% elif user.is_authenticated %}{{ catalogo_web_url }}{% else %}{% url 'marketplace:registro' %}?rol=VENDEDOR{% endif %}">{% if user.is_authenticated and not user.vendedor %}{% translate "Explorar catálogo" %}{% else %}{% translate "Empezar a vender" %}{% endif %} <span aria-hidden="true">↗</span></a></section>
 {% endblock %}

@@ -1,0 +1,2455 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CarFit\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: marketplace/domain/builders.py:182 marketplace/forms.py:187
+#, python-format
+msgid "%(etiqueta)s: La fecha de expedición no puede ser futura."
+msgstr "%(etiqueta)s: The issue date cannot be in the future."
+
+#: marketplace/domain/builders.py:185 marketplace/forms.py:192
+#, python-format
+msgid ""
+"%(etiqueta)s: La fecha de vencimiento debe ser posterior a la fecha de expedición."
+msgstr "%(etiqueta)s: The expiry date must be after the issue date."
+
+#: marketplace/models.py:295
+#, python-format
+msgid "%(operacion)s de %(referencia)s → %(estado)s"
+msgstr "%(operacion)s for %(referencia)s → %(estado)s"
+
+#: marketplace/models.py:146
+#, python-format
+msgid "%(tipo)s de %(placa)s"
+msgstr "%(tipo)s for %(placa)s"
+
+#: marketplace/infra/validadores.py:49
+#, python-format
+msgid "%(tipo)s tiene fecha de expedición futura."
+msgstr "%(tipo)s has a future issue date."
+
+#: marketplace/infra/validadores.py:44
+#, python-format
+msgid "%(tipo)s vencido el %(fecha)s."
+msgstr "%(tipo)s expired on %(fecha)s."
+
+#: marketplace/domain/builders.py:393
+#, python-format
+msgid "%(valor1)s admite entre 1 y %(valor2)s cuotas (recibido: %(valor3)s)."
+msgstr "%(valor1)s supports 1 to %(valor2)s installments (received: %(valor3)s)."
+
+#: marketplace/domain/builders.py:400
+#, python-format
+msgid "%(valor1)s exige estos datos: %(valor2)s."
+msgstr "%(valor1)s requires these details: %(valor2)s."
+
+#: marketplace/domain/builders.py:391
+#, python-format
+msgid "%(valor1)s no permite diferir el pago a cuotas."
+msgstr "%(valor1)s does not support installment payments."
+
+#: marketplace/domain/builders.py:381
+#, python-format
+msgid ""
+"%(valor1)s solo opera entre $%(valor2)s y $%(valor3)s COP (monto recibido: "
+"$%(monto)s)."
+msgstr ""
+"%(valor1)s only supports $%(valor2)s to $%(valor3)s COP (amount received: $%(monto)s)."
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "01 / EXPLORA"
+msgstr "01 / EXPLORE"
+
+#: marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "01 Tu carrito"
+msgstr "01 Your cart"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "02 / ELIGE"
+msgstr "02 / CHOOSE"
+
+#: marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "02 Forma de pago"
+msgstr "02 Payment method"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "03 / AVANZA"
+msgstr "03 / CHECKOUT"
+
+#: marketplace/forms.py:203
+msgid "1 estrella — Muy malo"
+msgstr "1 star — Very poor"
+
+#: marketplace/forms.py:202
+msgid "2 estrellas — Malo"
+msgstr "2 stars — Poor"
+
+#: marketplace/forms.py:201
+msgid "3 estrellas — Regular"
+msgstr "3 stars — Fair"
+
+#: marketplace/forms.py:200
+msgid "4 estrellas — Muy bueno"
+msgstr "4 stars — Very good"
+
+#: marketplace/forms.py:199
+msgid "5 estrellas — Excelente"
+msgstr "5 stars — Excellent"
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:5
+#: marketplace/templates/marketplace/confirmar_eliminar.html:10
+msgid "? Esta acción no se puede deshacer."
+msgstr "? This action cannot be undone."
+
+#: marketplace/infra/pasarelas.py:73
+msgid "A la espera de la confirmación del banco (simulación)."
+msgstr "Waiting for bank confirmation (simulation)."
+
+#: marketplace/templates/flask_admin/resource_list.html:17
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:11
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:29
+#: marketplace/templates/marketplace/mis_publicaciones.html:18
+#: marketplace/templates/marketplace/mis_publicaciones.html:50
+msgid "Acciones"
+msgstr "Actions"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "Activa JavaScript para ver el total estimado antes de confirmar."
+msgstr "Enable JavaScript to see your estimated total before confirming."
+
+#: marketplace/views.py:423
+msgid "Actualizamos el estado de tu pago."
+msgstr "Your payment status has been updated."
+
+#: marketplace/templates/marketplace/documentos_carro.html:136
+msgid "Actualizar fechas o archivo soporte"
+msgstr "Update dates or supporting file"
+
+#: marketplace/templates/flask_admin/base.html:19
+msgid "Administración"
+msgstr "Administration"
+
+#: marketplace/templates/flask_admin/base.html:6
+#: marketplace/templates/flask_admin/dashboard.html:6
+msgid "Administración CarFit"
+msgstr "CarFit Administration"
+
+#: marketplace/templates/flask_admin/base.html:20
+msgid "Administración Django"
+msgstr "Django Administration"
+
+#: marketplace/templates/flask_admin/dashboard.html:3
+msgid "Administración Flask | CarFit"
+msgstr "Flask Administration | CarFit"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "Agrega tus favoritos al carrito y revisa tu selección antes de continuar."
+msgstr "Add your favorites to your cart and review your selection before continuing."
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/marketplace/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:9
+msgid "Agregar al carrito +"
+msgstr "Add to cart +"
+
+#: marketplace/templates/flask_compras/carrito.html:34
+#: marketplace/templates/marketplace/carrito.html:34
+#: marketplace/templates/marketplace/pagar_articulo.html:25
+msgid "Agregar referencia (opcional)"
+msgstr "Add reference (optional)"
+
+#: marketplace/templates/marketplace/documentos_carro.html:137
+msgid ""
+"Al actualizar las fechas de expedición y vencimiento, el estado de vigencia se "
+"recalcula automáticamente."
+msgstr ""
+"Validity is recalculated automatically when you update the issue and expiry dates."
+
+#: marketplace/models.py:219
+msgid "Anulado"
+msgstr "Voided"
+
+#: marketplace/models.py:217
+msgid "Aprobado"
+msgstr "Approved"
+
+#: marketplace/templates/marketplace/mis_publicaciones.html:7
+msgid "Aquí puedes ver, editar y eliminar los vehículos que has publicado."
+msgstr "View, edit, or remove the vehicles you have listed."
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:5
+msgid "Aquí puedes ver, editar y eliminar los vehículos y repuestos que has publicado."
+msgstr "View, edit, or remove the vehicles and parts you have listed."
+
+#: marketplace/models.py:139
+msgid "Archivo"
+msgstr "File"
+
+#: marketplace/forms.py:170
+msgid "Archivo soporte (PDF o imagen)"
+msgstr "Supporting file (PDF or image)"
+
+#: marketplace/templates/marketplace/historial_pagos.html:15
+#: marketplace/templates/marketplace/pago_detalle.html:14
+#: marketplace/templates/marketplace/pago_factura.html:34
+msgid "Artículo"
+msgstr "Item"
+
+#: marketplace/templates/flask_publicaciones/articulo_publicado.html:2
+#: marketplace/templates/marketplace/articulo_publicado.html:3
+msgid "Artículo publicado | CarFit"
+msgstr "Item published | CarFit"
+
+#: marketplace/templates/flask_compras/catalogo.html:7
+#: marketplace/templates/marketplace/catalogo.html:7
+msgid "Artículos disponibles"
+msgstr "Available items"
+
+#: marketplace/templates/flask_compras/carrito.html:6
+#: marketplace/templates/marketplace/carrito.html:6
+msgid "Artículos en tu carrito"
+msgstr "Items in your cart"
+
+#: marketplace/templates/marketplace/index.html:28
+msgid "Así de fácil es empezar."
+msgstr "How to get started"
+
+#: marketplace/models.py:167
+msgid "Atención del vendedor"
+msgstr "Seller service"
+
+#: accounts_microservice.py:444
+msgid "Autenticación requerida."
+msgstr "Authentication required."
+
+#: marketplace/models.py:172
+msgid "Autor"
+msgstr "Author"
+
+#: marketplace/models.py:242 marketplace/models.py:285
+#: marketplace/templates/marketplace/pago_detalle.html:23
+#: marketplace/templates/marketplace/pago_factura.html:40
+msgid "Autorización"
+msgstr "Authorization"
+
+#: marketplace/templates/registration/login.html:3
+msgid "BIENVENIDO A CARFIT"
+msgstr "WELCOME TO CARFIT"
+
+#: marketplace/forms.py:118
+msgid "Banco"
+msgstr "Bank"
+
+#: marketplace/domain/metodos_pago.py:147 marketplace/models.py:212
+msgid "Billetera digital"
+msgstr "Digital wallet"
+
+#: marketplace/templates/marketplace/pagar_articulo.html:3
+msgid "COMPRA DIRECTA"
+msgstr "DIRECT PURCHASE"
+
+#: marketplace/forms.py:210 marketplace/models.py:174 marketplace/models.py:26
+msgid "Calificación"
+msgstr "Rating"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:14
+msgid "Calificación promedio"
+msgstr "Average rating"
+
+#: marketplace/templates/flask_admin/resource_form.html:11
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:9
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:10
+#: marketplace/templates/marketplace/confirmar_eliminar.html:16
+#: marketplace/templates/marketplace/editar_articulo.html:13
+msgid "Cancelar"
+msgstr "Cancel"
+
+#: marketplace/models.py:310
+msgid "Cantidad de artículos"
+msgstr "Item count"
+
+#: marketplace/models.py:153
+msgid "Cantidad de repuestos"
+msgstr "Part count"
+
+#: marketplace/models.py:154
+msgid "Cantidad de vehículos"
+msgstr "Vehicle count"
+
+#: marketplace/templates/flask_compras/base.html:5
+#: marketplace/templates/flask_publicaciones/base.html:5
+#: marketplace/templates/marketplace/base.html:5
+msgid "CarFit · Tu próximo camino"
+msgstr "CarFit · Your next journey"
+
+#: marketplace/templates/marketplace/index.html:2
+msgid "CarFit · Tu próximo camino empieza aquí"
+msgstr "CarFit · Your next journey starts here"
+
+#: marketplace/templates/flask_compras/base.html:19
+#: marketplace/templates/flask_publicaciones/base.html:19
+#: marketplace/templates/marketplace/base.html:18
+msgid "CarFit, inicio"
+msgstr "CarFit home"
+
+#: marketplace/infra/notificadores.py:82
+#, python-format
+msgid "CarFit: pago %(referencia)s %(estado)s"
+msgstr "CarFit: payment %(referencia)s — %(estado)s"
+
+#: marketplace/models.py:110 marketplace/models.py:79
+#: marketplace/templates/flask_compras/base.html:31
+#: marketplace/templates/flask_publicaciones/base.html:31
+#: marketplace/templates/marketplace/base.html:30
+msgid "Carrito"
+msgstr "Cart"
+
+#: marketplace/models.py:314 marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "Carrito de compras"
+msgstr "Shopping cart"
+
+#: marketplace/models.py:318
+#, python-format
+msgid "Carrito de compras #%(id)s"
+msgstr "Shopping cart #%(id)s"
+
+#: marketplace/models.py:315
+msgid "Carritos de compras"
+msgstr "Shopping carts"
+
+#: accounts_microservice.py:168
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:8
+#: marketplace/templates/marketplace/mis_publicaciones.html:10
+msgid "Carros"
+msgstr "Cars"
+
+#: marketplace/models.py:179 marketplace/models.py:222 marketplace/models.py:304
+#: marketplace/models.py:49 marketplace/templates/marketplace/pago_factura.html:31
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:8
+msgid "Cliente"
+msgstr "Customer"
+
+#: marketplace/forms.py:138
+msgid "Cliente — quiero comprar"
+msgstr "Customer — I want to buy"
+
+#: accounts_microservice.py:162 marketplace/models.py:50
+msgid "Clientes"
+msgstr "Customers"
+
+#: marketplace/forms.py:22 marketplace/models.py:86
+msgid "Color"
+msgstr "Color"
+
+#: marketplace/models.py:169
+msgid "Comentario general"
+msgstr "General comment"
+
+#: marketplace/models.py:231 marketplace/templates/marketplace/pago_detalle.html:17
+#: marketplace/templates/marketplace/pago_factura.html:47
+msgid "Comisión"
+msgstr "Fee"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "Comisión estimada"
+msgstr "Estimated fee"
+
+#: marketplace/templates/flask_publicaciones/crear_repuesto.html:5
+#: marketplace/templates/marketplace/crear_repuesto.html:8
+msgid "Completa los datos del repuesto que deseas vender."
+msgstr "Enter the details of the part you want to sell."
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+msgid "Completa sus características y documentos. Te acompañamos paso a paso."
+msgstr "Enter the vehicle details and documents. We'll guide you through each step."
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "Compra lo que necesitas o dale un nuevo destino a lo que vendes."
+msgstr "Buy what you need or find a new owner for what you sell."
+
+#: marketplace/infra/pasarelas.py:94
+msgid "Confirmada por el banco (simulación)."
+msgstr "Confirmed by the bank (simulation)."
+
+#: marketplace/models.py:277
+msgid "Confirmar"
+msgstr "Confirm"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+msgid "Confirmar compra del carrito"
+msgstr "Confirm cart purchase"
+
+#: marketplace/forms.py:142
+msgid "Confirmar contraseña"
+msgstr "Confirm password"
+
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "Confirmar pago"
+msgstr "Confirm payment"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Conozcamos tu vehículo"
+msgstr "Tell us about your vehicle"
+
+#: marketplace/templates/marketplace/index.html:13
+msgid "Consulta documentos, compara y elige a tu ritmo."
+msgstr "Check documents, compare, and decide at your own pace."
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Consulta las reseñas del vendedor y los documentos del vehículo."
+msgstr "Check seller reviews and vehicle documents."
+
+#: marketplace/models.py:276
+msgid "Consultar"
+msgstr "Check"
+
+#: marketplace/templates/marketplace/pago_detalle.html:31
+msgid "Consultar estado con la pasarela"
+msgstr "Check payment status"
+
+#: marketplace/models.py:171
+msgid "Contenido"
+msgstr "Content"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+#: marketplace/templates/marketplace/registro.html:8
+msgid "Continuar →"
+msgstr "Continue →"
+
+#: marketplace/forms.py:141
+msgid "Contraseña"
+msgstr "Password"
+
+#: marketplace/forms.py:144 marketplace/models.py:23 marketplace/models.py:44
+#: marketplace/templates/marketplace/pago_factura.html:32
+msgid "Correo"
+msgstr "Email"
+
+#: marketplace/templates/flask_admin/resource_list.html:10
+msgid "Crear"
+msgstr "Create"
+
+#: marketplace/templates/marketplace/registro.html:8
+msgid "Crear mi cuenta →"
+msgstr "Create my account →"
+
+#: marketplace/templates/marketplace/registro.html:3
+#: marketplace/templates/registration/login.html:3
+msgid "Crear una cuenta"
+msgstr "Create an account"
+
+#: marketplace/templates/marketplace/registro.html:2
+msgid "Crear una cuenta | CarFit"
+msgstr "Create an account | CarFit"
+
+#: marketplace/forms.py:107 marketplace/models.py:234
+#: marketplace/templates/marketplace/pago_detalle.html:20
+#: marketplace/templates/marketplace/pago_factura.html:37
+msgid "Cuotas"
+msgstr "Installments"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "Cuéntanos qué buscas y empecemos."
+msgstr "Choose the type of account you need to get started."
+
+#: marketplace/templates/flask_compras/base.html:23
+#: marketplace/templates/flask_compras/base.html:51
+#: marketplace/templates/flask_publicaciones/base.html:23
+#: marketplace/templates/flask_publicaciones/base.html:51
+#: marketplace/templates/marketplace/base.html:22
+#: marketplace/templates/marketplace/base.html:50
+msgid "Cómo funciona"
+msgstr "How it works"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+#: marketplace/templates/marketplace/index.html:31
+msgid "DALE UN NUEVO DESTINO"
+msgstr "FIND A NEW OWNER"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Dale los detalles que importan"
+msgstr "Add the details that matter"
+
+#: marketplace/api/views.py:282
+msgid "Datos con formato inválido."
+msgstr "Invalid data format."
+
+#: accounts_microservice.py:397 accounts_microservice.py:407
+msgid "Datos inválidos."
+msgstr "Invalid data."
+
+#: marketplace/forms.py:29 marketplace/models.py:88
+msgid "Descripción"
+msgstr "Description"
+
+#: marketplace/forms.py:145 marketplace/models.py:24 marketplace/models.py:45
+msgid "Dirección"
+msgstr "Address"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+#: marketplace/templates/marketplace/documentos_carro.html:4
+#: marketplace/templates/marketplace/documentos_carro.html:49
+msgid "Documentación del vehículo"
+msgstr "Vehicle documentation"
+
+#: marketplace/services.py:909
+msgid "Documentación pendiente"
+msgstr "Documents pending"
+
+#: marketplace/services.py:903
+msgid "Documentación vencida"
+msgstr "Expired documents"
+
+#: marketplace/services.py:915
+msgid "Documentación vigente"
+msgstr "Valid documents"
+
+#: marketplace/templates/marketplace/documentos_carro.html:103
+#: marketplace/templates/marketplace/documentos_carro.html:93
+msgid "Documento"
+msgstr "Document"
+
+#: marketplace/views.py:560
+msgid "Documento actualizado correctamente."
+msgstr "Document updated successfully."
+
+#: marketplace/forms.py:125
+msgid "Documento del pagador"
+msgstr "Payer ID"
+
+#: marketplace/models.py:142
+msgid "Documento del vehículo"
+msgstr "Vehicle document"
+
+#: marketplace/templates/marketplace/documentos_carro.html:125
+msgid "Documento privado"
+msgstr "Private document"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Documentos"
+msgstr "Documents"
+
+#: accounts_microservice.py:185 marketplace/models.py:143
+msgid "Documentos de carros"
+msgstr "Vehicle documents"
+
+#: marketplace/templates/marketplace/index.html:16
+msgid "EL SIGUIENTE PASO ES TUYO"
+msgstr "TAKE THE NEXT STEP"
+
+#: marketplace/templates/flask_compras/catalogo.html:4
+#: marketplace/templates/marketplace/catalogo.html:4
+msgid "ENCUENTRA LO QUE TE MUEVE"
+msgstr "FIND WHAT MOVES YOU"
+
+#: marketplace/templates/marketplace/index.html:7
+msgid "ENCUENTRA. CONECTA. AVANZA."
+msgstr "FIND. CONNECT. GO."
+
+#: marketplace/templates/flask_admin/resource_list.html:28
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:4
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:18
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:36
+#: marketplace/templates/marketplace/editar_articulo.html:7
+#: marketplace/templates/marketplace/mis_publicaciones.html:29
+#: marketplace/templates/marketplace/mis_publicaciones.html:60
+msgid "Editar"
+msgstr "Edit"
+
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:2
+#: marketplace/templates/marketplace/editar_articulo.html:3
+msgid "Editar Artículo | CarFit"
+msgstr "Edit item | CarFit"
+
+#: marketplace/domain/metodos_pago.py:157 marketplace/models.py:213
+msgid "Efectivo en corresponsal"
+msgstr "Cash at a payment agent"
+
+#: marketplace/services.py:917
+msgid ""
+"El SOAT y la revisión técnico-mecánica tienen fechas válidas y se encuentran vigentes."
+msgstr "The SOAT insurance and vehicle inspection dates are valid and current."
+
+#: marketplace/services.py:426
+#, python-format
+msgid "El artículo '%(articulo)s' ya tiene un pago aprobado o en curso."
+msgstr "Item '%(articulo)s' already has an approved or pending payment."
+
+#: marketplace/domain/builders.py:129
+msgid "El artículo debe pertenecer a un vendedor."
+msgstr "The item must belong to a seller."
+
+#: marketplace/services.py:669
+msgid "El artículo no está en el carrito."
+msgstr "The item is not in the cart."
+
+#: marketplace/domain/builders.py:378
+msgid "El artículo no tiene un precio válido en pesos colombianos."
+msgstr "The item has no valid price in Colombian pesos."
+
+#: marketplace/services.py:659
+msgid "El artículo ya está en otro carrito."
+msgstr "This item is already in another cart."
+
+#: marketplace/services.py:692 marketplace/services.py:769
+msgid "El carrito está vacío."
+msgstr "Your cart is empty."
+
+#: marketplace/domain/builders.py:141
+msgid "El color es obligatorio."
+msgstr "Color is required."
+
+#: marketplace/services.py:1017
+msgid "El contenido de la reseña no puede estar vacío."
+msgstr "The review cannot be empty."
+
+#: marketplace/infra/pasarelas.py:270
+msgid "El corresponsal aún no reporta el recaudo."
+msgstr "The payment agent has not reported the payment yet."
+
+#: accounts_microservice.py:372 accounts_microservice.py:393
+#: accounts_microservice.py:469 accounts_microservice.py:489
+#: payments_microservice.py:164
+msgid "El cuerpo debe ser un objeto JSON."
+msgstr "The request body must be a JSON object."
+
+#: marketplace/views.py:579
+msgid "El documento no tiene archivo adjunto."
+msgstr "The document has no attachment."
+
+#: marketplace/services.py:834
+#, python-format
+msgid "El documento venció el %(fecha)s."
+msgstr "The document expired on %(fecha)s."
+
+#: marketplace/domain/builders.py:144
+#, python-format
+msgid "El estado '%(valor1)s' no es válido (NUEVO o USADO)."
+msgstr "Condition '%(valor1)s' is invalid (NUEVO or USADO)."
+
+#: marketplace/domain/builders.py:154
+msgid "El kilometraje debe ser un entero mayor o igual a cero."
+msgstr "Mileage must be a nonnegative integer."
+
+#: marketplace/domain/builders.py:139
+msgid "El modelo es obligatorio."
+msgstr "Model is required."
+
+#: marketplace/domain/exceptions.py:69
+#, python-format
+msgid "El método de pago '%(codigo)s' no está soportado. Opciones: %(opciones)s."
+msgstr "Payment method '%(codigo)s' is unsupported. Options: %(opciones)s."
+
+#: marketplace/domain/builders.py:344
+#, python-format
+msgid "El método de pago '%(valor1)s' no está soportado."
+msgstr "Payment method '%(valor1)s' is unsupported."
+
+#: marketplace/domain/builders.py:387
+msgid "El número de cuotas debe ser un entero."
+msgstr "The number of installments must be an integer."
+
+#: marketplace/domain/exceptions.py:108
+#, python-format
+msgid ""
+"El pago '%(referencia)s' está en estado %(estado_actual)s y no puede pasar a "
+"%(estado_pretendido)s."
+msgstr ""
+"Payment '%(referencia)s' has status %(estado_actual)s and cannot change to "
+"%(estado_pretendido)s."
+
+#: marketplace/domain/exceptions.py:123
+#, python-format
+msgid ""
+"El pago '%(referencia)s' está en estado %(estado_actual)s: solo se factura un pago "
+"APROBADO."
+msgstr ""
+"Payment '%(referencia)s' has status %(estado_actual)s. Only approved payments can be "
+"invoiced."
+
+#: marketplace/domain/builders.py:334
+msgid "El pago debe estar asociado a un cliente."
+msgstr "The payment must be associated with a customer."
+
+#: marketplace/domain/builders.py:358
+msgid "El pago debe referirse a un carro o a un repuesto."
+msgstr "The payment must be for a vehicle or a part."
+
+#: marketplace/api/views.py:240
+msgid "El parámetro 'monto' debe ser un entero en pesos."
+msgstr "The 'monto' parameter must be an integer in pesos."
+
+#: marketplace/domain/builders.py:163
+msgid "El precio debe ser un entero positivo en pesos colombianos."
+msgstr "The price must be a positive integer in Colombian pesos."
+
+#: accounts_microservice.py:506
+msgid "El registro tiene dependencias que impiden eliminarlo."
+msgstr "This record cannot be deleted because other records depend on it."
+
+#: accounts_microservice.py:476 accounts_microservice.py:500
+#: accounts_microservice.py:629
+msgid "El registro viola una restricción de integridad."
+msgstr "The record violates an integrity constraint."
+
+#: marketplace/domain/exceptions.py:148
+#, python-format
+msgid "El usuario '%(username)s' ya está en uso."
+msgstr "Username '%(username)s' is already taken."
+
+#: marketplace/services.py:698
+msgid "El usuario no tiene un perfil de cliente."
+msgstr "This user has no customer profile."
+
+#: marketplace/templates/marketplace/index.html:9
+msgid ""
+"El vehículo que buscas. El repuesto que necesitas. Conecta con vendedores y encuentra "
+"todo para seguir en movimiento."
+msgstr "Find the vehicle or part you need and connect with sellers."
+
+#: marketplace/services.py:816
+msgid "El vendedor todavía no ha registrado las fechas requeridas."
+msgstr "The seller has not entered the required dates yet."
+
+#: marketplace/services.py:911
+msgid "El vendedor todavía no ha registrado todas las fechas requeridas."
+msgstr "The seller has not entered all the required dates yet."
+
+#: marketplace/templates/flask_compras/carrito.html:18
+#: marketplace/templates/marketplace/carrito.html:18
+#: marketplace/templates/marketplace/pagar_articulo.html:9
+msgid "Elige cómo pagar"
+msgstr "Choose how to pay"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "Elige tu tipo de cuenta. Te guiamos en cada paso."
+msgstr "Choose your account type. We'll guide you through each step."
+
+#: marketplace/templates/marketplace/index.html:29
+msgid ""
+"Elige un método, consulta las comisiones y sigue el estado de tu compra desde Mis "
+"pagos."
+msgstr "Choose a payment method, check fees, and track your purchase under My payments."
+
+#: marketplace/templates/flask_admin/resource_list.html:32
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:4
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:18
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:36
+#: marketplace/templates/marketplace/confirmar_eliminar.html:7
+#: marketplace/templates/marketplace/mis_publicaciones.html:30
+#: marketplace/templates/marketplace/mis_publicaciones.html:61
+msgid "Eliminar"
+msgstr "Delete"
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:2
+#: marketplace/templates/marketplace/confirmar_eliminar.html:3
+msgid "Eliminar Artículo | CarFit"
+msgstr "Delete item | CarFit"
+
+#: marketplace/templates/marketplace/index.html:31
+msgid "Empezar a vender"
+msgstr "Start selling"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Encuentra el indicado"
+msgstr "Find the right one"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "Encuentra tu próximo paso"
+msgstr "Find what you need"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Entrar a mi cuenta"
+msgstr "Sign in to my account"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:39
+msgid "Escribir una reseña"
+msgstr "Write a review"
+
+#: marketplace/forms.py:23 marketplace/models.py:117 marketplace/models.py:237
+#: marketplace/models.py:85 marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:11
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:29
+#: marketplace/templates/marketplace/catalogo.html:6
+#: marketplace/templates/marketplace/historial_pagos.html:18
+#: marketplace/templates/marketplace/mis_publicaciones.html:17
+#: marketplace/templates/marketplace/mis_publicaciones.html:49
+msgid "Estado"
+msgstr "Status"
+
+#: marketplace/templates/marketplace/documentos_carro.html:68
+msgid "Estado de vigencia documental"
+msgstr "Document validity status"
+
+#: marketplace/models.py:168
+msgid "Estado del vehículo / repuesto"
+msgstr "Vehicle or part condition"
+
+#: marketplace/models.py:284
+msgid "Estado resultante"
+msgstr "Resulting status"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Estamos contigo."
+msgstr "We're here to help."
+
+#: accounts_microservice.py:90
+msgid "Este campo es obligatorio al crear un usuario."
+msgstr "This field is required when creating a user."
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:34
+msgid "Este vendedor aún no tiene reseñas. ¡Sé el primero en calificarlo!"
+msgstr "This seller has no reviews yet. Be the first to leave one."
+
+#: marketplace/services.py:899
+msgid "Existen fechas inconsistentes en los documentos registrados."
+msgstr "The dates entered for these documents are inconsistent."
+
+#: marketplace/templates/marketplace/documentos_carro.html:104
+#: marketplace/templates/marketplace/documentos_carro.html:94
+msgid "Expedición"
+msgstr "Issue date"
+
+#: marketplace/models.py:166
+msgid "Experiencia de compra"
+msgstr "Buying experience"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Explora a tu ritmo. Elige con información."
+msgstr "Explore at your own pace and make an informed choice."
+
+#: marketplace/templates/flask_compras/carrito.html:39
+#: marketplace/templates/marketplace/carrito.html:39
+msgid "Explora el catálogo y agrega lo que te gustaría comprar."
+msgstr "Browse the catalog and add items you'd like to buy."
+
+#: marketplace/templates/marketplace/index.html:22
+msgid "Explora las opciones y encuentra lo que encaja contigo."
+msgstr "Browse the options to find what suits you."
+
+#: marketplace/templates/flask_compras/base.html:51
+#: marketplace/templates/flask_publicaciones/base.html:51
+#: marketplace/templates/marketplace/base.html:50
+msgid "Explorar"
+msgstr "Browse"
+
+#: marketplace/templates/flask_compras/base.html:22
+#: marketplace/templates/flask_publicaciones/base.html:22
+#: marketplace/templates/marketplace/base.html:21
+#: marketplace/templates/marketplace/index.html:10
+#: marketplace/templates/marketplace/index.html:31
+msgid "Explorar catálogo"
+msgstr "Browse catalog"
+
+#: marketplace/templates/flask_compras/catalogo.html:2
+#: marketplace/templates/marketplace/catalogo.html:2
+msgid "Explorar catálogo | CarFit"
+msgstr "Browse catalog | CarFit"
+
+#: marketplace/templates/flask_compras/carrito.html:39
+#: marketplace/templates/marketplace/carrito.html:39
+msgid "Explorar catálogo →"
+msgstr "Browse catalog →"
+
+#: marketplace/templates/marketplace/pago_factura.html:24
+#: marketplace/templates/marketplace/pago_factura.html:3
+msgid "Factura"
+msgstr "Invoice"
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:3
+msgid "Falta tu perfil de cliente | CarFit"
+msgstr "Customer profile required | CarFit"
+
+#: marketplace/domain/builders.py:173
+#, python-format
+msgid "Faltan documentos obligatorios: %(valor1)s."
+msgstr "Required documents are missing: %(valor1)s."
+
+#: marketplace/models.py:244 marketplace/templates/marketplace/historial_pagos.html:19
+#: marketplace/templates/marketplace/pago_detalle.html:25
+msgid "Fecha"
+msgstr "Date"
+
+#: marketplace/models.py:184 marketplace/models.py:287 marketplace/models.py:63
+msgid "Fecha de creación"
+msgstr "Created on"
+
+#: marketplace/forms.py:161 marketplace/models.py:137
+msgid "Fecha de expedición"
+msgstr "Issue date"
+
+#: marketplace/models.py:91
+msgid "Fecha de publicación"
+msgstr "Listing date"
+
+#: marketplace/forms.py:165 marketplace/models.py:138
+msgid "Fecha de vencimiento"
+msgstr "Expiry date"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid ""
+"Filtra vehículos y repuestos. Revisa sus características, el precio y las reseñas del "
+"vendedor."
+msgstr "Filter vehicles and parts. Check their features, prices, and seller reviews."
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Filtrar catálogo"
+msgstr "Filter catalog"
+
+#: accounts_microservice.py:229
+msgid "Grupos"
+msgstr "Groups"
+
+#: marketplace/templates/flask_admin/resource_form.html:10
+msgid "Guardar"
+msgstr "Save"
+
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:9
+#: marketplace/templates/marketplace/editar_articulo.html:12
+msgid "Guardar cambios"
+msgstr "Save changes"
+
+#: marketplace/templates/marketplace/documentos_carro.html:154
+msgid "Guardar documento"
+msgstr "Save document"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "HAGAMOS CAMINO"
+msgstr "GET STARTED"
+
+#: marketplace/services.py:398
+msgid "Hay que indicar el carro o el repuesto que se está pagando."
+msgstr "Specify the vehicle or part being purchased."
+
+#: marketplace/infra/notificadores.py:85
+#, python-format
+msgid ""
+"Hola %(nombre)s,\n"
+"\n"
+"%(estado)s\n"
+"\n"
+"Referencia: %(referencia)s\n"
+"Método: %(metodo)s\n"
+"Artículo: $%(precio)s %(moneda)s\n"
+"Comisión: $%(comision)s %(moneda)s\n"
+"Total: $%(total)s %(moneda)s\n"
+"%(mensaje)s\n"
+msgstr ""
+"Hello %(nombre)s,\n"
+"\n"
+"%(estado)s\n"
+"\n"
+"Reference: %(referencia)s\n"
+"Method: %(metodo)s\n"
+"Item: $%(precio)s %(moneda)s\n"
+"Fee: $%(comision)s %(moneda)s\n"
+"Total: $%(total)s %(moneda)s\n"
+"%(mensaje)s\n"
+
+#: marketplace/infra/notificadores.py:50
+#, python-format
+msgid ""
+"Hola %(nombre)s,\n"
+"\n"
+"Tu publicación %(articulo)s está visible por $%(precio)s COP.\n"
+msgstr ""
+"Hello %(nombre)s,\n"
+"\n"
+"Your listing for %(articulo)s is live at $%(precio)s COP.\n"
+
+#: marketplace/services.py:821 marketplace/services.py:827
+msgid "INVÁLIDO"
+msgstr "INVALID"
+
+#: marketplace/templates/flask_admin/base.html:22
+#: marketplace/templates/flask_compras/base.html:39
+#: marketplace/templates/flask_publicaciones/base.html:39
+#: marketplace/templates/marketplace/base.html:38
+msgid "Idioma"
+msgstr "Language"
+
+#: marketplace/templates/marketplace/index.html:18
+msgid "Imagen de referencia"
+msgstr "Reference image"
+
+#: marketplace/templates/marketplace/index.html:15
+msgid "Imagen fotorrealista de un BMW M4 gris grafito en un estudio nocturno"
+msgstr "Photorealistic image of a graphite gray BMW M4 in a nighttime studio"
+
+#: marketplace/templates/marketplace/pago_factura.html:52
+msgid "Imprimir factura"
+msgstr "Print invoice"
+
+#: marketplace/services.py:897
+msgid "Información inválida"
+msgstr "Invalid information"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Ingresa a tu cuenta y continúa donde te quedaste."
+msgstr "Sign in and pick up where you left off."
+
+#: marketplace/templates/marketplace/registro.html:8
+msgid "Inicia sesión"
+msgstr "Sign in"
+
+#: marketplace/templates/flask_compras/base.html:36
+#: marketplace/templates/flask_publicaciones/base.html:36
+#: marketplace/templates/marketplace/base.html:35
+#: marketplace/templates/registration/login.html:3
+msgid "Iniciar sesión"
+msgstr "Sign in"
+
+#: marketplace/templates/registration/login.html:2
+msgid "Iniciar sesión | CarFit"
+msgstr "Sign in | CarFit"
+
+#: marketplace/templates/flask_admin/base.html:21
+msgid "Inicio"
+msgstr "Home"
+
+#: marketplace/models.py:157
+msgid "Inventario"
+msgstr "Inventory"
+
+#: marketplace/models.py:161
+#, python-format
+msgid "Inventario de %(vendedor)s"
+msgstr "Inventory for %(vendedor)s"
+
+#: accounts_microservice.py:193 marketplace/models.py:158
+msgid "Inventarios"
+msgstr "Inventories"
+
+#: marketplace/templates/marketplace/documentos_carro.html:161
+msgid "Ir a mis publicaciones"
+msgstr "Go to my listings"
+
+#: marketplace/forms.py:24 marketplace/models.py:87
+msgid "Kilometraje"
+msgstr "Mileage (km)"
+
+#: marketplace/services.py:1025
+msgid "La calificación debe estar entre 1 y 5 estrellas."
+msgstr "The rating must be between 1 and 5 stars."
+
+#: marketplace/services.py:1022
+msgid "La calificación debe ser un número entero entre 1 y 5."
+msgstr "The rating must be an integer between 1 and 5."
+
+#: marketplace/services.py:822 marketplace/services.py:945
+msgid "La fecha de expedición no puede ser futura."
+msgstr "The issue date cannot be in the future."
+
+#: marketplace/services.py:828 marketplace/services.py:949
+msgid "La fecha de vencimiento debe ser posterior a la fecha de expedición."
+msgstr "The expiry date must be after the issue date."
+
+#: marketplace/templates/marketplace/documentos_carro.html:86
+msgid ""
+"La información documental es proporcionada por el vendedor. CarFit calcula la vigencia"
+" según las fechas registradas, sin realizar verificaciones con entidades oficiales. "
+"Los documentos originales son privados."
+msgstr ""
+"Sellers provide document details. CarFit calculates validity using the dates entered "
+"and does not verify them with authorities. Original documents are private."
+
+#: marketplace/domain/builders.py:137
+msgid "La marca es obligatoria."
+msgstr "Make is required."
+
+#: marketplace/domain/exceptions.py:137
+#, python-format
+msgid "La pasarela %(pasarela)s no está disponible: %(motivo)s"
+msgstr "Payment gateway %(pasarela)s is unavailable: %(motivo)s"
+
+#: marketplace/domain/builders.py:133
+#, python-format
+msgid "La placa '%(valor1)s' no cumple el formato colombiano (ABC123)."
+msgstr "License plate '%(valor1)s' does not match the Colombian format (ABC123)."
+
+#: marketplace/domain/builders.py:372
+msgid "La referencia de pago no puede superar los 60 caracteres."
+msgstr "The payment reference cannot exceed 60 characters."
+
+#: marketplace/forms.py:151
+msgid "Las contraseñas no coinciden."
+msgstr "The passwords do not match."
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Limpiar filtros"
+msgstr "Clear filters"
+
+#: marketplace/templates/marketplace/index.html:25
+msgid "Lo que tu vehículo necesita para seguir."
+msgstr "Find the parts your vehicle needs."
+
+#: marketplace/templates/marketplace/index.html:31
+msgid "Lo que vendes, alguien lo está buscando."
+msgstr "Find a buyer for your vehicle or part."
+
+#: marketplace/templates/marketplace/index.html:28
+msgid "MENOS VUELTAS. MÁS CAMINO."
+msgstr "SHOP IN THREE STEPS"
+
+#: marketplace/forms.py:20 marketplace/models.py:83
+msgid "Marca"
+msgstr "Make"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Marca, modelo, repuesto…"
+msgstr "Make, model, part…"
+
+#: marketplace/templates/marketplace/pago_factura.html:21
+msgid "Marketplace de vehículos y repuestos"
+msgstr "Vehicle and parts marketplace"
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:9
+msgid "Marketplace → Clientes"
+msgstr "Marketplace → Customers"
+
+#: marketplace/templates/flask_compras/catalogo.html:7
+#: marketplace/templates/marketplace/catalogo.html:7
+msgid "Mayor precio"
+msgstr "Highest price"
+
+#: marketplace/templates/flask_compras/catalogo.html:7
+#: marketplace/templates/marketplace/catalogo.html:7
+msgid "Menor precio"
+msgstr "Lowest price"
+
+#: marketplace/models.py:243 marketplace/models.py:286
+msgid "Mensaje"
+msgstr "Message"
+
+#: marketplace/templates/flask_compras/base.html:20
+#: marketplace/templates/flask_publicaciones/base.html:20
+#: marketplace/templates/marketplace/base.html:19
+msgid "Menú ☰"
+msgstr "Menu ☰"
+
+#: marketplace/templates/flask_compras/carrito.html:2
+#: marketplace/templates/marketplace/carrito.html:2
+msgid "Mi carrito | CarFit"
+msgstr "My cart | CarFit"
+
+#: marketplace/templates/flask_compras/base.html:33
+#: marketplace/templates/flask_publicaciones/base.html:33
+#: marketplace/templates/marketplace/base.html:32
+msgid "Mi cuenta"
+msgstr "My account"
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:4
+#: marketplace/templates/marketplace/mis_publicaciones.html:6
+msgid "Mis Publicaciones"
+msgstr "My listings"
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:2
+#: marketplace/templates/marketplace/mis_publicaciones.html:3
+msgid "Mis Publicaciones | CarFit"
+msgstr "My listings | CarFit"
+
+#: marketplace/templates/flask_compras/base.html:24
+#: marketplace/templates/flask_publicaciones/base.html:24
+#: marketplace/templates/marketplace/base.html:23
+#: marketplace/templates/marketplace/historial_pagos.html:8
+msgid "Mis pagos"
+msgstr "My payments"
+
+#: marketplace/templates/marketplace/historial_pagos.html:3
+msgid "Mis pagos | CarFit"
+msgstr "My payments | CarFit"
+
+#: marketplace/templates/flask_compras/base.html:23
+#: marketplace/templates/flask_publicaciones/base.html:23
+#: marketplace/templates/marketplace/base.html:22
+msgid "Mis publicaciones"
+msgstr "My listings"
+
+#: marketplace/forms.py:21 marketplace/models.py:84
+msgid "Modelo"
+msgstr "Model"
+
+#: marketplace/models.py:114
+msgid "Modelo compatible"
+msgstr "Compatible model"
+
+#: marketplace/models.py:233
+msgid "Moneda"
+msgstr "Currency"
+
+#: marketplace/templates/flask_admin/resource_list.html:43
+msgid "Mostrando los primeros 200 registros."
+msgstr "Showing the first 200 records."
+
+#: marketplace/templates/marketplace/index.html:18
+msgid "MÁS QUE UN DESTINO"
+msgstr "MORE THAN A DESTINATION"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "Más posibilidades."
+msgstr "More possibilities."
+
+#: marketplace/templates/marketplace/historial_pagos.html:16
+#: marketplace/templates/marketplace/pago_detalle.html:15
+msgid "Método"
+msgstr "Method"
+
+#: marketplace/forms.py:104 marketplace/models.py:235
+#: marketplace/templates/marketplace/pago_factura.html:35
+msgid "Método de pago"
+msgstr "Payment method"
+
+#: accounts_microservice.py:508
+msgid "Método no permitido."
+msgstr "Method not allowed."
+
+#: marketplace/templates/flask_compras/base.html:18
+#: marketplace/templates/flask_publicaciones/base.html:18
+#: marketplace/templates/marketplace/base.html:17
+msgid "Navegación principal"
+msgstr "Main navigation"
+
+#: marketplace/templates/flask_publicaciones/sin_perfil_vendedor.html:4
+#: marketplace/templates/marketplace/sin_perfil_vendedor.html:6
+msgid "Necesitas un perfil de vendedor"
+msgstr "You need a seller profile"
+
+#: accounts_microservice.py:482 publications_microservice.py:236
+#: shopping_microservice.py:281
+msgid "No encontrado."
+msgstr "Not found."
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:10
+msgid "No encontramos coincidencias"
+msgstr "No matches found"
+
+#: marketplace/domain/exceptions.py:41
+#, python-format
+msgid "No existe %(recurso)s%(detalle)s."
+msgstr "Could not find %(recurso)s%(detalle)s."
+
+#: marketplace/services.py:708
+#, python-format
+msgid "No existe el %(tipo)s solicitado."
+msgstr "The requested %(tipo)s does not exist."
+
+#: marketplace/templates/flask_compras/carrito.html:38
+#: marketplace/templates/marketplace/carrito.html:38
+#: marketplace/templates/marketplace/pagar_articulo.html:29
+msgid "No hay métodos para este monto"
+msgstr "No payment methods for this amount"
+
+#: marketplace/templates/flask_admin/resource_list.html:39
+msgid "No hay registros."
+msgstr "No records found."
+
+#: marketplace/templates/registration/login.html:3
+msgid "No pudimos iniciar sesión. Revisa tu usuario y contraseña."
+msgstr "We couldn't sign you in. Check your username and password."
+
+#: marketplace/templates/flask_publicaciones/crear_repuesto.html:9
+#: marketplace/templates/marketplace/crear_repuesto.html:16
+msgid "No pudimos publicar el repuesto:"
+msgstr "We couldn't publish the part:"
+
+#: marketplace/services.py:178
+msgid "No puedes eliminar un artículo que está en proceso de pago."
+msgstr "You cannot delete an item with a payment in progress."
+
+#: marketplace/services.py:1013
+msgid "No puedes escribir una reseña sobre tu propio perfil de vendedor."
+msgstr "You cannot review your own seller profile."
+
+#: accounts_microservice.py:411
+msgid "No se pudo crear la cuenta por una restricción de integridad."
+msgstr "The account could not be created due to an integrity constraint."
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:23
+#: marketplace/templates/marketplace/mis_publicaciones.html:37
+msgid "No tienes carros publicados."
+msgstr "You have no vehicle listings."
+
+#: marketplace/views.py:583
+msgid "No tienes permiso para acceder al documento original del propietario."
+msgstr "You do not have permission to access the original document."
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:41
+#: marketplace/templates/marketplace/mis_publicaciones.html:68
+msgid "No tienes repuestos publicados."
+msgstr "You have no parts listings."
+
+#: marketplace/models.py:22 marketplace/models.py:43
+msgid "Nombre"
+msgstr "Name"
+
+#: marketplace/forms.py:143
+msgid "Nombre completo"
+msgstr "Full name"
+
+#: marketplace/models.py:103 marketplace/models.py:72
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Nuevo"
+msgstr "New"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Nuevo y usado"
+msgstr "New and used"
+
+#: marketplace/templates/marketplace/index.html:24
+msgid "Nuevos caminos, nuevas posibilidades."
+msgstr "Find your next vehicle."
+
+#: marketplace/models.py:116
+msgid "Número de serie"
+msgstr "Serial number"
+
+#: marketplace/forms.py:116
+msgid "Número de tarjeta / token"
+msgstr "Card number / token"
+
+#: marketplace/templates/marketplace/field.html:1
+msgid "Opcional"
+msgstr "Optional"
+
+#: marketplace/models.py:282
+msgid "Operación"
+msgstr "Operation"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:19
+msgid "Opiniones de compradores"
+msgstr "Customer reviews"
+
+#: marketplace/templates/flask_compras/catalogo.html:7
+#: marketplace/templates/marketplace/catalogo.html:7
+msgid "Ordenar por"
+msgstr "Sort by"
+
+#: marketplace/services.py:815
+msgid "PENDIENTE"
+msgstr "PENDING"
+
+#: marketplace/domain/metodos_pago.py:136 marketplace/models.py:211
+msgid "PSE (débito desde cuenta bancaria)"
+msgstr "PSE (bank account debit)"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "Paga a tu manera"
+msgstr "Pay your way"
+
+#: marketplace/templates/marketplace/pagar_articulo.html:2
+#: marketplace/templates/marketplace/pagar_articulo.html:3
+msgid "Pagar"
+msgstr "Pay for"
+
+#: marketplace/models.py:248 marketplace/models.py:280
+#: marketplace/templates/marketplace/pago_detalle.html:3
+#: marketplace/templates/marketplace/pago_detalle.html:6
+msgid "Pago"
+msgstr "Payment"
+
+#: marketplace/models.py:262
+#, python-format
+msgid "Pago %(referencia)s - %(estado)s"
+msgstr "Payment %(referencia)s - %(estado)s"
+
+#: accounts_microservice.py:205 marketplace/models.py:249
+msgid "Pagos"
+msgstr "Payments"
+
+#: marketplace/infra/pasarelas.py:254
+#, python-format
+msgid ""
+"Pague $%(monto)s COP con el código %(codigo)s en cualquier corresponsal antes del "
+"%(fecha)s."
+msgstr "Pay $%(monto)s COP at a payment agent with code %(codigo)s before %(fecha)s."
+
+#: marketplace/templates/flask_admin/dashboard.html:7
+msgid ""
+"Panel Flask para administrar los registros del marketplace. Pagos y transacciones se "
+"muestran en modo de solo lectura."
+msgstr ""
+"Flask panel for managing marketplace records. Payments and transactions are read-only."
+
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:18
+#: marketplace/templates/marketplace/mis_publicaciones.html:28
+msgid "Papeles"
+msgstr "Documents"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:10
+msgid "Para"
+msgstr "Fits"
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:8
+msgid "Para comprar en CarFit necesitas un perfil de"
+msgstr "To buy on CarFit, you need a"
+
+#: marketplace/models.py:240 marketplace/models.py:283
+msgid "Pasarela de pago"
+msgstr "Payment gateway"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Pasos de publicación"
+msgstr "Listing steps"
+
+#: marketplace/templates/marketplace/registro.html:5
+msgid "Pasos del registro"
+msgstr "Registration steps"
+
+#: marketplace/models.py:216
+msgid "Pendiente de confirmación"
+msgstr "Pending confirmation"
+
+#: marketplace/templates/flask_publicaciones/sin_perfil_vendedor.html:2
+#: marketplace/templates/marketplace/sin_perfil_vendedor.html:3
+msgid "Perfil de vendedor requerido — CarFit"
+msgstr "Seller profile required — CarFit"
+
+#: marketplace/forms.py:120
+msgid "Persona jurídica"
+msgstr "Business or organization"
+
+#: marketplace/forms.py:120
+msgid "Persona natural"
+msgstr "Individual"
+
+#: marketplace/forms.py:19 marketplace/models.py:82
+#: marketplace/templates/marketplace/documentos_carro.html:57
+msgid "Placa"
+msgstr "License plate"
+
+#: marketplace/templates/flask_compras/catalogo.html:7
+#: marketplace/templates/marketplace/catalogo.html:7
+msgid "Por categoría"
+msgstr "By category"
+
+#: marketplace/models.py:115 marketplace/models.py:230 marketplace/models.py:89
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:11
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:29
+#: marketplace/templates/marketplace/mis_publicaciones.html:16
+#: marketplace/templates/marketplace/mis_publicaciones.html:48
+#: marketplace/templates/marketplace/pago_detalle.html:16
+msgid "Precio"
+msgstr "Price"
+
+#: marketplace/forms.py:25
+msgid "Precio (COP)"
+msgstr "Price (COP)"
+
+#: marketplace/models.py:311
+msgid "Precio total"
+msgstr "Total price"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Precio y detalle"
+msgstr "Price and details"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "Precios en pesos colombianos (COP)."
+msgstr "Prices in Colombian pesos (COP)."
+
+#: marketplace/views.py:320
+#, python-format
+msgid "Procesamos %(valor1)s pagos. Te llevamos al primer recibo."
+msgstr "We processed %(valor1)s payments. Here is the first receipt."
+
+#: marketplace/views.py:324
+msgid "Procesamos tu compra."
+msgstr "Your purchase has been processed."
+
+#: marketplace/models.py:275
+msgid "Procesar"
+msgstr "Process"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:10
+msgid "Prueba otra búsqueda o cambia los filtros para ver más opciones."
+msgstr "Try a different search or change the filters to see more options."
+
+#: marketplace/templates/marketplace/index.html:31
+msgid "Publica tu vehículo o repuesto y conecta con tu próximo comprador."
+msgstr "List your vehicle or part and connect with buyers."
+
+#: marketplace/templates/flask_compras/base.html:23
+#: marketplace/templates/flask_publicaciones/base.html:23
+#: marketplace/templates/marketplace/base.html:22
+msgid "Publicar"
+msgstr "List an item"
+
+#: marketplace/templates/flask_publicaciones/crear_repuesto.html:4
+#: marketplace/templates/marketplace/crear_repuesto.html:6
+msgid "Publicar Repuesto"
+msgstr "List a part"
+
+#: marketplace/templates/flask_publicaciones/crear_repuesto.html:2
+#: marketplace/templates/marketplace/crear_repuesto.html:3
+msgid "Publicar Repuesto | CarFit"
+msgstr "List a part | CarFit"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Publicar artículo ↗"
+msgstr "Publish listing ↗"
+
+#: marketplace/templates/flask_publicaciones/articulo_publicado.html:6
+#: marketplace/templates/marketplace/articulo_publicado.html:10
+msgid "Publicar otro artículo"
+msgstr "List another item"
+
+#: marketplace/templates/flask_publicaciones/crear_repuesto.html:12
+#: marketplace/templates/marketplace/crear_repuesto.html:23
+msgid "Publicar repuesto"
+msgstr "List a part"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:56
+msgid "Publicar reseña"
+msgstr "Post review"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+msgid "Publicar un repuesto →"
+msgstr "List a part →"
+
+#: marketplace/templates/marketplace/index.html:11
+msgid "Publicar un vehículo"
+msgstr "List a vehicle"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+msgid "Publicar vehículo"
+msgstr "List a vehicle"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+msgid "Publicar vehículo | CarFit"
+msgstr "List a vehicle | CarFit"
+
+#: marketplace/templates/marketplace/registro.html:6
+msgid "Publicar y también comprar"
+msgstr "Sell and buy"
+
+#: marketplace/models.py:90
+msgid "Puntuación"
+msgstr "Score"
+
+#: marketplace/templates/registration/login.html:3
+msgid "QUÉ BUENO VERTE DE NUEVO"
+msgstr "WELCOME BACK"
+
+#: marketplace/templates/marketplace/registro.html:6
+msgid "Quiero comprar"
+msgstr "I want to buy"
+
+#: marketplace/templates/marketplace/index.html:11
+#: marketplace/templates/marketplace/registro.html:6
+msgid "Quiero vender"
+msgstr "I want to sell"
+
+#: marketplace/templates/flask_compras/carrito.html:9
+#: marketplace/templates/marketplace/carrito.html:9
+msgid "Quitar"
+msgstr "Remove"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "RESUMEN DE PAGO"
+msgstr "PAYMENT SUMMARY"
+
+#: marketplace/models.py:218
+msgid "Rechazado"
+msgstr "Declined"
+
+#: marketplace/models.py:220
+msgid "Reembolsado"
+msgstr "Refunded"
+
+#: marketplace/models.py:229 marketplace/templates/flask_compras/carrito.html:34
+#: marketplace/templates/marketplace/carrito.html:34
+#: marketplace/templates/marketplace/historial_pagos.html:14
+#: marketplace/templates/marketplace/pagar_articulo.html:25
+msgid "Referencia"
+msgstr "Reference"
+
+#: marketplace/forms.py:110
+msgid "Referencia (opcional)"
+msgstr "Reference (optional)"
+
+#: marketplace/api/serializers.py:201
+msgid "Referencia de idempotencia. Si no se envía, CarFit la genera."
+msgstr "Idempotency reference. CarFit generates one if omitted."
+
+#: marketplace/models.py:241
+msgid "Referencia de la pasarela"
+msgstr "Gateway reference"
+
+#: marketplace/templates/marketplace/pago_factura.html:42
+msgid "Referencia de pago"
+msgstr "Payment reference"
+
+#: marketplace/templates/flask_compras/base.html:36
+#: marketplace/templates/flask_publicaciones/base.html:36
+#: marketplace/templates/marketplace/base.html:35
+msgid "Registrarse"
+msgstr "Sign up"
+
+#: marketplace/models.py:120 marketplace/models.py:227
+#: marketplace/templates/flask_compras/carrito.html:8
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:29
+#: marketplace/templates/marketplace/carrito.html:8
+#: marketplace/templates/marketplace/mis_publicaciones.html:47
+msgid "Repuesto"
+msgstr "Part"
+
+#: accounts_microservice.py:177 marketplace/models.py:121
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:26
+#: marketplace/templates/marketplace/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:9
+#: marketplace/templates/marketplace/index.html:25
+#: marketplace/templates/marketplace/mis_publicaciones.html:42
+msgid "Repuestos"
+msgstr "Parts"
+
+#: marketplace/models.py:187
+msgid "Reseña"
+msgstr "Review"
+
+#: marketplace/models.py:192
+#, python-format
+msgid "Reseña de %(autor)s"
+msgstr "Review by %(autor)s"
+
+#: accounts_microservice.py:199 marketplace/models.py:188
+msgid "Reseñas"
+msgstr "Reviews"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:9
+msgid "Reseñas de"
+msgstr "Reviews for"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:4
+msgid "Reseñas del vendedor"
+msgstr "Seller reviews"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Retoma el camino."
+msgstr "Pick up where you left off."
+
+#: marketplace/templates/marketplace/pagar_articulo.html:3
+msgid "Revisa el importe y elige cómo quieres pagar este artículo."
+msgstr "Review the amount and choose how to pay for this item."
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid ""
+"Revisa las fechas de expedición y vencimiento. Los archivos originales se mantienen "
+"privados; los compradores pueden solicitarte acceso."
+msgstr ""
+"Check the issue and expiry dates. Original files remain private and buyers can request"
+" access."
+
+#: marketplace/templates/flask_compras/carrito.html:38
+#: marketplace/templates/marketplace/carrito.html:38
+#: marketplace/templates/marketplace/pagar_articulo.html:29
+msgid "Revisa tu selección o vuelve al catálogo para elegir otro artículo."
+msgstr "Review your selection or return to the catalog to choose another item."
+
+#: marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "Revisa tu selección y continúa con tu método de pago preferido."
+msgstr "Review your selection and proceed with your preferred payment method."
+
+#: marketplace/models.py:130
+msgid "Revisión tecnomecánica"
+msgstr "Vehicle inspection"
+
+#: marketplace/forms.py:80
+msgid "Revisión técnico-mecánica: La fecha de expedición no puede ser futura."
+msgstr "Vehicle inspection: The issue date cannot be in the future."
+
+#: marketplace/forms.py:85
+msgid ""
+"Revisión técnico-mecánica: La fecha de vencimiento debe ser posterior a la fecha de "
+"expedición."
+msgstr "Vehicle inspection: The expiry date must be after the issue date."
+
+#: marketplace/models.py:129
+msgid "SOAT"
+msgstr "SOAT insurance"
+
+#: marketplace/templates/marketplace/documentos_carro.html:84
+msgid "SOAT y Revisión técnico-mecánica"
+msgstr "SOAT insurance and vehicle inspection"
+
+#: marketplace/forms.py:66
+msgid "SOAT: La fecha de expedición no puede ser futura."
+msgstr "SOAT insurance: The issue date cannot be in the future."
+
+#: marketplace/forms.py:71
+msgid "SOAT: La fecha de vencimiento debe ser posterior a la fecha de expedición."
+msgstr "SOAT insurance: The expiry date must be after the issue date."
+
+#: marketplace/forms.py:40
+msgid "SOAT: archivo"
+msgstr "SOAT insurance: file"
+
+#: marketplace/forms.py:33
+msgid "SOAT: expedición"
+msgstr "SOAT insurance: issue date"
+
+#: marketplace/forms.py:37
+msgid "SOAT: vencimiento"
+msgstr "SOAT insurance: expiry date"
+
+#: marketplace/templates/flask_compras/base.html:34
+#: marketplace/templates/flask_publicaciones/base.html:34
+#: marketplace/templates/marketplace/base.html:33
+msgid "Salir"
+msgstr "Sign out"
+
+#: marketplace/templates/flask_compras/base.html:15
+#: marketplace/templates/flask_publicaciones/base.html:15
+#: marketplace/templates/marketplace/base.html:14
+msgid "Saltar al contenido"
+msgstr "Skip to content"
+
+#: shopping_microservice.py:116
+msgid "Se requiere iniciar sesión."
+msgstr "Sign-in required."
+
+#: marketplace/api/views.py:368 marketplace/api/views.py:434
+msgid "Se requiere perfil de Vendedor."
+msgstr "A seller profile is required."
+
+#: accounts_microservice.py:327
+msgid "Se requieren credenciales de administrador."
+msgstr "Administrator credentials are required."
+
+#: accounts_microservice.py:329
+msgid "Se requieren permisos de superusuario."
+msgstr "Superuser permissions are required."
+
+#: marketplace/templates/flask_compras/carrito.html:18
+#: marketplace/templates/marketplace/carrito.html:18
+#: marketplace/templates/marketplace/pagar_articulo.html:9
+msgid "Selecciona un método para ver los datos que necesitas y su comisión."
+msgstr "Select a method to see the required details and fees."
+
+#: accounts_microservice.py:427
+msgid "Sesión cerrada."
+msgstr "Signed out."
+
+#: marketplace/templates/flask_compras/carrito.html:34
+#: marketplace/templates/marketplace/carrito.html:34
+#: marketplace/templates/marketplace/pagar_articulo.html:25
+msgid "Si la dejas vacía, CarFit genera una referencia automáticamente."
+msgstr "Leave it blank and CarFit will generate a reference automatically."
+
+#: marketplace/templates/flask_compras/carrito.html:24
+#: marketplace/templates/marketplace/carrito.html:24
+#: marketplace/templates/marketplace/pagar_articulo.html:15
+msgid "Sin comisión"
+msgstr "No fee"
+
+#: marketplace/templates/flask_publicaciones/csrf_error.html:4
+msgid "Solicitud rechazada"
+msgstr "Request rejected"
+
+#: marketplace/services.py:937
+msgid "Solo el vendedor propietario del vehículo puede modificar sus fechas o archivos."
+msgstr "Only the seller who owns the vehicle can update its dates or files."
+
+#: marketplace/templates/flask_publicaciones/sin_perfil_vendedor.html:5
+#: marketplace/templates/marketplace/sin_perfil_vendedor.html:7
+msgid "Solo las cuentas registradas como vendedor pueden publicar vehículos."
+msgstr "Only accounts registered as sellers can list vehicles."
+
+#: marketplace/templates/marketplace/documentos_carro.html:121
+#: marketplace/templates/marketplace/documentos_carro.html:97
+msgid "Soporte documental"
+msgstr "Supporting document"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+#: marketplace/templates/marketplace/pago_factura.html:46
+msgid "Subtotal"
+msgstr "Subtotal"
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:8
+#: marketplace/templates/marketplace/confirmar_eliminar.html:15
+msgid "Sí, eliminar"
+msgstr "Yes, delete"
+
+#: marketplace/templates/marketplace/index.html:22
+msgid "TODO EN UN MISMO LUGAR"
+msgstr "VEHICLES AND PARTS"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "TU HISTORIA SIGUE AQUÍ"
+msgstr "WELCOME TO CARFIT"
+
+#: marketplace/domain/metodos_pago.py:114 marketplace/models.py:209
+msgid "Tarjeta de crédito"
+msgstr "Credit card"
+
+#: marketplace/models.py:131
+msgid "Tarjeta de propiedad"
+msgstr "Vehicle registration card"
+
+#: marketplace/domain/metodos_pago.py:126 marketplace/models.py:210
+msgid "Tarjeta débito"
+msgstr "Debit card"
+
+#: marketplace/forms.py:51
+msgid "Tecnomecánica: archivo"
+msgstr "Vehicle inspection: file"
+
+#: marketplace/forms.py:43
+msgid "Tecnomecánica: expedición"
+msgstr "Vehicle inspection: issue date"
+
+#: marketplace/forms.py:47
+msgid "Tecnomecánica: vencimiento"
+msgstr "Vehicle inspection: expiry date"
+
+#: marketplace/forms.py:127 marketplace/forms.py:146 marketplace/models.py:25
+#: marketplace/models.py:46
+msgid "Teléfono"
+msgstr "Phone"
+
+#: marketplace/models.py:113 marketplace/models.py:173
+msgid "Tipo"
+msgstr "Type"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Tipo de artículo"
+msgstr "Item type"
+
+#: marketplace/views.py:369
+msgid "Tipo de artículo desconocido."
+msgstr "Unknown item type."
+
+#: marketplace/services.py:704
+msgid "Tipo de artículo no soportado."
+msgstr "Unsupported item type."
+
+#: marketplace/forms.py:139
+msgid "Tipo de cuenta"
+msgstr "Account type"
+
+#: marketplace/forms.py:158 marketplace/models.py:136
+msgid "Tipo de documento"
+msgstr "Document type"
+
+#: marketplace/forms.py:122
+msgid "Tipo de persona"
+msgstr "Payer type"
+
+#: marketplace/forms.py:215
+msgid "Tipo de reseña"
+msgstr "Review type"
+
+#: marketplace/templates/marketplace/historial_pagos.html:36
+msgid "Todavía no has hecho ningún pago."
+msgstr "You haven't made any payments yet."
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:6
+msgid "Todavía no tienes perfil de cliente"
+msgstr "You don't have a customer profile yet"
+
+#: marketplace/templates/marketplace/index.html:29
+msgid "Todo bajo tu control"
+msgstr "Review your selection"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Todos los artículos"
+msgstr "All items"
+
+#: accounts_microservice.py:320 shopping_microservice.py:123
+msgid "Token CSRF ausente o inválido."
+msgstr "Missing or invalid CSRF token."
+
+#: marketplace/templates/flask_publicaciones/csrf_error.html:5
+msgid "Token CSRF ausente o inválido. Recarga la página e inténtalo de nuevo."
+msgstr "Your session could not be verified. Reload the page and try again."
+
+#: marketplace/templates/flask_publicaciones/csrf_error.html:2
+msgid "Token CSRF inválido | CarFit"
+msgstr "Session verification failed | CarFit"
+
+#: marketplace/models.py:232 marketplace/templates/marketplace/historial_pagos.html:17
+#: marketplace/templates/marketplace/pago_detalle.html:18
+msgid "Total"
+msgstr "Total"
+
+#: marketplace/templates/flask_compras/carrito.html:36
+#: marketplace/templates/marketplace/carrito.html:36
+#: marketplace/templates/marketplace/pagar_articulo.html:27
+msgid "Total estimado"
+msgstr "Estimated total"
+
+#: marketplace/templates/marketplace/pago_factura.html:48
+msgid "Total pagado"
+msgstr "Total paid"
+
+#: marketplace/models.py:291
+msgid "Transacciones de pago"
+msgstr "Payment transactions"
+
+#: accounts_microservice.py:214
+msgid "Transacciones de pago (solo lectura)"
+msgstr "Payment transactions (read-only)"
+
+#: marketplace/infra/pasarelas.py:85
+msgid "Transacción aprobada (simulación)."
+msgstr "Transaction approved (simulation)."
+
+#: marketplace/models.py:290
+msgid "Transacción de pago"
+msgstr "Payment transaction"
+
+#: marketplace/infra/pasarelas.py:65
+msgid "Transacción rechazada por el emisor (simulación)."
+msgstr "Transaction declined by the issuer (simulation)."
+
+#: marketplace/infra/pasarelas.py:217
+msgid "Transacción rechazada por el emisor."
+msgstr "The issuer declined the transaction."
+
+#: marketplace/templates/flask_compras/carrito.html:39
+#: marketplace/templates/marketplace/carrito.html:39
+msgid "Tu carrito está vacío."
+msgstr "Your cart is empty."
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Tu compra, bien informada."
+msgstr "Know what you're buying."
+
+#: marketplace/templates/marketplace/registro.html:5
+msgid "Tu cuenta"
+msgstr "Your account"
+
+#: marketplace/infra/notificadores.py:21
+msgid "Tu pago fue anulado."
+msgstr "Your payment was voided."
+
+#: marketplace/infra/notificadores.py:18
+msgid "Tu pago fue aprobado."
+msgstr "Your payment was approved."
+
+#: marketplace/infra/notificadores.py:20
+msgid "Tu pago fue rechazado y no se te cobró nada."
+msgstr "Your payment was declined. You were not charged."
+
+#: marketplace/infra/notificadores.py:22
+msgid "Tu pago fue reembolsado."
+msgstr "Your payment was refunded."
+
+#: marketplace/infra/notificadores.py:19
+msgid "Tu pago quedó pendiente de confirmación."
+msgstr "Your payment is awaiting confirmation."
+
+#: marketplace/templates/marketplace/index.html:8
+msgid "Tu próximo"
+msgstr "Your next"
+
+#: marketplace/templates/flask_compras/catalogo.html:4
+#: marketplace/templates/marketplace/catalogo.html:4
+msgid "Tu próximo camino."
+msgstr "Find your next vehicle or part"
+
+#: marketplace/infra/notificadores.py:49
+#, python-format
+msgid "Tu publicación %(articulo)s ya está en CarFit"
+msgstr "Your listing for %(articulo)s is live on CarFit"
+
+#: marketplace/templates/flask_publicaciones/articulo_publicado.html:5
+#: marketplace/templates/marketplace/articulo_publicado.html:8
+msgid "Tu publicación ya está visible para los compradores en CarFit."
+msgstr "Buyers can now see your listing on CarFit."
+
+#: marketplace/forms.py:219
+msgid "Tu reseña"
+msgstr "Your review"
+
+#: marketplace/views.py:630
+msgid "Tu reseña ha sido publicada."
+msgstr "Your review has been posted."
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+msgid "Tu vehículo"
+msgstr "Your vehicle"
+
+#: marketplace/templates/marketplace/registro.html:5
+msgid "Tus datos"
+msgstr "Your details"
+
+#: marketplace/templates/registration/login.html:3
+msgid "Tus próximos vehículos, repuestos y posibilidades, en un mismo lugar."
+msgstr "Shop for vehicles and parts in one place."
+
+#: marketplace/templates/flask_compras/base.html:16
+#: marketplace/templates/flask_publicaciones/base.html:16
+#: marketplace/templates/marketplace/base.html:15
+msgid "UN NUEVO CAMINO PARA COMPRAR Y VENDER"
+msgstr "BUY AND SELL VEHICLES AND PARTS"
+
+#: marketplace/api/serializers.py:77
+#, python-format
+msgid ""
+"Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km (recibido: %(kilometraje)s km)."
+msgstr ""
+"A new vehicle cannot exceed %(KM_MAXIMO_NUEVO)s km (received: %(kilometraje)s km)."
+
+#: marketplace/domain/builders.py:157
+#, python-format
+msgid ""
+"Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km (recibido: %(valor2)s km)."
+msgstr "A new vehicle cannot exceed %(KM_MAXIMO_NUEVO)s km (received: %(valor2)s km)."
+
+#: marketplace/services.py:151
+#, python-format
+msgid "Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km."
+msgstr "A new vehicle cannot exceed %(KM_MAXIMO_NUEVO)s km."
+
+#: marketplace/domain/builders.py:356 marketplace/services.py:394
+msgid "Un pago cubre un solo artículo: o un carro o un repuesto."
+msgstr "Each payment covers one item: a vehicle or a part."
+
+#: marketplace/templates/marketplace/registro.html:7
+msgid "Un poco sobre ti"
+msgstr "Tell us about yourself"
+
+#: marketplace/templates/marketplace/registro.html:3
+msgid "Un solo lugar."
+msgstr "All in one place."
+
+#: marketplace/domain/builders.py:367
+msgid "Un usuario no puede comprar su propio artículo."
+msgstr "You cannot buy your own listing."
+
+#: marketplace/templates/marketplace/index.html:18
+msgid "Una nueva forma de avanzar."
+msgstr "Find your next ride."
+
+#: marketplace/services.py:905
+msgid "Uno o ambos documentos obligatorios han superado su fecha de vencimiento."
+msgstr "One or both required documents have expired."
+
+#: marketplace/models.py:104 marketplace/models.py:73
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "Usado"
+msgstr "Used"
+
+#: marketplace/forms.py:140 marketplace/models.py:18 marketplace/models.py:39
+msgid "Usuario"
+msgstr "Username"
+
+#: accounts_microservice.py:381 marketplace/domain/exceptions.py:142
+msgid "Usuario o contraseña incorrectos."
+msgstr "Incorrect username or password."
+
+#: accounts_microservice.py:220
+msgid "Usuarios"
+msgstr "Users"
+
+#: marketplace/services.py:833
+msgid "VENCIDO"
+msgstr "EXPIRED"
+
+#: marketplace/services.py:838
+msgid "VIGENTE"
+msgstr "VALID"
+
+#: marketplace/templates/flask_compras/carrito.html:12
+#: marketplace/templates/marketplace/carrito.html:12
+msgid "Vaciar carrito"
+msgstr "Empty cart"
+
+#: marketplace/models.py:134 marketplace/models.py:182 marketplace/models.py:224
+#: marketplace/models.py:94 marketplace/templates/flask_compras/carrito.html:8
+#: marketplace/templates/flask_publicaciones/mis_publicaciones.html:11
+#: marketplace/templates/marketplace/carrito.html:8
+#: marketplace/templates/marketplace/documentos_carro.html:53
+#: marketplace/templates/marketplace/mis_publicaciones.html:15
+msgid "Vehículo"
+msgstr "Vehicle"
+
+#: marketplace/models.py:95 marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/flask_compras/catalogo.html:8
+#: marketplace/templates/marketplace/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:8
+#: marketplace/templates/marketplace/index.html:24
+msgid "Vehículos"
+msgstr "Vehicles"
+
+#: marketplace/templates/marketplace/registro.html:6
+msgid "Vehículos y repuestos"
+msgstr "Vehicles and parts"
+
+#: marketplace/templates/flask_compras/catalogo.html:4
+#: marketplace/templates/marketplace/catalogo.html:4
+msgid "Vehículos y repuestos disponibles. Compara, elige y sigue adelante."
+msgstr "Browse and compare available vehicles and parts."
+
+#: marketplace/templates/flask_compras/base.html:51
+#: marketplace/templates/flask_publicaciones/base.html:51
+#: marketplace/templates/marketplace/base.html:50
+msgid "Vehículos, repuestos y nuevas posibilidades. Hecho para seguir adelante."
+msgstr "Marketplace for vehicles and parts."
+
+#: marketplace/templates/marketplace/documentos_carro.html:111
+#: marketplace/templates/marketplace/documentos_carro.html:95
+msgid "Vencimiento"
+msgstr "Expiry date"
+
+#: marketplace/models.py:107 marketplace/models.py:151 marketplace/models.py:176
+#: marketplace/models.py:29 marketplace/models.py:76
+#: marketplace/templates/flask_compras/base.html:33
+#: marketplace/templates/flask_publicaciones/base.html:33
+#: marketplace/templates/marketplace/base.html:32
+#: marketplace/templates/marketplace/documentos_carro.html:61
+#: marketplace/templates/marketplace/pago_factura.html:33
+msgid "Vendedor"
+msgstr "Seller"
+
+#: marketplace/forms.py:138
+msgid "Vendedor — quiero publicar vehículos"
+msgstr "Seller — I want to list vehicles"
+
+#: accounts_microservice.py:156 marketplace/models.py:30
+msgid "Vendedores"
+msgstr "Sellers"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/marketplace/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:9
+msgid "Vendido por"
+msgstr "Sold by"
+
+#: marketplace/templates/marketplace/documentos_carro.html:123
+msgid "Ver archivo original"
+msgstr "View original file"
+
+#: marketplace/templates/flask_compras/base.html:29
+#: marketplace/templates/flask_publicaciones/base.html:29
+#: marketplace/templates/marketplace/base.html:28
+msgid "Ver carrito de compras"
+msgstr "View shopping cart"
+
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/marketplace/catalogo.html:9
+msgid "Ver documentos"
+msgstr "View documents"
+
+#: marketplace/templates/marketplace/historial_pagos.html:37
+msgid "Ver el catálogo"
+msgstr "View catalog"
+
+#: marketplace/templates/flask_publicaciones/articulo_publicado.html:7
+#: marketplace/templates/marketplace/articulo_publicado.html:11
+msgid "Ver el catálogo de compras"
+msgstr "View catalog"
+
+#: marketplace/templates/marketplace/pago_detalle.html:34
+msgid "Ver factura"
+msgstr "View invoice"
+
+#: marketplace/templates/flask_compras/catalogo.html:4
+#: marketplace/templates/marketplace/catalogo.html:4
+#: marketplace/templates/marketplace/index.html:11
+msgid "Ver mi carrito"
+msgstr "View my cart"
+
+#: marketplace/templates/marketplace/pago_detalle.html:37
+msgid "Ver mis pagos"
+msgstr "View my payments"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/marketplace/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:9
+msgid "Ver reseñas"
+msgstr "View reviews"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:10
+msgid "Ver todos los artículos"
+msgstr "View all items"
+
+#: marketplace/templates/marketplace/documentos_carro.html:118
+#: marketplace/templates/marketplace/documentos_carro.html:96
+msgid "Vigencia"
+msgstr "Validity"
+
+#: marketplace/services.py:839
+#, python-format
+msgid "Vigente hasta el %(fecha)s."
+msgstr "Valid until %(fecha)s."
+
+#: marketplace/templates/flask_admin/resource_list.html:8
+msgid "Volver"
+msgstr "Back"
+
+#: marketplace/templates/flask_publicaciones/csrf_error.html:6
+msgid "Volver a mis publicaciones"
+msgstr "Back to my listings"
+
+#: marketplace/templates/flask_compras/carrito.html:38
+#: marketplace/templates/marketplace/carrito.html:38
+#: marketplace/templates/marketplace/documentos_carro.html:159
+#: marketplace/templates/marketplace/pagar_articulo.html:29
+#: marketplace/templates/marketplace/resenas_vendedor.html:61
+msgid "Volver al catálogo"
+msgstr "Back to catalog"
+
+#: marketplace/templates/flask_publicaciones/sin_perfil_vendedor.html:6
+#: marketplace/templates/marketplace/sin_perfil_vendedor.html:8
+msgid "Volver al inicio"
+msgstr "Back to home"
+
+#: marketplace/templates/marketplace/pago_factura.html:53
+msgid "Volver al pago"
+msgstr "Back to payment"
+
+#: marketplace/services.py:130 marketplace/services.py:171
+msgid "Ya existe un repuesto publicado con este número de serie."
+msgstr "A part with this serial number is already listed."
+
+#: marketplace/services.py:105 marketplace/services.py:156
+msgid "Ya existe un vehículo registrado con esta placa."
+msgstr "A vehicle with this license plate is already registered."
+
+#: marketplace/domain/exceptions.py:84
+#, python-format
+msgid "Ya se registró un pago con la referencia '%(referencia)s'."
+msgstr "A payment with reference '%(referencia)s' already exists."
+
+#: marketplace/templates/marketplace/index.html:8
+msgid "aquí."
+msgstr "here."
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:8
+msgid "asociado a tu usuario. Pídele a un administrador que lo cree desde"
+msgstr "linked to your account. Ask an administrator to create it under"
+
+#: marketplace/templates/marketplace/index.html:8
+msgid "camino empieza"
+msgstr "journey starts"
+
+#: marketplace/templates/flask_compras/carrito.html:9
+#: marketplace/templates/marketplace/carrito.html:9
+msgid "del carrito"
+msgstr "from the cart"
+
+#: marketplace/infra/pasarelas.py:224
+#, python-format
+msgid "devolvió un estado desconocido: '%(estado)s'."
+msgstr "returned an unknown status: '%(estado)s'."
+
+#: marketplace/infra/pasarelas.py:195
+msgid "devolvió una respuesta ilegible."
+msgstr "returned an unreadable response."
+
+#: marketplace/api/views.py:395 marketplace/api/views.py:439 marketplace/services.py:404
+msgid "el carro"
+msgstr "the vehicle"
+
+#: marketplace/services.py:1033
+msgid "el carro del vendedor"
+msgstr "the seller's vehicle"
+
+#: payments_microservice.py:102
+msgid "el cliente"
+msgstr "the customer"
+
+#: marketplace/services.py:518
+msgid "el pago"
+msgstr "the payment"
+
+#: marketplace/services.py:409
+msgid "el repuesto"
+msgstr "the part"
+
+#: marketplace/services.py:1010 marketplace/services.py:991
+msgid "el vendedor"
+msgstr "the seller"
+
+#: marketplace/templates/marketplace/sin_perfil_cliente.html:9
+msgid "en el panel de administración."
+msgstr "in the admin panel."
+
+#: marketplace/infra/pasarelas.py:169
+msgid "falta configurar la variable PASARELA_URL."
+msgstr "the PASARELA_URL variable is missing."
+
+#: payments_microservice.py:131
+msgid "monto debe ser un entero."
+msgstr "monto must be an integer."
+
+#: marketplace/infra/pasarelas.py:191
+#, python-format
+msgid "no hubo conexión (%(valor1)s)."
+msgstr "the connection failed (%(valor1)s)."
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:4
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:4
+#: marketplace/templates/marketplace/confirmar_eliminar.html:7
+#: marketplace/templates/marketplace/editar_articulo.html:7
+msgid "repuesto"
+msgstr "part"
+
+#: marketplace/templates/marketplace/resenas_vendedor.html:15
+msgid "reseñas"
+msgstr "reviews"
+
+#: marketplace/infra/pasarelas.py:187
+#, python-format
+msgid "respondió HTTP %(valor1)s."
+msgstr "returned HTTP %(valor1)s."
+
+#: payments_microservice.py:98
+msgid "un cliente autenticado"
+msgstr "an authenticated customer"
+
+#: marketplace/api/views.py:220
+msgid "un perfil de cliente para el usuario autenticado"
+msgstr "a customer profile for the signed-in user"
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:4
+#: marketplace/templates/flask_publicaciones/editar_articulo.html:4
+#: marketplace/templates/marketplace/confirmar_eliminar.html:7
+#: marketplace/templates/marketplace/editar_articulo.html:7
+msgid "vehículo"
+msgstr "vehicle"
+
+#: marketplace/templates/flask_admin/resource_form.html:3
+#: marketplace/templates/flask_admin/resource_list.html:3
+msgid "| Administración CarFit"
+msgstr "| CarFit Administration"
+
+#: marketplace/templates/flask_publicaciones/articulo_publicado.html:4
+#: marketplace/templates/marketplace/articulo_publicado.html:6
+msgid "¡Tu artículo quedó publicado!"
+msgstr "Your listing is live!"
+
+#: marketplace/templates/flask_compras/carrito.html:24
+#: marketplace/templates/marketplace/carrito.html:24
+#: marketplace/templates/marketplace/pagar_articulo.html:15
+msgid "· Confirmación posterior"
+msgstr "· Confirmed later"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:10
+msgid "· Serie"
+msgstr "· Serial"
+
+#: marketplace/templates/registration/login.html:3
+msgid "¿Aún no tienes cuenta?"
+msgstr "Don't have an account yet?"
+
+#: marketplace/templates/marketplace/registro.html:6
+msgid "¿Cómo quieres empezar?"
+msgstr "How would you like to get started?"
+
+#: marketplace/templates/flask_publicaciones/confirmar_eliminar.html:5
+#: marketplace/templates/marketplace/confirmar_eliminar.html:10
+msgid "¿Estás seguro de que deseas eliminar"
+msgstr "Are you sure you want to delete"
+
+#: marketplace/templates/flask_compras/carrito.html:12
+#: marketplace/templates/marketplace/carrito.html:12
+msgid "¿Quieres quitar todos los artículos del carrito?"
+msgstr "Remove all items from your cart?"
+
+#: marketplace/templates/flask_compras/catalogo.html:6
+#: marketplace/templates/marketplace/catalogo.html:6
+msgid "¿Qué estás buscando?"
+msgstr "What are you looking for?"
+
+#: marketplace/templates/marketplace/index.html:22
+msgid "¿Qué te mueve hoy?"
+msgstr "What are you shopping for?"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:1
+#: marketplace/templates/marketplace/crear_articulo.html:1
+msgid "¿Vendes un repuesto?"
+msgstr "Selling a part?"
+
+#: marketplace/templates/marketplace/registro.html:8
+msgid "¿Ya tienes cuenta?"
+msgstr "Already have an account?"
+
+#: marketplace/models.py:245
+msgid "Última actualización"
+msgstr "Last updated"
+
+#: marketplace/templates/flask_publicaciones/crear_articulo.html:2
+#: marketplace/templates/marketplace/crear_articulo.html:2
+#: marketplace/templates/marketplace/registro.html:8
+msgid "← Atrás"
+msgstr "← Back"
+
+#: marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "← Seguir explorando"
+msgstr "← Keep browsing"
+
+#: marketplace/templates/marketplace/pagar_articulo.html:3
+msgid "← Volver al carrito"
+msgstr "← Back to cart"
+
+#: marketplace/templates/flask_compras/carrito.html:4
+#: marketplace/templates/marketplace/carrito.html:4
+msgid "→ 03 Comprobante"
+msgstr "→ 03 Receipt"
+
+#: marketplace/templates/flask_compras/catalogo.html:10
+#: marketplace/templates/flask_compras/catalogo.html:9
+#: marketplace/templates/marketplace/catalogo.html:10
+#: marketplace/templates/marketplace/catalogo.html:9
+msgid "✓ En tu carrito · Quitar"
+msgstr "✓ In your cart · Remove"

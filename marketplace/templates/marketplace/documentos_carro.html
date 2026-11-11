@@ -10,7 +10,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: .85rem;
-    background: #f8fafc;
+    background: var(--superficie-alta);
     border: 1px solid var(--borde);
     border-radius: 8px;
     padding: .9rem 1.1rem;
@@ -21,7 +21,7 @@
   .ficha-vehiculo .valor-campo { font-weight: 700; font-size: .98rem; color: var(--tinta); }
 
   .badge-VIGENTE { background: var(--exito-suave); color: var(--exito); }
-  .badge-VENCIDO, .badge-INVALIDO { background: #fbe9e9; color: var(--error); }
+  .badge-VENCIDO, .badge-INVALIDO { background: var(--error-suave); color: var(--error); }
   .badge-PENDIENTE { background: var(--pendiente-suave); color: var(--pendiente); }
 
   .contenedor-tabla { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -31,7 +31,7 @@
       display: block; width: 100%;
     }
     table.tabla-documentos tr {
-      border: 1px solid var(--borde); border-radius: 8px; padding: .6rem .75rem; margin-bottom: .75rem; background: #fff;
+      border: 1px solid var(--borde); border-radius: 8px; padding: .6rem .75rem; margin-bottom: .75rem; background: var(--superficie);
     }
     table.tabla-documentos td {
       display: flex; justify-content: space-between; align-items: center;
@@ -103,14 +103,14 @@
             <td data-label="{% trans 'Documento' %}"><strong>{{ doc.tipo_etiqueta }}</strong></td>
             <td data-label="{% trans 'Expedición' %}">
               {% if doc.fecha_expedicion %}
-                {{ doc.fecha_expedicion|date:"d/m/Y" }}
+                {{ doc.fecha_expedicion|date:"SHORT_DATE_FORMAT" }}
               {% else %}
                 <span class="ayuda">—</span>
               {% endif %}
             </td>
             <td data-label="{% trans 'Vencimiento' %}">
               {% if doc.fecha_vencimiento %}
-                {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+                {{ doc.fecha_vencimiento|date:"SHORT_DATE_FORMAT" }}
               {% else %}
                 <span class="ayuda">—</span>
               {% endif %}

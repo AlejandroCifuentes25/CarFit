@@ -1,25 +1,8 @@
-{% extends "marketplace/base.html" %}
-
-{% block titulo %}Registrarse — CarFit{% endblock %}
-
-{% block contenido %}
-  <h1>Crear una cuenta</h1>
-
-  <form method="post">
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-      <div class="errores">
-        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-      </div>
-    {% endif %}
-
-    {{ form.as_p }}
-
-    <button type="submit">Registrarme</button>
-  </form>
-
-  <p class="ayuda">
-    ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>.
-  </p>
-{% endblock %}
+{% extends "marketplace/base.html" %}{% load i18n %}{% load static %}
+{% block titulo %}{% translate "Crear una cuenta | CarFit" %}{% endblock %}
+{% block contenido %}<div class="auth-layout"><aside class="auth-story"><span class="eyebrow">{% translate "TU HISTORIA SIGUE AQUÍ" %}</span><h2>{% translate "Más posibilidades." %}<br>{% translate "Un solo lugar." %}</h2><p>{% translate "Compra lo que necesitas o dale un nuevo destino a lo que vendes." %}</p><img src="{% static 'marketplace/bmw-m4-studio.jpg' %}" alt="" width="1536" height="1024"><p class="auth-footnote">{% translate "Elige tu tipo de cuenta. Te guiamos en cada paso." %}</p></aside><section class="auth-panel"><span class="eyebrow">{% translate "HAGAMOS CAMINO" %}</span><h1>{% translate "Crear una cuenta" %}</h1><p>{% translate "Cuéntanos qué buscas y empecemos." %}</p>
+<form method="post" data-wizard novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="errores" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<ol class="wizard-steps" aria-label="{% translate 'Pasos del registro' %}"><li data-step-indicator><b>01</b> {% translate "Tu cuenta" %}</li><li data-step-indicator><b>02</b> {% translate "Tus datos" %}</li></ol>
+<fieldset class="wizard-panel" data-step-panel><legend>{% translate "¿Cómo quieres empezar?" %}</legend><div class="role-options"><div class="role-card"><input type="radio" name="rol" required id="rol_cliente" value="CLIENTE" {% if form.rol.value == 'CLIENTE' or not form.rol.value and request.GET.rol != 'VENDEDOR' %}checked{% endif %}><label for="rol_cliente">{% translate "Quiero comprar" %}<small>{% translate "Vehículos y repuestos" %}</small></label></div><div class="role-card"><input type="radio" name="rol" required id="rol_vendedor" value="VENDEDOR" {% if form.rol.value == 'VENDEDOR' or not form.rol.value and request.GET.rol == 'VENDEDOR' %}checked{% endif %}><label for="rol_vendedor">{% translate "Quiero vender" %}<small>{% translate "Publicar y también comprar" %}</small></label></div></div>{{ form.rol.errors }}{% include "marketplace/field.html" with field=form.username %}{% include "marketplace/field.html" with field=form.password %}{% include "marketplace/field.html" with field=form.password_confirmacion %}</fieldset>
+<fieldset class="wizard-panel" data-step-panel><legend>{% translate "Un poco sobre ti" %}</legend>{% include "marketplace/field.html" with field=form.nombre %}{% include "marketplace/field.html" with field=form.correo %}{% include "marketplace/field.html" with field=form.numero_tel %}{% include "marketplace/field.html" with field=form.direccion %}</fieldset>
+<div class="wizard-actions"><button type="button" class="secundario" data-step-back>{% translate "← Atrás" %}</button><button type="button" data-step-next>{% translate "Continuar →" %}</button><button type="submit">{% translate "Crear mi cuenta →" %}</button></div></form><p class="auth-switch">{% translate "¿Ya tienes cuenta?" %} <a href="{% url 'login' %}">{% translate "Inicia sesión" %}</a></p></section></div>{% endblock %}

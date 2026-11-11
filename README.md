@@ -65,6 +65,57 @@ justificación de los patrones) en [docs/pagos.md](docs/pagos.md).
 
 ## Puesta en marcha
 
+Con Docker Compose, `docker compose up --build` inicia también Redis y el
+worker de Celery. Las publicaciones de carros y repuestos y los cambios de
+estado de pago generan notificaciones en segundo plano. Los eventos se guardan
+junto con el cambio de negocio y se encolan tras confirmar la transacción.
+Celery Beat vuelve a encolar los eventos pendientes cada 30 segundos.
+
+```bash
+docker compose ps redis worker
+docker compose logs -f worker
+```
+
+El modo predeterminado `MOCK` deja las notificaciones en el registro del worker.
+Para probar el flujo con SQLite y el servidor local de Django, apunta
+`CELERY_BROKER_URL` a tu Redis, por ejemplo `redis://127.0.0.1:6379/0`. Aplica
+las migraciones y abre una terminal para cada proceso con la misma variable.
+
+```powershell
+$env:CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+python -m celery -A carfit worker --pool=solo --loglevel=INFO
+```
+
+```powershell
+$env:CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+python -m celery -A carfit beat --loglevel=INFO
+```
+
+Si ejecutas Django sin configurar Redis, las notificaciones se ejecutan
+localmente con el notificador configurado.
+
+El selector **ES / EN** conserva la ruta y los filtros al cambiar de idioma.
+Django y Flask usan la misma cookie y los mismos catálogos gettext. Los textos
+del sistema usan español como idioma de origen. Las traducciones editables y
+compiladas están en `marketplace/locale/en/LC_MESSAGES/`. Usa
+`python manage.py compilemessages` (requiere GNU gettext) tras editar los
+archivos `.po`. Los datos escritos por compradores y vendedores se muestran
+tal como se guardaron.
+
+Marca los textos nuevos con `translate` en Django, `_()` en Jinja y
+`gettext()` o `ngettext()` en JavaScript. En Python usa `gettext_lazy` para
+etiquetas que se definen al importar el módulo. Incluye la traducción en el
+catálogo correspondiente y vuelve a compilarlo.
+
+Referencias de integración: [Celery con Django](https://docs.celeryq.dev/en/v5.6.1/django/first-steps-with-django.html)
+y [traducciones en Django](https://docs.djangoproject.com/en/6.0/topics/i18n/translation/).
+
+En la revisión de UI/UX, el menú se ajustó para que las etiquetas en inglés
+quepan en pantallas estrechas. El registro exige seleccionar un rol, las fechas
+conservan el formato válido de los campos HTML y el reinicio de filtros restaura
+también el orden del catálogo. Los formularios muestran la validación en el
+idioma elegido y bloquean envíos repetidos mientras procesan la solicitud.
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -73,6 +124,11 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
+
+Para usar el sitio solo con Django, sin Nginx ni Flask, configura
+`CARFIT_FLASK_COMPRAS=False` antes de iniciar `runserver`. En PowerShell:
+`$env:CARFIT_FLASK_COMPRAS = 'False'`. Así la navegación apunta a `/comprar/`
+y `/carrito/`.
 
 ### Stack integrado con Nginx y Flask
 
@@ -240,3 +296,17 @@ o aprobados.
 ```bash
 python manage.py test marketplace
 ```
+
+## Interfaz web
+
+Django y los flujos Flask de compras y publicaciones comparten los estilos y las
+interacciones en `marketplace/static/marketplace/`. El catálogo permite buscar,
+filtrar y ordenar por precio dentro de cada categoría. El registro y la
+publicación de vehículos se dividen en pasos; en el carrito el resumen de pago
+se actualiza al cambiar el método seleccionado.
+
+La iluminación interactiva de la portada y los bordes de las tarjetas se
+inspiran en [Card Spotlight](https://21st.dev/aceternity/card-spotlight/default)
+y [Hover Border Gradient](https://ui.aceternity.com/components/hover-border-gradient)
+de Aceternity UI. Están implementados en CSS y JavaScript sin dependencias de React,
+y respetan la preferencia de movimiento reducido.

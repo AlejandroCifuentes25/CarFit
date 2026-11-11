@@ -1,5 +1,7 @@
 """Flask storefront and shopping-cart slice sharing Django's domain services."""
 
+from django.utils.translation import gettext as _
+
 import os
 from functools import wraps
 from pathlib import Path
@@ -31,10 +33,14 @@ from marketplace.services import (
 PREFIX = "/compras/v2"
 LOGIN_URL = "/cuentas/login/"
 
+from marketplace.flask_i18n import instalar_i18n
+
 app = Flask(
     __name__,
     template_folder=str(Path(__file__).parent / "marketplace/templates/flask_compras"),
 )
+
+instalar_i18n(app)
 
 
 @app.template_filter("cop")
@@ -107,14 +113,14 @@ def _require_login(view):
 def _require_json_login():
     django_request = _session_request()
     if not django_request.user.is_authenticated:
-        return None, (jsonify({"detail": "Se requiere iniciar sesión."}), 401)
+        return None, (jsonify({"detail": _('Se requiere iniciar sesión.')}), 401)
     _cliente_de(django_request)
     return django_request, None
 
 
 def _require_csrf():
     if not _csrf_is_valid(_session_request().session):
-        return jsonify({"detail": "Token CSRF ausente o inválido."}), 403
+        return jsonify({"detail": _('Token CSRF ausente o inválido.')}), 403
     return None
 
 
@@ -272,4 +278,4 @@ def vaciar_carrito():
 
 @app.errorhandler(404)
 def not_found(_error):
-    return jsonify({"detail": "No encontrado."}), 404
+    return jsonify({"detail": _('No encontrado.')}), 404

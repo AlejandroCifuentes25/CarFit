@@ -10,6 +10,8 @@ cuando un pago entra por la API, por un comando de consola o por una tarea
 programada, y ninguno de esos caminos pasa por un serializer.
 """
 
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
 from ..domain.builders import KM_MAXIMO_NUEVO
@@ -72,8 +74,7 @@ class CarroSerializer(serializers.ModelSerializer):
 
         if estado == Carro.Estado.NUEVO and kilometraje is not None and kilometraje > KM_MAXIMO_NUEVO:
             raise serializers.ValidationError(
-                f"Un carro NUEVO no puede superar {KM_MAXIMO_NUEVO} km "
-                f"(recibido: {kilometraje} km)."
+                _('Un carro NUEVO no puede superar %(KM_MAXIMO_NUEVO)s km (recibido: %(kilometraje)s km).') % {'KM_MAXIMO_NUEVO': KM_MAXIMO_NUEVO, 'kilometraje': kilometraje}
             )
         return datos
 
@@ -197,7 +198,7 @@ class CrearPagoSerializer(serializers.Serializer):
     cuotas = serializers.IntegerField(required=False, min_value=1, default=1)
     referencia = serializers.CharField(
         required=False, max_length=60, allow_blank=True,
-        help_text="Referencia de idempotencia. Si no se envía, CarFit la genera.",
+        help_text=_('Referencia de idempotencia. Si no se envía, CarFit la genera.'),
     )
 
     # Datos propios de cada método. Se declaran opcionales porque cuáles son
@@ -250,6 +251,7 @@ class PagoSerializer(serializers.ModelSerializer):
     bancaria): esos ni siquiera se guardan.
     """
 
+    mensaje = serializers.CharField(source="mensaje_localizado", read_only=True)
     metodo_pago_etiqueta = serializers.CharField(
         source="get_metodo_pago_display", read_only=True
     )

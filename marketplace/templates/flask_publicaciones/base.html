@@ -1,32 +1,53 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ idioma_actual }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}CarFit{% endblock %}</title>
-  <style>
-    :root { --tinta:#16212e; --tinta-suave:#5a6a7a; --borde:#d8dfe6; --acento:#0e6c9b; --error:#d14343; --fondo:#f1f5f8; }
-    body { font-family: system-ui, sans-serif; background: var(--fondo); color: var(--tinta); margin: 0; }
-    nav.principal { background: #fff; border-bottom: 1px solid var(--borde); padding: .75rem 1.5rem; display: flex; gap: 1.25rem; }
-    nav.principal a.marca { font-weight: 800; }
-    main { max-width: 720px; margin: 1.5rem auto; background: #fff; padding: 1.5rem 2rem; border-radius: 8px; }
-    a { color: var(--acento); }
-    .ayuda { color: var(--tinta-suave); }
-    .errores, ul.errorlist { color: var(--error); }
-    table.tabla { width: 100%; border-collapse: collapse; }
-    table.tabla th, table.tabla td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--borde); }
-    button, .boton { background: var(--acento); color: #fff; border: 0; padding: .6rem 1rem; border-radius: 4px; cursor: pointer; }
-    .boton-secundario { background: var(--error); }
-  </style>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{{ _("CarFit · Tu próximo camino") }}{% endblock %}</title>
+  <meta name="csrf-token" content="{{ csrf_token }}"><meta name="theme-color" content="#0c1118">
+  <link rel="icon" href="/static/marketplace/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/marketplace/carfit.css">
+  <script src="/i18n/carfit.js"></script>
+  <script src="/i18n/carfit.js"></script>
+  <script src="/static/marketplace/carfit.js" defer></script>
+  <style>{% block estilos %}{% endblock %}</style>
 </head>
-<body>
-  <nav class="principal">
-    <a class="marca" href="/comprar/">CarFit</a>
-    <a href="/comprar/">Comprar</a>
-    <a href="{{ prefix }}/nuevo/">Publicar</a>
-    <a href="{{ prefix }}/mis-publicaciones/">Mis publicaciones</a>
-    <a href="/pagos/">Mis pagos</a>
-  </nav>
-  <main>{% block contenido %}{% endblock %}</main>
-</body>
-</html>
+<body data-cart-page="/compras/v2/carrito/">
+  <a class="skip-link" href="#contenido">{{ _("Saltar al contenido") }}</a>
+  <div class="topline"><span>●</span> {{ _("UN NUEVO CAMINO PARA COMPRAR Y VENDER") }}</div>
+  <header class="site-header">
+    <nav class="principal" aria-label="{{ _('Navegación principal') }}">
+      <a class="marca" href="/" aria-label="{{ _('CarFit, inicio') }}"><span class="brand-symbol" aria-hidden="true">»</span><span>Car<span class="brand-fit">Fit</span></span></a>
+      <button class="nav-toggle" type="button" aria-controls="nav-links nav-account" aria-expanded="false">{{ _("Menú ☰") }}</button>
+      <div class="nav-links" id="nav-links">
+        <a href="/compras/v2/catalogo/">{{ _("Explorar catálogo") }}</a>
+        {% if user.vendedor %}<a href="/publicaciones/v2/mis-publicaciones/">{{ _("Mis publicaciones") }}</a><a href="/publicaciones/v2/nuevo/">{{ _("Publicar") }}</a>{% else %}<a href="/#como-funciona">{{ _("Cómo funciona") }}</a>{% endif %}
+        {% if user.cliente %}<a href="/pagos/">{{ _("Mis pagos") }}</a>{% endif %}
+      </div>
+      <span class="separador"></span>
+      <div class="nav-account" id="nav-account">
+      {% if user.is_authenticated %}
+        <a href="/compras/v2/carrito/" class="carrito-resumen" aria-label="{{ _('Ver carrito de compras') }}">
+          <svg class="carrito-icono" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 4h2l2 11h11l3-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+          <span>{{ _("Carrito") }}</span><span class="cart-count" data-cart-count>{{ carrito.cantidad_producto|default(0) if carrito is defined else 0 }}</span>
+        </a>
+        <span class="nav-user"><small>{% if user.vendedor %}{{ _("Vendedor") }}{% else %}{{ _("Mi cuenta") }}{% endif %}</small>{{ user.username }}</span>
+        <button type="button" class="enlace" data-logout>{{ _("Salir") }}</button>
+      {% else %}
+        <a href="/cuentas/login/">{{ _("Iniciar sesión") }}</a><a class="boton dark" href="/registro/" style="color:white">{{ _("Registrarse") }} <span aria-hidden="true">↗</span></a>
+      {% endif %}
+      </div>
+      <form class="language-switch" method="post" action="/i18n/setlang/" aria-label="{{ _('Idioma') }}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ idioma_csrf }}">
+        <input type="hidden" name="next" value="{{ idioma_next }}">
+        <button type="submit" name="language" value="es-co" lang="es" aria-label="Español" aria-pressed="{{ 'true' if idioma_actual.startswith('es') else 'false' }}">ES</button>
+        <button type="submit" name="language" value="en" lang="en" aria-label="English" aria-pressed="{{ 'true' if idioma_actual == 'en' else 'false' }}">EN</button>
+      </form>
+    </nav>
+  </header>
+  <div class="envoltorio"><main id="contenido" class="page-main {% block main_class %}{% endblock %}">
+
+    {% block contenido %}{% endblock %}
+  </main></div>
+  <footer class="site-footer"><a class="marca" href="/">Car<span class="brand-fit">Fit</span></a><p>{{ _("Vehículos, repuestos y nuevas posibilidades. Hecho para seguir adelante.") }}</p><div class="footer-links"><a href="/compras/v2/catalogo/">{{ _("Explorar") }}</a><a href="/#como-funciona">{{ _("Cómo funciona") }}</a></div></footer>
+  <div id="toast-region" class="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
+{% block scripts %}{% endblock %}</body></html>

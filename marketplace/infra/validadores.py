@@ -8,6 +8,8 @@ cualquiera sin enterarse (Sustitución de Liskov). Quién se inyecta lo decide
 import logging
 from datetime import date
 
+from django.utils.translation import gettext as _
+
 from ..domain.ports import ResultadoValidacion, ValidadorDocumental
 
 logger = logging.getLogger(__name__)
@@ -39,12 +41,12 @@ class ValidadorDocumentalRunt(ValidadorDocumental):
     def validar(self, placa, documentos) -> ResultadoValidacion:
         hoy = self._hoy()
         vencidos = [
-            f"{doc.tipo_documento} vencido el {doc.fecha_vencimiento:%d/%m/%Y}."
+            _("%(tipo)s vencido el %(fecha)s.") % {"tipo": doc.tipo_documento, "fecha": doc.fecha_vencimiento.strftime("%d/%m/%Y")}
             for doc in documentos
             if doc.fecha_vencimiento < hoy
         ]
         futuros = [
-            f"{doc.tipo_documento} tiene fecha de expedición futura."
+            _("%(tipo)s tiene fecha de expedición futura.") % {"tipo": doc.tipo_documento}
             for doc in documentos
             if doc.fecha_expedicion > hoy
         ]

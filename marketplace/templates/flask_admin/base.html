@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="es">
+<html lang="{{ idioma_actual }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Administración CarFit{% endblock %}</title>
+    <title>{% block title %}{{ _("Administración CarFit") }}{% endblock %}</title>
     <style>
       body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; color: #202124; }
       nav, .actions { display: flex; gap: 1rem; align-items: center; }
@@ -16,9 +16,15 @@
   </head>
   <body>
     <nav>
-      <a href="{{ url_for('admin_dashboard') }}">Administración</a>
-      <a href="/admin/">Administración Django</a>
-      <a href="/">Inicio</a>
+      <a href="{{ url_for('admin_dashboard') }}">{{ _("Administración") }}</a>
+      <a href="/admin/">{{ _("Administración Django") }}</a>
+      <a href="/">{{ _("Inicio") }}</a>
+      <form class="language-switch" method="post" action="/i18n/setlang/" aria-label="{{ _('Idioma') }}">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ idioma_csrf }}">
+        <input type="hidden" name="next" value="{{ idioma_next }}">
+        <button type="submit" name="language" value="es-co" lang="es" aria-label="Español" aria-pressed="{{ 'true' if idioma_actual.startswith('es') else 'false' }}">ES</button>
+        <button type="submit" name="language" value="en" lang="en" aria-label="English" aria-pressed="{{ 'true' if idioma_actual == 'en' else 'false' }}">EN</button>
+      </form>
     </nav>
     <main>
       {% block content %}{% endblock %}

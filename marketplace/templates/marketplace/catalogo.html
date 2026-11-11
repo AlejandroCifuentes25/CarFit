@@ -1,65 +1,10 @@
-{% extends "marketplace/base.html" %}
-
-{% block titulo %}Comprar | CarFit{% endblock %}
-{% block ancho %}860px{% endblock %}
-{% block ancho_nav %}860px{% endblock %}
-
+{% extends "marketplace/base.html" %}{% load i18n %}{% load static %}
+{% block titulo %}{% translate "Explorar catálogo | CarFit" %}{% endblock %}
 {% block contenido %}
-  <h1>Vehículos y repuestos disponibles</h1>
-  <p class="ayuda">Agrega artículos al carrito y continúa el pago desde allí.</p>
-
-  <h2>Carros</h2>
-  {% if carros %}
-    <div class="rejilla">
-      {% for carro in carros %}
-        <div class="tarjeta-articulo">
-          <span class="etiqueta">{{ carro.get_estado_display }}</span>
-          <strong>{{ carro.marca }} {{ carro.modelo }}</strong>
-          <span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span>
-          <span class="ayuda">
-            Vendedor: <strong>{{ carro.vendedor.nombre }}</strong> (★ {{ carro.vendedor.resena }}/5) ·
-            <a href="{% url 'marketplace:resenas_vendedor' carro.vendedor.pk %}">Reseñas</a> ·
-            <a href="{% url 'marketplace:documentos_carro' carro.pk %}">Papeles</a>
-          </span>
-          <span class="precio">${{ carro.precio|floatformat:0 }} COP</span>
-          <div class="acciones-carrito">
-            {% if carro.pk in carrito_carros_ids %}
-              <button type="button" class="boton secundario" data-carrito-toggle data-estado="dentro" data-tipo-articulo="carro" data-articulo-id="{{ carro.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" onclick="CarFitCart.quitar(this.dataset.url)">Quitar del carrito</button>
-            {% else %}
-              <button type="button" class="boton secundario" data-carrito-toggle data-estado="fuera" data-tipo-articulo="carro" data-articulo-id="{{ carro.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" onclick="CarFitCart.agregar(this.dataset.url)">Agregar al carrito</button>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="vacio">No hay carros disponibles en este momento.</p>
-  {% endif %}
-
-  <h2>Repuestos</h2>
-  {% if repuestos %}
-    <div class="rejilla">
-      {% for repuesto in repuestos %}
-        <div class="tarjeta-articulo">
-          <span class="etiqueta">{{ repuesto.get_estado_display }}</span>
-          <strong>{{ repuesto.tipo }}</strong>
-          <span class="ayuda">Para {{ repuesto.modelo_carro }} · Serie {{ repuesto.numero_serie }}</span>
-          <span class="ayuda">
-            Vendedor: <strong>{{ repuesto.vendedor.nombre }}</strong> (★ {{ repuesto.vendedor.resena }}/5) ·
-            <a href="{% url 'marketplace:resenas_vendedor' repuesto.vendedor.pk %}">Reseñas</a>
-          </span>
-          <span class="precio">${{ repuesto.precio|floatformat:0 }} COP</span>
-          <div class="acciones-carrito">
-            {% if repuesto.pk in carrito_repuestos_ids %}
-              <button type="button" class="boton secundario" data-carrito-toggle data-estado="dentro" data-tipo-articulo="repuesto" data-articulo-id="{{ repuesto.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" onclick="CarFitCart.quitar(this.dataset.url)">Quitar del carrito</button>
-            {% else %}
-              <button type="button" class="boton secundario" data-carrito-toggle data-estado="fuera" data-tipo-articulo="repuesto" data-articulo-id="{{ repuesto.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" onclick="CarFitCart.agregar(this.dataset.url)">Agregar al carrito</button>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="vacio">No hay repuestos disponibles en este momento.</p>
-  {% endif %}
-{% endblock %}
+<div class="catalog-header"><div><span class="eyebrow">{% translate "ENCUENTRA LO QUE TE MUEVE" %}</span><h1>{% translate "Tu próximo camino." %}</h1><p class="ayuda">{% translate "Vehículos y repuestos disponibles. Compara, elige y sigue adelante." %}</p></div><a class="boton dark" href="/carrito/">{% translate "Ver mi carrito" %} <span aria-hidden="true">→</span></a></div>
+<div class="catalog-layout" data-catalog>
+<aside class="filters" aria-label="{% translate 'Filtrar catálogo' %}"><h2>{% translate "Encuentra el indicado" %}</h2><div class="field"><label for="catalog-search">{% translate "¿Qué estás buscando?" %}</label><input id="catalog-search" type="search" placeholder="{% translate 'Marca, modelo, repuesto…' %}" autocomplete="off"></div><div class="field"><label for="catalog-type">{% translate "Tipo de artículo" %}</label><select id="catalog-type"><option value="">{% translate "Todos los artículos" %}</option><option value="carro">{% translate "Vehículos" %}</option><option value="repuesto">{% translate "Repuestos" %}</option></select></div><div class="field"><label for="catalog-state">{% translate "Estado" %}</label><select id="catalog-state"><option value="">{% translate "Nuevo y usado" %}</option><option value="NUEVO">{% translate "Nuevo" %}</option><option value="USADO">{% translate "Usado" %}</option></select></div><button class="secundario full-width" type="button" data-filter-reset>{% translate "Limpiar filtros" %}</button><hr class="filter-divider"><p class="filter-note">{% translate "Tu compra, bien informada." %}<br>{% translate "Consulta las reseñas del vendedor y los documentos del vehículo." %}</p></aside>
+<div><div class="catalog-toolbar"><p data-result-count aria-live="polite">{% translate "Artículos disponibles" %}</p><div><label class="skip-label" for="catalog-sort">{% translate "Ordenar por" %}</label><select id="catalog-sort"><option value="recent">{% translate "Por categoría" %}</option><option value="price-up">{% translate "Menor precio" %}</option><option value="price-down">{% translate "Mayor precio" %}</option></select></div></div>
+<section class="catalog-section" data-catalog-section><h2>{% translate "Vehículos" %}</h2><div class="rejilla" data-product-grid>{% for carro in carros %}
+<article class="tarjeta-articulo reveal" data-product data-type="carro" data-state="{{ carro.estado }}" data-price="{{ carro.precio|stringformat:"d" }}" data-index="{{ forloop.counter0 }}" data-search="{{ carro.marca }} {{ carro.modelo }} {{ carro.color }} {{ carro.placa }}"><div class="product-art"><svg viewBox="0 0 64 48" aria-hidden="true"><path d="m7 30 4-10 9-3 6-10h20l8 12 5 4v13H7zM20 17h32M28 7l-3 10M9 27h8m29 0h10"/><circle cx="19" cy="36" r="6"/><circle cx="48" cy="36" r="6"/></svg></div><span class="etiqueta">{{ carro.get_estado_display }}</span><strong class="product-name">{{ carro.marca }} {{ carro.modelo }}</strong><span class="ayuda">{{ carro.placa }} · {{ carro.color }} · {{ carro.kilometraje }} km</span><span class="seller-line">{% translate "Vendido por" %} <strong>{{ carro.vendedor.nombre }}</strong> · ★ {{ carro.vendedor.resena }}/5</span><div class="product-links"><a href="/vendedores/{{ carro.vendedor.pk }}/resenas/">{% translate "Ver reseñas" %}</a><a href="/carros/{{ carro.pk }}/documentos/">{% translate "Ver documentos" %}</a></div><span class="precio">${{ carro.precio|floatformat:0 }} <small>COP</small></span><div class="acciones-carrito"><button type="button" data-carrito-toggle data-tipo-articulo="carro" data-articulo-id="{{ carro.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}" data-url="{% if carro.pk in carrito_carros_ids %}{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}{% else %}{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='carro' articulo_id=carro.pk %}{% endif %}" data-estado="{% if carro.pk in carrito_carros_ids %}dentro{% else %}fuera{% endif %}" aria-pressed="{% if carro.pk in carrito_carros_ids %}true{% else %}false{% endif %}">{% if carro.pk in carrito_carros_ids %}{% translate "✓ En tu carrito · Quitar" %}{% else %}{% translate "Agregar al carrito +" %}{% endif %}</button></div></article>{% endfor %}</div></section><section class="catalog-section" data-catalog-section><h2>{% translate "Repuestos" %}</h2><div class="rejilla" data-product-grid>{% for repuesto in repuestos %}
+<article class="tarjeta-articulo reveal" data-product data-type="repuesto" data-state="{{ repuesto.estado }}" data-price="{{ repuesto.precio|stringformat:"d" }}" data-index="{{ forloop.counter0 }}" data-search="{{ repuesto.tipo }} {{ repuesto.modelo_carro }} {{ repuesto.numero_serie }}"><div class="product-art parts"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="29"/><circle cx="40" cy="40" r="16"/><circle cx="40" cy="40" r="5"/><path d="m40 11 4 14m19-1-12 10m18 14-15-2M47 68l-4-15M18 58l13-10M12 29l14 7"/></svg></div><span class="etiqueta">{{ repuesto.get_estado_display }}</span><strong class="product-name">{{ repuesto.tipo }}</strong><span class="ayuda">{% translate "Para" %} {{ repuesto.modelo_carro }} {% translate "· Serie" %} {{ repuesto.numero_serie }}</span><span class="seller-line">{% translate "Vendido por" %} <strong>{{ repuesto.vendedor.nombre }}</strong> · ★ {{ repuesto.vendedor.resena }}/5</span><div class="product-links"><a href="/vendedores/{{ repuesto.vendedor.pk }}/resenas/">{% translate "Ver reseñas" %}</a></div><span class="precio">${{ repuesto.precio|floatformat:0 }} <small>COP</small></span><div class="acciones-carrito"><button type="button" data-carrito-toggle data-tipo-articulo="repuesto" data-articulo-id="{{ repuesto.pk }}" data-agregar-url="{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-quitar-url="{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}" data-url="{% if repuesto.pk in carrito_repuestos_ids %}{% url 'marketplace:quitar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}{% else %}{% url 'marketplace:agregar_articulo_carrito' tipo_articulo='repuesto' articulo_id=repuesto.pk %}{% endif %}" data-estado="{% if repuesto.pk in carrito_repuestos_ids %}dentro{% else %}fuera{% endif %}" aria-pressed="{% if repuesto.pk in carrito_repuestos_ids %}true{% else %}false{% endif %}">{% if repuesto.pk in carrito_repuestos_ids %}{% translate "✓ En tu carrito · Quitar" %}{% else %}{% translate "Agregar al carrito +" %}{% endif %}</button></div></article>{% endfor %}</div></section><div class="empty-state" data-no-results hidden><span class="empty-icon" aria-hidden="true">⌕</span><h2>{% translate "No encontramos coincidencias" %}</h2><p>{% translate "Prueba otra búsqueda o cambia los filtros para ver más opciones." %}</p><button class="secundario" type="button" data-filter-reset>{% translate "Ver todos los artículos" %}</button></div></div></div>{% endblock %}

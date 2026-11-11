@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block titulo %}Publicar Repuesto | CarFit{% endblock %}
+{% block titulo %}{{ _("Publicar Repuesto | CarFit") }}{% endblock %}
 {% block contenido %}
-  <h1>Publicar Repuesto</h1>
-  <p class="ayuda">Completa los datos del repuesto que deseas vender.</p>
+  <h1>{{ _("Publicar Repuesto") }}</h1>
+  <p class="ayuda">{{ _("Completa los datos del repuesto que deseas vender.") }}</p>
   <form method="post" novalidate>
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
     {% if form.non_field_errors() %}
-      <div class="errores"><strong>No pudimos publicar el repuesto:</strong> {{ form.non_field_errors() }}</div>
+      <div class="errores"><strong>{{ _("No pudimos publicar el repuesto:") }}</strong> {{ form.non_field_errors() }}</div>
     {% endif %}
     {{ form.as_p() }}
-    <button type="submit">Publicar repuesto</button>
+    <button type="submit">{{ _("Publicar repuesto") }}</button>
   </form>
 {% endblock %}

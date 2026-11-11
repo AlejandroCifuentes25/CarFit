@@ -10,6 +10,8 @@ Ejecutar desde la raiz del proyecto:
     flask --app payments_microservice run --port 5001
 """
 
+from django.utils.translation import gettext as _
+
 import os
 from datetime import date, datetime
 from decimal import Decimal
@@ -40,7 +42,11 @@ from marketplace.services import (
 )
 
 
+from marketplace.flask_i18n import instalar_i18n
+
 app = Flask(__name__)
+
+instalar_i18n(app)
 
 
 def _json_value(value):
@@ -89,11 +95,11 @@ def _cliente_desde_request():
     datos = request.get_json(silent=True) or {}
     cliente_id = request.args.get("cliente_id", datos.get("cliente_id"))
     if cliente_id is None:
-        raise RecursoNoEncontradoError("un cliente autenticado")
+        raise RecursoNoEncontradoError(_('un cliente autenticado'))
     try:
         return Cliente.objects.get(pk=int(cliente_id))
     except (Cliente.DoesNotExist, ValueError):
-        raise RecursoNoEncontradoError("el cliente", cliente_id) from None
+        raise RecursoNoEncontradoError(_('el cliente'), cliente_id) from None
 
 
 def _error_response(error):
@@ -122,7 +128,7 @@ def metodos_pago():
         try:
             monto = int(monto)
         except ValueError:
-            return jsonify({"error": "monto debe ser un entero."}), 400
+            return jsonify({"error": _('monto debe ser un entero.')}), 400
     metodos = CatalogoMetodosPagoService().listar(monto)
     return jsonify(
         {
@@ -155,7 +161,7 @@ def pagos():
 
         datos = request.get_json(silent=True)
         if not isinstance(datos, dict):
-            return jsonify({"error": "El cuerpo debe ser un objeto JSON."}), 400
+            return jsonify({"error": _('El cuerpo debe ser un objeto JSON.')}), 400
         datos = dict(datos)
         datos.pop("cliente_id", None)
         pago = ProcesarPagoService().procesar(cliente, datos)

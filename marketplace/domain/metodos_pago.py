@@ -16,6 +16,8 @@ ni el Service Layer, ni la API cambian (principio Abierto/Cerrado).
 Este módulo no conoce HTTP ni pasarelas concretas: es dominio puro.
 """
 
+from django.utils.translation import gettext_lazy as _
+
 from dataclasses import dataclass, field
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -109,7 +111,7 @@ class EspecificacionMetodoPago:
 CATALOGO_METODOS = {
     Pago.Metodo.TARJETA_CREDITO: EspecificacionMetodoPago(
         codigo=Pago.Metodo.TARJETA_CREDITO,
-        etiqueta="Tarjeta de crédito",
+        etiqueta=_('Tarjeta de crédito'),
         pasarela=PASARELA_AGREGADOR,
         comision_porcentual=Decimal("0.0290"),
         comision_fija=900,
@@ -121,7 +123,7 @@ CATALOGO_METODOS = {
     ),
     Pago.Metodo.TARJETA_DEBITO: EspecificacionMetodoPago(
         codigo=Pago.Metodo.TARJETA_DEBITO,
-        etiqueta="Tarjeta débito",
+        etiqueta=_('Tarjeta débito'),
         pasarela=PASARELA_AGREGADOR,
         comision_porcentual=Decimal("0.0190"),
         comision_fija=900,
@@ -131,7 +133,7 @@ CATALOGO_METODOS = {
     ),
     Pago.Metodo.PSE: EspecificacionMetodoPago(
         codigo=Pago.Metodo.PSE,
-        etiqueta="PSE (débito desde cuenta bancaria)",
+        etiqueta=_('PSE (débito desde cuenta bancaria)'),
         pasarela=PASARELA_AGREGADOR,
         comision_porcentual=Decimal("0.0000"),
         comision_fija=2_500,
@@ -142,7 +144,7 @@ CATALOGO_METODOS = {
     ),
     Pago.Metodo.BILLETERA_DIGITAL: EspecificacionMetodoPago(
         codigo=Pago.Metodo.BILLETERA_DIGITAL,
-        etiqueta="Billetera digital",
+        etiqueta=_('Billetera digital'),
         pasarela=PASARELA_AGREGADOR,
         comision_porcentual=Decimal("0.0175"),
         comision_fija=0,
@@ -152,7 +154,7 @@ CATALOGO_METODOS = {
     ),
     Pago.Metodo.EFECTIVO: EspecificacionMetodoPago(
         codigo=Pago.Metodo.EFECTIVO,
-        etiqueta="Efectivo en corresponsal",
+        etiqueta=_('Efectivo en corresponsal'),
         pasarela=PASARELA_CORRESPONSAL,
         comision_porcentual=Decimal("0.0000"),
         comision_fija=4_500,

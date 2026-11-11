@@ -1,11 +1,11 @@
-{% extends "marketplace/base.html" %}
+{% extends "marketplace/base.html" %}{% load i18n %}
 
-{% block titulo %}Publicar Repuesto | CarFit{% endblock %}
+{% block titulo %}{% translate "Publicar Repuesto | CarFit" %}{% endblock %}
 
 {% block contenido %}
-  <h1>Publicar Repuesto</h1>
+  <h1>{% translate "Publicar Repuesto" %}</h1>
   <p class="ayuda">
-    Completa los datos del repuesto que deseas vender.
+    {% translate "Completa los datos del repuesto que deseas vender." %}
   </p>
 
   <form method="post" enctype="multipart/form-data" novalidate>
@@ -13,13 +13,13 @@
 
     {% if form.non_field_errors %}
       <div class="errores">
-        <strong>No pudimos publicar el repuesto:</strong>
+        <strong>{% translate "No pudimos publicar el repuesto:" %}</strong>
         {{ form.non_field_errors }}
       </div>
     {% endif %}
 
     {{ form.as_p }}
 
-    <button type="submit">Publicar repuesto</button>
+    <button type="submit">{% translate "Publicar repuesto" %}</button>
   </form>
 {% endblock %}
